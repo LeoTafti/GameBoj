@@ -24,7 +24,7 @@ public interface Preconditions {
      * @throws IllegalArgumentException
      */
     static int checkBits8(int v) throws IllegalArgumentException {
-        if (v >= 256 || v < 0)
+        if (v > 0xFF || v < 0x00)
             throw new IllegalArgumentException();
         else
             return v;
@@ -37,7 +37,7 @@ public interface Preconditions {
      * @throws IllegalArgumentException
      */
     static int checkBits16(int v) throws IllegalArgumentException {
-        if (v >= 65536 || v < 0)
+        if (v > 0xFFFF || v < 0x00)
             throw new IllegalArgumentException();
         else
             return v;
