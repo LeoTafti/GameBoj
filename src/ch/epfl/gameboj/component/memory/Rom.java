@@ -1,7 +1,8 @@
 /*
- *  Author : Paul Juillard (288519)
- *  Date: 19/02
+ *  @Author : Paul Juillard (288519)
+ *  @Author : Leo Tafti (285418)
 */
+
 package ch.epfl.gameboj.component.memory;
 
 import java.util.Arrays;
@@ -13,7 +14,7 @@ public final class Rom {
     
     /**
      * Constructor
-     * @param data final data of cartridge
+     * @param data final data (of cartridge)
      */
     public Rom( byte[] data) {
         this.data = Arrays.copyOf(data, data.length);
@@ -21,7 +22,7 @@ public final class Rom {
     
     /**
      * Rom's size
-     * @return cartridge's size in byte 
+     * @return rom's size in byte 
      */
     public int size() {
         return data.length;
@@ -29,12 +30,12 @@ public final class Rom {
     
     /**
      * Read byte at given index
-     * @param index adress of required byte
+     * @param index address of required byte
      * @return required byte
      * @throws IndexOutOfBoundsException
      */
     public int read(int index) throws IndexOutOfBoundsException{
-        if (index >= this.size() && index < 0)
+        if (index >= this.size() || index < 0)
             throw new IndexOutOfBoundsException();
         return Byte.toUnsignedInt(data[index]);
     }

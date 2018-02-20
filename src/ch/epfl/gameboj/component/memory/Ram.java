@@ -1,6 +1,6 @@
 /*
-* Author : Paul Juillard (288519)
-* Date: 19/02
+ *  @Author : Paul Juillard (288519)
+ *  @Author : Leo Tafti (285418)
 */
 
 package ch.epfl.gameboj.component.memory;
@@ -8,16 +8,16 @@ package ch.epfl.gameboj.component.memory;
 import ch.epfl.gameboj.Preconditions;
 
 public final class Ram {
-    private Byte[] data;
+    private byte[] data;
 
     /**
      * Constructor
      * @param size of Ram in byte      
      * @throws IllegalArgumentException
      */
-    Ram(int size) throws IllegalArgumentException {
+    public Ram(int size) throws IllegalArgumentException {
         Preconditions.checkArgument(size >= 0);
-        data = new Byte[size];
+        data = new byte[size];
     }
 
     /**
@@ -30,19 +30,19 @@ public final class Ram {
 
     /**
      * Read byte at given index
-     * @param index adress of required byte
+     * @param index address of required byte
      * @return required byte
      */
     public int read(int index)  throws IndexOutOfBoundsException{
-        if (index >= this.size() && index < 0)
+        if (index >= this.size() || index < 0)
             throw new IndexOutOfBoundsException();
         return Byte.toUnsignedInt(data[index]);
     }
     
     public void write(int index, int value) {
-        if (index >= this.size() && index < 0)
+        if (index >= this.size() || index < 0)
             throw new IndexOutOfBoundsException();
         Preconditions.checkBits8(value);
-//        data[index] = (byte) value;
+        data[index] = (byte) value;
     }
 }
