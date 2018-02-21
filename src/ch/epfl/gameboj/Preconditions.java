@@ -12,7 +12,7 @@ public interface Preconditions {
      * @param b boolean representing condition
      * @throws IllegalArgumentException
      */
-    static void checkArgument(boolean b) throws IllegalArgumentException {
+    static void checkArgument(boolean b) {
         if (!b)
             throw new IllegalArgumentException();
     }
@@ -23,7 +23,7 @@ public interface Preconditions {
      * @return argument if a correct 8 bit
      * @throws IllegalArgumentException
      */
-    static int checkBits8(int v) throws IllegalArgumentException {
+    static int checkBits8(int v) {
         if (v > 0xFF || v < 0x00)
             throw new IllegalArgumentException();
         else
@@ -36,7 +36,7 @@ public interface Preconditions {
      * @return argument if a correct 16 bit
      * @throws IllegalArgumentException
      */
-    static int checkBits16(int v) throws IllegalArgumentException {
+    static int checkBits16(int v) {
         if (v > 0xFFFF || v < 0x00)
             throw new IllegalArgumentException();
         else

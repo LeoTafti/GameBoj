@@ -15,7 +15,7 @@ public final class Ram {
      * @param size of Ram in byte      
      * @throws IllegalArgumentException
      */
-    public Ram(int size) throws IllegalArgumentException {
+    public Ram(int size) {
         Preconditions.checkArgument(size >= 0);
         data = new byte[size];
     }
@@ -32,13 +32,20 @@ public final class Ram {
      * Read byte at given index
      * @param index address of required byte
      * @return required byte
+     * @throws IndexOutOfBoundsException
      */
-    public int read(int index)  throws IndexOutOfBoundsException{
+    public int read(int index) {
         if (index >= this.size() || index < 0)
             throw new IndexOutOfBoundsException();
         return Byte.toUnsignedInt(data[index]);
     }
     
+    /**
+     * Writes given value at given index
+     * @param index
+     * @param value
+     * @throws IndexOutOfBoundsException
+     */
     public void write(int index, int value) {
         if (index >= this.size() || index < 0)
             throw new IndexOutOfBoundsException();
