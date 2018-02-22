@@ -47,8 +47,9 @@ public final class RamController implements Component {
     
     @Override
     public int read(int address) {
+        Preconditions.checkBits16(address);
         if (isInBound(address)) {
-            return(ram.read(address));
+            return(ram.read(address-startAddress));
         }
         else {
             return Component.NO_DATA;
@@ -57,8 +58,11 @@ public final class RamController implements Component {
 
     @Override
     public void write(int address, int data) {
+        Preconditions.checkBits16(address);
+        Preconditions.checkBits8(data);
+        
         if (isInBound(address)) {
-            ram.write(address, data);
+            ram.write(address-startAddress, data);
         }
     }
     
