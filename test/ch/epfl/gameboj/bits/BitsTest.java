@@ -1,3 +1,5 @@
+package ch.epfl.gameboj.bits;
+
 // Gameboj stage 1
 
 
