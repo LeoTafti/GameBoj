@@ -6,7 +6,6 @@
 package ch.epfl.gameboj;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.Objects;
 
 import ch.epfl.gameboj.component.Component;
