@@ -10,6 +10,7 @@ public final class RamController implements Component {
     private int startAddress, endAddress;
     private Ram ram;
     
+    
     public RamController(Ram ram, int startAddress, int endAddress) {
         Preconditions.checkBits16(startAddress);
         Preconditions.checkBits16(endAddress);
@@ -24,7 +25,7 @@ public final class RamController implements Component {
     }
     
     public RamController(Ram ram, int startAddress) {
-        this(ram, startAddress, startAddress + ram.size()); //TODO : think about edge cases
+        this(ram, startAddress, startAddress + ram.size());
     }
     
     @Override
