@@ -10,7 +10,14 @@ public final class RamController implements Component {
     private int startAddress, endAddress;
     private Ram ram;
     
-    
+    /**
+     * Constructs controller for given ram, giving access between startAddress (inclusive) and endAddress (exclusive)
+     * @param ram memory to access
+     * @param startAddress (inclusive)
+     * @param endAddress (exclusive)
+     * @throws IllegalArgumentExcepetion if both addresses aren't 16 bits or if address interval is negative, or if address interval
+     * bigger than ram's size
+     */
     public RamController(Ram ram, int startAddress, int endAddress) {
         Preconditions.checkBits16(startAddress);
         Preconditions.checkBits16(endAddress);
@@ -24,6 +31,11 @@ public final class RamController implements Component {
         this.ram = Objects.requireNonNull(ram);
     }
     
+    /**
+     * Constructs controller for given ram, giving access to totality of ram's memory starting at startAddress
+     * @param ram memory to access
+     * @param startAddress (inclusive)
+     */
     public RamController(Ram ram, int startAddress) {
         this(ram, startAddress, startAddress + ram.size());
     }
