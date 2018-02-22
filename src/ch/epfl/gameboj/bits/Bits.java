@@ -12,7 +12,7 @@ import ch.epfl.gameboj.Preconditions;
 public final class Bits {
     
     /**
-     * non-instanciable class **** * * * 
+     * non-instaniable class
      */
     private Bits() {};
     
