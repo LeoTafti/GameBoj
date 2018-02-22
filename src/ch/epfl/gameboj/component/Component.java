@@ -12,7 +12,7 @@ public interface Component {
     
     /**
      * Returns byte stored at given address or NO_DATA if the component has no value at given address
-     * @param address
+     * @param address read location
      * @return byte or NO_DATA
      * @throws IllegalArgumentException if address isn't a 16 bits value
      */
