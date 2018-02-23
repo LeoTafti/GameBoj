@@ -5,6 +5,7 @@
 
 package ch.epfl.gameboj.component.cpu;
 
+import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.bits.Bit;
 import ch.epfl.gameboj.bits.Bits;
 
@@ -58,6 +59,7 @@ public final class Alu {
     }
     
     private static int packValueZNHC(int v,boolean z, boolean n, boolean h, boolean c) {
+        Preconditions.checkBits16(v);
         int packed = v << 8;
         packed = Bits.set(packed, Flag.Z.index(), z);
         packed = Bits.set(packed, Flag.N.index(), n);
