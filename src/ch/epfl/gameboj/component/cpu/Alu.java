@@ -51,15 +51,31 @@ public final class Alu {
     
     /**
      * unpacks value form given int
-     * @param valueFlags int in which flags are packed
+     * @param valueFlags int in which value is packed
      * @return unpacked value
      */
     public static int unpackValue(int valueFlags) {
         return Bits.extract(valueFlags, 8, 16);
     }
     
+    /**
+     * unpacks flags from given int
+     * @param valueFlags int in which flags are packed
+     * @return unpacked flags
+     */
+    public static int unpackFlags(int valueFlags) {
+        return Bits.extract(valueFlags, 0, 8);
+    }
     
-    
+    /**
+     * TODO : add documentation
+     * @param v
+     * @param z
+     * @param n
+     * @param h
+     * @param c
+     * @return
+     */
     private static int packValueZNHC(int v,boolean z, boolean n, boolean h, boolean c) {
         Preconditions.checkBits16(v);
         int packed = v << 8;
