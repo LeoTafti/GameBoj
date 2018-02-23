@@ -55,7 +55,7 @@ public final class Alu {
      * @return unpacked value
      */
     public static int unpackValue(int valueFlags) {
-        return valueFlags >> 8;
+        return Bits.clip(16, valueFlags);
     }
     
     private static int packValueZNHC(int v,boolean z, boolean n, boolean h, boolean c) {
@@ -65,19 +65,6 @@ public final class Alu {
         packed = Bits.set(packed, Flag.N.index(), n);
         packed = Bits.set(packed, Flag.H.index(), h);
         packed = Bits.set(packed, Flag.C.index(), c);
-        
-//        if(z) {
-//            packed = packed | Flag.Z.mask();
-//        }
-//        if(n) {
-//            packed = packed | Flag.N.mask();
-//        }
-//        if(h) {
-//            packed = packed | Flag.H.mask();
-//        }
-//        if(c) {
-//            packed = packed | Flag.C.mask();
-//        }
         
         return packed;
     }
