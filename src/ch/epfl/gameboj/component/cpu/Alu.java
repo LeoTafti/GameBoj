@@ -55,7 +55,7 @@ public final class Alu {
      * @return unpacked value
      */
     public static int unpackValue(int valueFlags) {
-        return Bits.extract(valueFlags, 8, 24);
+        return Bits.extract(valueFlags, 8, 16);
     }
     
     

@@ -86,8 +86,7 @@ public final class Bits {
         return clipped;
     }
     /**
-     * Extracts required number of bits from 
-     *      designated start location in original bit-string
+     * Extracts required number of bits from start location (inclusive) to start+size (exclusive) in bits
      * @param bits original bit-string
      * @param start least significant extracted bit
      * @param size number of bits to be extracted
