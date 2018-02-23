@@ -55,8 +55,10 @@ public final class Alu {
      * @return unpacked value
      */
     public static int unpackValue(int valueFlags) {
-        return Bits.clip(16, valueFlags);
+        return Bits.extract(valueFlags, 8, 24);
     }
+    
+    
     
     private static int packValueZNHC(int v,boolean z, boolean n, boolean h, boolean c) {
         Preconditions.checkBits16(v);
