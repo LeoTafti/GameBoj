@@ -68,13 +68,43 @@ public final class Alu {
     }
     
     /**
-     * TODO : add documentation
-     * @param v
-     * @param z
-     * @param n
-     * @param h
-     * @param c
-     * @return
+     * Adds to 8 bits value, and an eventual carry
+     * @param l the first 8 bits value
+     * @param r the second 8 bits value
+     * @param c0 the carry
+     * @return packed int of sum and flags (sum may have been cropped)
+     * @throws IllegalArgumentException if l or r isn't an 8 bits value
+     */
+    public static int add(int l, int r, boolean c0) {
+        Preconditions.checkBits8(l);
+        Preconditions.checkBits8(r);
+        
+        int sum = l + r;
+        if(c0) {
+            sum += 1;
+        }
+        
+        boolean h = (Bits.test(sum, 4) != Bits.test(l, 4) & Bits.test(r, 4)); //avoids clipping and adding 4bits value "again"
+        boolean c = l + r > 0xFF;
+        
+        if(c) {
+            Bits.set(sum, 8, false); //crops the result (to simulate overflow)
+        }
+        
+        boolean z = (sum == 0);
+        
+        return packValueZNHC(sum, z, false, h, c);
+    }
+    
+    /**
+     * Packs value and flags in a single int
+     * @param v value, 8 or 16 bits
+     * @param z Z flag
+     * @param n N flag
+     * @param h H flag
+     * @param c C flag
+     * @return int of packed values
+     * @throws IllegalArgumentException if v isn't a 16 bits value
      */
     private static int packValueZNHC(int v,boolean z, boolean n, boolean h, boolean c) {
         Preconditions.checkBits16(v);
