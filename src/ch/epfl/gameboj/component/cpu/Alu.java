@@ -97,6 +97,23 @@ public final class Alu {
     }
     
     /**
+     * Adds to 8 bits value, no carry
+     * @param l the first 8 bits value
+     * @param r the second 8 bits value
+     * @return packed int of sum and flags (sum may have been cropped)
+     * @throws IllegalArgumentException if l or r isn't an 8 bits value
+     * @see Alu#add(int l, int r, boolean c0)
+     */
+    public static int add(int l, int r) {
+        return add(l, r, false);
+    }
+    
+    
+    
+    
+    
+    
+    /**
      * Packs value and flags in a single int
      * @param v value, 8 or 16 bits
      * @param z Z flag
