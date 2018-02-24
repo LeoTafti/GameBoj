@@ -80,7 +80,7 @@ public final class Alu {
         Preconditions.checkBits8(l);
         Preconditions.checkBits8(r);
         
-        int carry = c0 ? 0 : 1;
+        int carry = c0 ? 1 : 0;
         int sum = l + r + carry;
         
         boolean h = getHFlag(l, r, c0);
@@ -93,6 +93,7 @@ public final class Alu {
         
         boolean z = getZFlag(sum);
         
+        System.out.println(sum + " , " + z + " , " + false + " , " + h + " , " + c);
         return packValueZNHC(sum, z, false, h, c);
     }
     
@@ -179,7 +180,7 @@ public final class Alu {
      * @return int of packed values
      * @throws IllegalArgumentException if v isn't a 16 bits value
      */
-    private static int packValueZNHC(int v,boolean z, boolean n, boolean h, boolean c) {
+    public static int packValueZNHC(int v,boolean z, boolean n, boolean h, boolean c) {
         Preconditions.checkBits16(v);
         int packed = v << 8;
         packed = Bits.set(packed, Flag.Z.index(), z);
@@ -197,14 +198,14 @@ public final class Alu {
         //TODO : ask TA's if better/more efficient method than clipping and adding "again"
         //to get H-Flag
         
-        int carry = c0 ? 0 : 1;
+        int carry = c0 ? 1 : 0;
         int l4 = Bits.clip(4, l);
         int r4 = Bits.clip(4, r);
         
         return(l4 + r4 + carry > 0xF);
     }
     private static boolean getCFlag(int l, int r, boolean c0) {
-        int carry = c0 ? 0 : 1;
+        int carry = c0 ? 1 : 0;
         return (l + r + carry > 0xFF);
     }
     
