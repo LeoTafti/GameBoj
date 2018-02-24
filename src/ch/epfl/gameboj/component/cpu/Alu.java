@@ -160,8 +160,9 @@ public final class Alu {
         boolean h = getHFlag(l8H, r8H, false);
         boolean c = getCFlag(l8H, r8H, false);
         
-        Bits.set(valueFlags, Flag.H.index(), h);
-        Bits.set(valueFlags, Flag.C.index(), c);
+        valueFlags = Bits.set(valueFlags, Flag.H.index(), h);
+        valueFlags = Bits.set(valueFlags, Flag.C.index(), c);
+        
         
         return valueFlags;
     }
