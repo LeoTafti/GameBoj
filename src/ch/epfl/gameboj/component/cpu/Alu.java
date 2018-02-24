@@ -135,8 +135,6 @@ public final class Alu {
             sum = Bits.set(sum, 16, false); //crops the result (to simulate overflow)
         }
         
-        //TODO : Ask – project guidelines says to return flags 00HC
-        //Why can't Z be true ? Why don't we compute Z ?
         return packValueZNHC(sum, false, false, h, c);
     }
     
