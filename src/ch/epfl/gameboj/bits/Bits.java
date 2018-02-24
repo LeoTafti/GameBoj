@@ -12,7 +12,7 @@ import ch.epfl.gameboj.Preconditions;
 public final class Bits {
     
     /**
-     * non-instaniable class
+     * non-instantiable class
      */
     private Bits() {};
     
@@ -20,9 +20,10 @@ public final class Bits {
      * creates bit-string with single one at given index
      * @param index required position of the 1 bit
      * @return bit-string
+     * @throws IndexOutOfBoundsException if index is out-of-bound
      */
     static public int mask(int index) {
-        Objects.checkIndex(index, 32);
+        Objects.checkIndex(index, Integer.SIZE);
         return (int) Math.round(Math.pow(2, index));
     }
     /**
@@ -30,42 +31,40 @@ public final class Bits {
      * @param bits bit-string
      * @param index position of tested bit
      * @return True if given bit is 1, False if 0 
+     * @throws IndexOutOfBoundsException if index is out-of-bound
      */
     static public boolean test(int bits, int index) {
-        Objects.checkIndex(index, 32);
-        int verifier = bits & mask(index);
-        return (verifier != 0);
+        Objects.checkIndex(index, Integer.SIZE);
+        return ((bits & mask(index)) != 0);
     }
     /**
      * Verifies if bit at index is 1
      * @param bits bit-string
      * @param index position of tested bit
      * @return True if given bit is 1, False if 0 
+     * @throws IndexOutOfBoundsException if index is out-of-bound
+     * @see Bits#test(int bits, int index)
      */
     static public boolean test(int bits, Bit bit) {
-        int index = bit.index();
-        return ( (bits & mask(index)) != 0);
+        return test(bits, bit.index());
     }
     
     /**
-     * Sets given bit to given value
+     * Sets bit at given index to given value
      * @param bits original bit-string
      * @param index position of change
      * @param newValue True for 1 False for 0
-     * @return original bit-String with set index-bit to given value
+     * @return modified bit-string
+     * @throws IndexOutOfBoundsException if index is out-of-bound
      */
     static public int set(int bits, int index, boolean newValue) {
-        Objects.checkIndex(index, 32);
-        int requiredBits = bits;
-        if (newValue) { //if set to 1
-            if ( !test(bits, index) ) { //if is 0
-                requiredBits = bits + mask(index); }}
-        else { //if set to 0
-            if (test(bits, index)) { //if a 1
-                requiredBits = bits - mask(index);
-            }
+        Objects.checkIndex(index, Integer.SIZE);
+        if (newValue) {
+            return(bits | mask(index));
         }
-        return requiredBits;
+        else {
+            return(bits & ~mask(index));
+        }
     }
     
     
@@ -74,12 +73,13 @@ public final class Bits {
      * @param size number of bits to be kept
      * @param bits original bit string
      * @return clipped bit-string
+     * @throws IllegalArgumentException if size isn't between 0 (inclusive) and 32 (inclusive)
      */
     static public int clip(int size, int bits) {
-        Preconditions.checkArgument(size >= 0 && size <= 32);
+        Preconditions.checkArgument(size >= 0 && size <= Integer.SIZE);
         
         int clipped = 0;
-        for (int index = 0 ; index< size ; index++) {
+        for (int index = 0 ; index < size ; index++) {
             if (test(bits, index))
                 clipped += mask(index);
         }
@@ -91,9 +91,10 @@ public final class Bits {
      * @param start least significant extracted bit
      * @param size number of bits to be extracted
      * @return bit string with extracted bits as least-significant sequence
+     * @throws IndexOutOfBoundsException if interval designated by start and size isn't valid
      */
     static public int extract(int bits, int start, int size) {
-        Objects.checkFromIndexSize(start, size, 32);
+        Objects.checkFromIndexSize(start, size, Integer.SIZE);
         int extract = bits >>> start;
         return clip(size, extract);
     }
@@ -105,9 +106,11 @@ public final class Bits {
      * @param bits original bit-string
      * @param distance number of rotations (+ for leftwards, - for rightwards)
      * @return original bit-string with size least significant bits rotated by distance;
+     * @throws IllegalArgumentException if size isn't between 0 (exclusive) and 32 (inclusive)
+     *      or if bits isn't a size-bits value
      */
     static public int rotate(int size, int bits, int distance) {
-        Preconditions.checkArgument(size > 0 & size <= 32);
+        Preconditions.checkArgument(size > 0 & size <= Integer.SIZE);
         
         int clipped = clip(size, bits);
         
@@ -121,9 +124,10 @@ public final class Bits {
     
     /**
      * extends sign (0 for + ; 1 for - ) of byte to remaining most significant 32-8bits
-     * @param bites original byte
+     * @param bits original byte
      * @return 24 most significant bits of value 0 or 1 
      *      and original byte as least significant 8 bits 
+     * @throws IllegalArgumentException if bits isn't an 8-bits value
      */
     static public int signExtend8(int bits) {
         Preconditions.checkBits8(bits);
@@ -136,6 +140,7 @@ public final class Bits {
      * reverses 8 least significant bits (0 -> 7 , 1 -> 6 ...)
      * @param bits original byte    
      * @return  reversed byte
+     * @throws IllegalArgumentException if bits isn't an 8-bits value
      */
     static public int reverse8(int bits) {
         Preconditions.checkBits8(bits);
@@ -180,6 +185,7 @@ public final class Bits {
      * complement of byte
      * @param original byte
      * @return bitwise complement of given byte
+     * @throws IllegalArgumentException if bits isn't an 8-bits value
      */
     static public int complement8(int bits) {
         Preconditions.checkBits8(bits);
@@ -187,10 +193,11 @@ public final class Bits {
     }
     
     /**
-     * constructs 16 bit bit-string concatenating two bytes
+     * constructs 16 bits bit-string concatenating two bytes
      * @param highB most significant byte of returned bit-string
      * @param lowB least significant byte or returned bit-string
      * @return 16 bit bit-string
+     * @throws IllegalArgumentException if highB or lowB aren't 8-bits values
      */
     static public int make16(int highB, int lowB) {
         Preconditions.checkBits8(highB);
