@@ -85,10 +85,11 @@ public final class Alu {
         
         boolean h = getHFlag(l, r, c0);
         boolean c = getCFlag(l, r, c0);
+        //TODO : not optimal, getCFlag() calculates sum again...
         
         //TODO : ask if needed (but probably yes);
         if(c) {
-            Bits.set(sum, 8, false); //crops the result (to simulate overflow)
+            sum = Bits.set(sum, 8, false); //crops the result (to simulate overflow)
         }
         
         boolean z = getZFlag(sum);
@@ -131,7 +132,7 @@ public final class Alu {
         boolean c = getCFlag(l8L, r8L, false);
         
         if(sum > 0xFFFF) {
-            Bits.set(sum, 16, false); //crops the result (to simulate overflow)
+            sum = Bits.set(sum, 16, false); //crops the result (to simulate overflow)
         }
         
         //TODO : Ask – project guidelines says to return flags 00HC
@@ -179,7 +180,7 @@ public final class Alu {
      * @return int of packed values
      * @throws IllegalArgumentException if v isn't a 16 bits value
      */
-    public static int packValueZNHC(int v,boolean z, boolean n, boolean h, boolean c) {
+    private static int packValueZNHC(int v,boolean z, boolean n, boolean h, boolean c) {
         Preconditions.checkBits16(v);
         int packed = v << 8;
         packed = Bits.set(packed, Flag.Z.index(), z);
