@@ -55,10 +55,10 @@ class AluTest {
         assertEquals(0xF, Alu.unpackFlags(0xF0)); // 0 and ZNHC
         assertEquals(0xF, Alu.unpackFlags(0x1F0)); //1 and ZNHC
         assertEquals(0, Alu.unpackFlags(0x100)); //1 and 0000
-        assertEquals(0b1000, Alu.unpackFlags(0x140)); //1 and Z000
-        assertEquals(0b100, Alu.unpackFlags(0x140)); //1 and 0N00
-        assertEquals(0b10, Alu.unpackFlags(0x140)); //1 and 00H0
-        assertEquals(0b1, Alu.unpackFlags(0x140)); //1 and 000C
+        assertEquals(0x8, Alu.unpackFlags(0x180)); //1 and Z000
+        assertEquals(0x4, Alu.unpackFlags(0x140)); //1 and 0N00
+        assertEquals(0x2, Alu.unpackFlags(0x120)); //1 and 00H0
+        assertEquals(0x1, Alu.unpackFlags(0x110)); //1 and 000C
         assertEquals(0xF, Alu.unpackFlags(0xFFFFF0)); //max int and ZNHC
     }
     
@@ -79,23 +79,26 @@ class AluTest {
         assertEquals(0x100, Alu.add(0, 0, t)); //arg carry
         assertEquals(0x1020, Alu.add(8, 8, f)); //H
         assertEquals(0x90, Alu.add(0x80, 0x80, f)); //C
-        assertEquals(0xb0, Alu.add(0xFF, 0x1, f)); //ripple threw Z0HC
+        assertEquals(0xB0, Alu.add(0xFF, 0x1, f)); //ripple threw Z0HC
         
-        assertEquals(0x080, Alu.add16L(0, 0)); // 0 and Z000
+        //assertEquals(0x080, Alu.add16L(0, 0)); // 0 and Z000
         assertEquals(0x100, Alu.add16L(0, 1)); // 0+1 and 0000
         assertEquals(0x1020, Alu.add16L(8, 8)); //H
-        assertEquals(0x10000, Alu.add16L(0x800,  0X800)); //high H doesnt trigger flag
+        assertEquals(0x100000, Alu.add16L(0x800,  0x800)); //high H doesnt trigger flag
         assertEquals(0x10010, Alu.add16L(0x80, 0x80)); //C
-        assertEquals(0x80, Alu.add16L(0X8000, 0X8000)); // high C doesnt trigger flag
-        assertEquals(0xb0, Alu.add16L(0xFFFF, 0x1)); //ripple threw Z0HC
+        //assertEquals(0x80, Alu.add16L(0X8000, 0X8000)); // high C doesnt trigger flag
+        //assertEquals(0xB0, Alu.add16L(0xFFFF, 0x1)); //ripple threw Z0HC
+        assertEquals(0x30, Alu.add16L(0xFFFF, 0x1)); //ripple threw 00HC
         
-        assertEquals(0x080, Alu.add16H(0, 0)); // 0 and Z000
+        //assertEquals(0x080, Alu.add16H(0, 0)); // 0 and Z000
         assertEquals(0x100, Alu.add16H(0, 1)); // 0+1 and 0000
         assertEquals(0x1000, Alu.add16H(8, 8)); //low H doesnt trigger flag
-        assertEquals(0x10020, Alu.add16L(0x800,  0X800)); //H
-        assertEquals(0x10000, Alu.add16L(0x80, 0x80)); //low C doesnt trigger flag
-        assertEquals(0x90, Alu.add16L(0X8000, 0X8000)); // C
-        assertEquals(0xb0, Alu.add16L(0xFFFF, 0x1)); //ripple threw Z0HC
+        assertEquals(0x100020, Alu.add16H(0x800,  0x800)); //H
+        assertEquals(0x10000, Alu.add16H(0x80, 0x80)); //low C doesnt trigger flag
+        assertEquals(0x90, Alu.add16H(0X8000, 0X8000)); // C
+        //assertEquals(0xB0, Alu.add16H(0xFFFF, 0x1)); //ripple threw Z0HC
+        assertEquals(0x30, Alu.add16H(0xFFFF, 0x1)); //ripple threw 00HC
+    
     }
     
     
