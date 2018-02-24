@@ -23,7 +23,6 @@ class AluTest {
         assertEquals(0x20, Alu.maskZNHC(f, f, t, f));
         assertEquals(0x40, Alu.maskZNHC(f, t, f, f));
         assertEquals(0x80, Alu.maskZNHC(t, f, f, f));
-        
     }
     
 //    @Test
