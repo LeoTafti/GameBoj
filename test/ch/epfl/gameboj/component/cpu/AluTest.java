@@ -82,22 +82,18 @@ class AluTest {
         assertEquals(0x90, Alu.add(0x80, 0x80, f)); //C
         assertEquals(0xB0, Alu.add(0xFF, 0x1, f)); //ripple threw Z0HC
         
-        //assertEquals(0x080, Alu.add16L(0, 0)); // 0 and Z000
         assertEquals(0x100, Alu.add16L(0, 1)); // 0+1 and 0000
         assertEquals(0x1020, Alu.add16L(8, 8)); //H
         assertEquals(0x100000, Alu.add16L(0x800,  0x800)); //high H doesnt trigger flag
         assertEquals(0x10010, Alu.add16L(0x80, 0x80)); //C
-        //assertEquals(0x80, Alu.add16L(0X8000, 0X8000)); // high C doesnt trigger flag
-        //assertEquals(0xB0, Alu.add16L(0xFFFF, 0x1)); //ripple threw Z0HC
+        assertEquals(0x00, Alu.add16L(0X8000, 0X8000)); // high C doesnt trigger flag
         assertEquals(0x30, Alu.add16L(0xFFFF, 0x1)); //ripple threw 00HC
         
-        //assertEquals(0x080, Alu.add16H(0, 0)); // 0 and Z000
         assertEquals(0x100, Alu.add16H(0, 1)); // 0+1 and 0000
         assertEquals(0x1000, Alu.add16H(8, 8)); //low H doesnt trigger flag
         assertEquals(0x100020, Alu.add16H(0x800,  0x800)); //H
         assertEquals(0x10000, Alu.add16H(0x80, 0x80)); //low C doesnt trigger flag
-        //assertEquals(0x90, Alu.add16H(0X8000, 0X8000)); // C
-        //assertEquals(0xB0, Alu.add16H(0xFFFF, 0x1)); //ripple threw Z0HC
+        assertEquals(0x10, Alu.add16H(0X8000, 0X8000)); // C
         assertEquals(0x30, Alu.add16H(0xFFFF, 0x1)); //ripple threw 00HC
     
         
