@@ -64,7 +64,7 @@ public final class Alu {
      * @return unpacked flags
      */
     public static int unpackFlags(int valueFlags) {
-        return Bits.extract(valueFlags, 4, 8);
+        return Bits.extract(valueFlags, 4, 4);
     }
     
     /**
@@ -166,6 +166,77 @@ public final class Alu {
         return valueFlags;
     }
     
+    public static int sub(int l, int r, boolean b0) {
+        
+    }
+    
+    public static int sub(int l, int r) {
+        
+    }
+    
+    public static int bcdAdjust(int v, boolean n, boolean h, boolean c) {
+        
+    }
+    
+    public static int and(int l, int r) {
+        Preconditions.checkBits8(l);
+        Preconditions.checkBits8(r);
+        
+        int res = l & r;
+        
+        return packValueZNHC(res, getZFlag(res), false, true, false);
+    }
+    
+    public static int or(int l, int r) {
+        Preconditions.checkBits8(l);
+        Preconditions.checkBits8(r);
+        
+        int res = l | r;
+        
+        return packValueZNHC(res, getZFlag(res), false, false, false);
+    }
+    
+    public static int xor(int l, int r) {
+        Preconditions.checkBits8(l);
+        Preconditions.checkBits8(r);
+        
+        int res = l ^ r;
+        
+        return packValueZNHC(res, getZFlag(res), false, false, false);
+    }
+    
+    public static int shiftLeft(int v) {
+        Preconditions.checkBits8(v);
+        
+        boolean c = (v >>> 7) == 1 ? true : false;
+        int res = v << 1;
+        
+        return packValueZNHC(res, getZFlag(res), false, false, c);
+    }
+    
+    public static int shiftRightA(int v) {
+        
+    }
+    
+    public static int shiftRightL(int v) {
+        
+    }
+    
+    public static int rotate(RotDir d, int v) {
+        
+    }
+    
+    public static int rotate(RotDir d, int v, boolean c) {
+        
+    }
+    
+    public static int swap(int v) {
+        
+    }
+    
+    public static int testBit(int v, int bitIndex) {
+        
+    }
     
     
     
