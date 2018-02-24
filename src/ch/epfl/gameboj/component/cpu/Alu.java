@@ -180,7 +180,7 @@ public final class Alu {
      * @return int of packed values
      * @throws IllegalArgumentException if v isn't a 16 bits value
      */
-    public static int packValueZNHC(int v,boolean z, boolean n, boolean h, boolean c) {
+    private static int packValueZNHC(int v,boolean z, boolean n, boolean h, boolean c) {
         Preconditions.checkBits16(v);
         int packed = v << 8;
         packed = Bits.set(packed, Flag.Z.index(), z);
