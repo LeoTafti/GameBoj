@@ -93,7 +93,6 @@ public final class Alu {
         
         boolean z = getZFlag(sum);
         
-        System.out.println(sum + " , " + z + " , " + false + " , " + h + " , " + c);
         return packValueZNHC(sum, z, false, h, c);
     }
     
@@ -180,7 +179,7 @@ public final class Alu {
      * @return int of packed values
      * @throws IllegalArgumentException if v isn't a 16 bits value
      */
-    private static int packValueZNHC(int v,boolean z, boolean n, boolean h, boolean c) {
+    public static int packValueZNHC(int v,boolean z, boolean n, boolean h, boolean c) {
         Preconditions.checkBits16(v);
         int packed = v << 8;
         packed = Bits.set(packed, Flag.Z.index(), z);
