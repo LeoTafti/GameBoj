@@ -208,26 +208,61 @@ public final class Alu {
     public static int shiftLeft(int v) {
         Preconditions.checkBits8(v);
         
-        boolean c = (v >>> 7) == 1 ? true : false;
+        boolean c = Bits.test(v, 7);
         int res = v << 1;
         
         return packValueZNHC(res, getZFlag(res), false, false, c);
     }
     
     public static int shiftRightA(int v) {
+        Preconditions.checkBits8(v);
         
+        boolean c = Bits.test(v, 0);
+        int res = v >> 1;
+        
+        return packValueZNHC(res, getZFlag(res), false, false, c);
     }
     
     public static int shiftRightL(int v) {
+        Preconditions.checkBits8(v);
         
+        boolean c = Bits.test(v, 0);
+        int res = v >>> 1;
+        
+        return packValueZNHC(res, getZFlag(res), false, false, c);
     }
     
     public static int rotate(RotDir d, int v) {
+        Preconditions.checkBits8(v);
+        
+        boolean c = false;
+        int res = 0;
+        
+        if(d == RotDir.LEFT) {
+            c = Bits.test(v, 7);
+            res = Bits.rotate(8, v, 1);
+        }
+        else {
+            c = Bits.test(v, 0);
+            res = Bits.rotate(8, v, -1);
+        }
+        
+        return packValueZNHC(res, getZFlag(res), false, false, c);
         
     }
     
     public static int rotate(RotDir d, int v, boolean c) {
+        Preconditions.checkBits8(v);
         
+        int res = 0;
+        res = Bits.set(v, 8, c);
+        res = Bits.rotate(9, res, 1);
+        
+        boolean newC = Bits.test(res, 8);
+        
+        res = Bits.clip(8, res);
+        
+        return packValueZNHC(res, getZFlag(res), false, false, newC);
     }
     
     public static int swap(int v) {
