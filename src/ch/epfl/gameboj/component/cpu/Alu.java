@@ -26,7 +26,7 @@ public final class Alu {
      * C : carry
      */
     public enum Flag implements Bit{
-        UNUSED_0, UNUSED_1, UNUSED_2, UNUSED_3, Z, N, H, C;
+        UNUSED_0, UNUSED_1, UNUSED_2, UNUSED_3, C, H, N, Z;
     }
     
     /**
@@ -64,7 +64,7 @@ public final class Alu {
      * @return unpacked flags
      */
     public static int unpackFlags(int valueFlags) {
-        return Bits.extract(valueFlags, 0, 8);
+        return Bits.extract(valueFlags, 4, 8);
     }
     
     /**
