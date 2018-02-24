@@ -262,6 +262,7 @@ public final class Alu {
         
         res = Bits.clip(8, res);
         
+        
         return packValueZNHC(res, getZFlag(res), false, false, newC);
     }
     
