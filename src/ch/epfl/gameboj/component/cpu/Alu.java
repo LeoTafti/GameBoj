@@ -72,35 +72,36 @@ public final class Alu {
      * @param l the first 8 bits value
      * @param r the second 8 bits value
      * @param c0 the carry
-     * @return packed int of sum and flags (sum may have been cropped)
+     * @return packed int of sum and flags Z0HC
+     *      (sum may have been cropped)
      * @throws IllegalArgumentException if l or r isn't an 8 bits value
      */
     public static int add(int l, int r, boolean c0) {
         Preconditions.checkBits8(l);
         Preconditions.checkBits8(r);
         
-        int sum = l + r;
-        if(c0) {
-            sum += 1;
-        }
+        int carry = c0 ? 0 : 1;
+        int sum = l + r + carry;
         
-        boolean h = (Bits.test(sum, 4) != Bits.test(l, 4) & Bits.test(r, 4)); //avoids clipping and adding 4bits value "again"
-        boolean c = l + r > 0xFF;
+        boolean h = getHFlag(l, r, c0);
+        boolean c = getCFlag(l, r, c0);
         
+        //TODO : ask if needed (but probably yes);
         if(c) {
             Bits.set(sum, 8, false); //crops the result (to simulate overflow)
         }
         
-        boolean z = (sum == 0);
+        boolean z = getZFlag(sum);
         
         return packValueZNHC(sum, z, false, h, c);
     }
     
     /**
-     * Adds to 8 bits value, no carry
+     * Adds two 8 bits value, no carry
      * @param l the first 8 bits value
      * @param r the second 8 bits value
-     * @return packed int of sum and flags (sum may have been cropped)
+     * @return packed int of sum and flags Z0HC
+     *      (sum may have been cropped)
      * @throws IllegalArgumentException if l or r isn't an 8 bits value
      * @see Alu#add(int l, int r, boolean c0)
      */
@@ -108,6 +109,61 @@ public final class Alu {
         return add(l, r, false);
     }
     
+    /**
+     * Adds two 16 bits value
+     * @param l the first 16 bits value
+     * @param r the second 16 bits value
+     * @return packed int of sum and flags 00HC
+     *      H, C determined by the addition of the 8 LSB of l and r
+     *      (sum may have been cropped)
+     * @throws IllegalArgumentException if l or r aren't 16 bits values
+     */
+    public static int add16L(int l, int r) {
+        Preconditions.checkBits16(l);
+        Preconditions.checkBits16(r);
+        
+        int sum = l+r;
+        
+        int l8L = Bits.clip(8, l);
+        int r8L = Bits.clip(8, r);
+        
+        boolean h = getHFlag(l8L, r8L, false);
+        boolean c = getCFlag(l8L, r8L, false);
+        
+        if(sum > 0xFFFF) {
+            Bits.set(sum, 16, false); //crops the result (to simulate overflow)
+        }
+        
+        //TODO : Ask – project guidelines says to return flags 00HC
+        //Why can't Z be true ? Why don't we compute Z ?
+        return packValueZNHC(sum, false, false, h, c);
+    }
+    
+    /**
+     * Adds two 16 bits value
+     * @param l the first 16 bits value
+     * @param r the second 16 bits value
+     * @return packed int of sum and flags 00HC
+     *      H, C determined by the addition of the 8 MSB of l and r
+     *      (sum may have been cropped)
+     * @throws IllegalArgumentException if l or r aren't 16 bits values
+     * @see Alu#add16L(int l, int r)
+     */
+    public static int add16H(int l, int r) {
+        //TODO : better to reuse add16L() or copy add16L() code and change flags-related portion ?
+        int valueFlags = add16L(l, r);
+        
+        int l8H = Bits.extract(l, 8, 8);
+        int r8H = Bits.extract(r, 8, 8);
+        
+        boolean h = getHFlag(l8H, r8H, false);
+        boolean c = getCFlag(l8H, r8H, false);
+        
+        Bits.set(valueFlags, Flag.H.index(), h);
+        Bits.set(valueFlags, Flag.C.index(), c);
+        
+        return valueFlags;
+    }
     
     
     
@@ -134,5 +190,22 @@ public final class Alu {
         return packed;
     }
     
+    private static boolean getZFlag(int n) {
+        return (n == 0);
+    }
+    private static boolean getHFlag(int l, int r, boolean c0) {
+        //TODO : ask TA's if better/more efficient method than clipping and adding "again"
+        //to get H-Flag
+        
+        int carry = c0 ? 0 : 1;
+        int l4 = Bits.clip(4, l);
+        int r4 = Bits.clip(4, r);
+        
+        return(l4 + r4 + carry > 0xF);
+    }
+    private static boolean getCFlag(int l, int r, boolean c0) {
+        int carry = c0 ? 0 : 1;
+        return (l + r + carry > 0xFF);
+    }
     
 }

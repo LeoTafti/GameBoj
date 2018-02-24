@@ -18,7 +18,7 @@ public final class Bits {
     
     /**
      * creates bit-string with single one at given index
-     * @param index required position of the 1 bit
+     * @param index required position of the 1 bit (starts at 0)
      * @return bit-string
      * @throws IndexOutOfBoundsException if index is out-of-bound
      */
@@ -52,7 +52,7 @@ public final class Bits {
     /**
      * Sets bit at given index to given value
      * @param bits original bit-string
-     * @param index position of change
+     * @param index position of change (starts at 0)
      * @param newValue True for 1 False for 0
      * @return modified bit-string
      * @throws IndexOutOfBoundsException if index is out-of-bound
