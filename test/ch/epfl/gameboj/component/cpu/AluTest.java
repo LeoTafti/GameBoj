@@ -70,6 +70,7 @@ class AluTest {
                 () -> Alu.unpackValue(0x1000000)); //17bit int and 0000
         assertThrows(IndexOutOfBoundsException.class, 
                 () -> Alu.unpackFlags(0x1000000)); //17bit int and 0000
+    
     }
     
     @Test
