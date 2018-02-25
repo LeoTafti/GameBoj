@@ -175,6 +175,7 @@ public final class Alu {
      * @param r subtracted byte
      * @param b0 true if initial borrow
      * @return result of subtraction and Z1HC
+     * @throws IllegalArgumentException if l or r aren't 8 bits values
      */
     public static int sub(int l, int r, boolean b0) {
         Preconditions.checkBits8(l);
@@ -195,6 +196,7 @@ public final class Alu {
      * @param l first byte
      * @param r subtracted byte
      * @return result of subtraction and Z1HC
+     * @throws IllegalArgumentException if l or r aren't 8 bits values
      */
     public static int sub(int l, int r) {
         return sub(l, r, false);
@@ -207,6 +209,7 @@ public final class Alu {
      * @param h true if original byte has half-carry/borrow
      * @param c true if original byte has carry/borrow
      * @return byte adjusted to BCD format (value between 0 and 99) and ZN0C
+     * @throws IllegalArgumentException if v isn't 8bit value
      */
     public static int bcdAdjust(int v, boolean n, boolean h, boolean c) {
         Preconditions.checkBits8(v);
@@ -278,7 +281,7 @@ public final class Alu {
         Preconditions.checkBits8(v);
         
         boolean c = Bits.test(v, 7);
-        int res = v << 1;
+        int res = Bits.clip(8, v << 1);
         
         return packValueZNHC(res, getZFlag(res), false, false, c);
     }
@@ -294,8 +297,9 @@ public final class Alu {
         Preconditions.checkBits8(v);
         
         boolean c = Bits.test(v, 0);
-        int res = v >> 1;
-        
+        int res = Bits.clip(8, v >> 1);
+        // TODO TODO must the shift be 'made' arithmetic (adding 1 if most-significant bit was 1)??
+        // using the usual ">>" working on bytes doesn't consider the 8th bit as the most-significant
         return packValueZNHC(res, getZFlag(res), false, false, c);
     }
     
@@ -310,7 +314,7 @@ public final class Alu {
         Preconditions.checkBits8(v);
         
         boolean c = Bits.test(v, 0);
-        int res = v >>> 1;
+        int res = Bits.clip(8, v >>> 1);
         
         return packValueZNHC(res, getZFlag(res), false, false, c);
     }
@@ -370,6 +374,7 @@ public final class Alu {
      * swaps four most-significant bits with 4 least significant bits
      * @param v original byte
      * @return swapped byte and flags Z000
+     * @throws IllegalArgumentException if v isn't 8bit value
      */
     public static int swap(int v) {
         Preconditions.checkBits8(v);
@@ -387,6 +392,8 @@ public final class Alu {
      * @param v byte to be tested
      * @param bitIndex index of tested bit (0 to 7)
      * @return 0-Z010 with Z the truth value of tested bit
+     * @throws IllegalArgumentException if v isn't 8bit value
+     * @throws IndexOutOfBoundsException if bitIndex is not in [0 : 7]
      */
     public static int testBit(int v, int bitIndex) {
         Preconditions.checkBits8(v);
