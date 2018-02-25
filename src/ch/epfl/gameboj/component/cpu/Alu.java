@@ -5,6 +5,8 @@
 
 package ch.epfl.gameboj.component.cpu;
 
+import java.util.Objects;
+
 import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.bits.Bit;
 import ch.epfl.gameboj.bits.Bits;
@@ -167,16 +169,54 @@ public final class Alu {
         return valueFlags;
     }
     
+    /**
+     * subtracts two bytes (with possible initial borrow)
+     * @param l first byte
+     * @param r subtracted byte
+     * @param b0 true if initial borrow
+     * @return result of subtraction and Z1HC
+     */
     public static int sub(int l, int r, boolean b0) {
+        Preconditions.checkBits8(l);
+        Preconditions.checkBits8(r);
         
+        int borrow = b0 ? 1 : 0;
+        int sub = l - r - borrow;
+        
+        boolean H = (Bits.clip(4, l) < Bits.clip(4, r));
+        boolean C = (l < r);
+        
+        return packValueZNHC( sub, getZFlag(sub), true, H, C );
+    
     }
     
+    /**
+     * subtracts two bytes
+     * @param l first byte
+     * @param r subtracted byte
+     * @return result of subtraction and Z1HC
+     */
     public static int sub(int l, int r) {
-        
+        return sub(l, r, false);
     }
     
+    /**
+     * converts given byte to binary coded decimal (BCD) format
+     * @param v original byte
+     * @param n true if conversion is after a subtraction
+     * @param h true if original byte has half-carry/borrow
+     * @param c true if original byte has carry/borrow
+     * @return byte adjusted to BCD format (value between 0 and 99) and ZN0C
+     */
     public static int bcdAdjust(int v, boolean n, boolean h, boolean c) {
+        Preconditions.checkBits8(v);
         
+        // given algorithm adapted to java
+        int fixL = h | (!n & Bits.clip(4, v) > 9)? 1 : 0;
+        int fixH = c | (!n & v > 99 ) ? 1 : 0;
+        int vAdj = n ? v - (0x60*fixH + 6*fixL) : v + (0x60*fixH + 6*fixL);
+        
+        return packValueZNHC(vAdj, getZFlag(vAdj), n, false, (fixH == 1));
     }
     
     /**
@@ -326,12 +366,33 @@ public final class Alu {
         return packValueZNHC(res, getZFlag(res), false, false, newC);
     }
     
+    /**
+     * swaps four most-significant bits with 4 least significant bits
+     * @param v original byte
+     * @return swapped byte and flags Z000
+     */
     public static int swap(int v) {
+        Preconditions.checkBits8(v);
         
+        int vL = Bits.clip(4, v);
+        int vH = Bits.extract(v, 4, 4);
+        
+        int vSwapped = (vL << 4) + vH;
+        
+        return packValueZNHC(vSwapped, getZFlag(vSwapped), false, false, false);
     }
     
+    /**
+     * returns O and flags Z010 where Z is 1 if bit at index is 1
+     * @param v byte to be tested
+     * @param bitIndex index of tested bit (0 to 7)
+     * @return 0-Z010 with Z the truth value of tested bit
+     */
     public static int testBit(int v, int bitIndex) {
+        Preconditions.checkBits8(v);
+        Objects.checkIndex(bitIndex, 8);
         
+        return packValueZNHC( 0, Bits.test(v, bitIndex), false, true, false);
     }
     
     
