@@ -179,6 +179,13 @@ public final class Alu {
         
     }
     
+    /**
+     * Computes bitwise "and" of given values
+     * @param l first value
+     * @param r second value
+     * @return result and flags Z010, packed in an int
+     * @throws IllegalArgumentException if l or r aren't 8-bits values
+     */
     public static int and(int l, int r) {
         Preconditions.checkBits8(l);
         Preconditions.checkBits8(r);
@@ -188,6 +195,13 @@ public final class Alu {
         return packValueZNHC(res, getZFlag(res), false, true, false);
     }
     
+    /**
+     * Computes bitwise "or" of given values
+     * @param l first value
+     * @param r second value
+     * @return result and flags Z000, packed in an int
+     * @throws IllegalArgumentException if l or r aren't 8-bits values
+     */
     public static int or(int l, int r) {
         Preconditions.checkBits8(l);
         Preconditions.checkBits8(r);
@@ -197,6 +211,13 @@ public final class Alu {
         return packValueZNHC(res, getZFlag(res), false, false, false);
     }
     
+    /**
+     * Computes bitwise "xor" of given values
+     * @param l first value
+     * @param r second value
+     * @return result and flags Z000, packed in an int
+     * @throws IllegalArgumentException if l or r aren't 8-bits values
+     */
     public static int xor(int l, int r) {
         Preconditions.checkBits8(l);
         Preconditions.checkBits8(r);
@@ -206,6 +227,13 @@ public final class Alu {
         return packValueZNHC(res, getZFlag(res), false, false, false);
     }
     
+    /**
+     * Shifts given value left by 1 bit
+     * @param v value to shift
+     * @return shifted value and Flags Z00C packed in an int
+     *      C worth the value of the "ejected" bit (true for 1, false for 0)
+     * @throws IllegalArgumentException if v isn't an 8-bits value
+     */
     public static int shiftLeft(int v) {
         Preconditions.checkBits8(v);
         
@@ -215,6 +243,13 @@ public final class Alu {
         return packValueZNHC(res, getZFlag(res), false, false, c);
     }
     
+    /**
+     * Shifts given value right by 1 bit using arithmetic shifting >>
+     * @param v value to shift
+     * @return shifted value and Flags Z00C packed in an int
+     *      C worth the value of the "ejected" bit (true for 1, false for 0)
+     * @throws IllegalArgumentException if v ins't an 8-bts value
+     */
     public static int shiftRightA(int v) {
         Preconditions.checkBits8(v);
         
@@ -224,6 +259,13 @@ public final class Alu {
         return packValueZNHC(res, getZFlag(res), false, false, c);
     }
     
+    /**
+     * Shifts given value right by 1 bit using logic shifting >>>
+     * @param v value to shift
+     * @return shifted value and Flags Z00C packed in an int
+     *      C worth the value of the "ejected" bit (true for 1, false for 0)
+     * @throws IllegalArgumentException if v ins't an 8-bts value
+     */
     public static int shiftRightL(int v) {
         Preconditions.checkBits8(v);
         
@@ -233,6 +275,14 @@ public final class Alu {
         return packValueZNHC(res, getZFlag(res), false, false, c);
     }
     
+    /**
+     * Rotates given value in given direction by 1 bit
+     * @param d rotation direction
+     * @param v value to rotate
+     * @return rotated value and flags Z00C, packed in an int
+     *      C worth the value of the bit which passed from one end to the other
+     * @throws IllegalArgumentException if v ins't an 8-bits value
+     */
     public static int rotate(RotDir d, int v) {
         Preconditions.checkBits8(v);
         
@@ -252,6 +302,15 @@ public final class Alu {
         
     }
     
+    /**
+     * Computes "rotation through carry" by 1 bit
+     * @param d rotation direction
+     * @param v value to rotate
+     * @param c carry
+     * @return rotate value and flags Z00C, packed in an int
+     *      C worth the MSB (index 8) before truncating result to an 8-bits value
+     * @throws IllegalArgumentException if v isn't an 8-bits value
+     */
     public static int rotate(RotDir d, int v, boolean c) {
         Preconditions.checkBits8(v);
         
@@ -298,6 +357,9 @@ public final class Alu {
         
         return packed;
     }
+    
+    
+    //TODO : if these flags-related methods are finally kept, write javadoc for them
     
     private static boolean getZFlag(int n) {
         return (n == 0);
