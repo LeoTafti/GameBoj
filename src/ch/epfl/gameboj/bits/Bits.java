@@ -78,12 +78,12 @@ public final class Bits {
     static public int clip(int size, int bits) {
         Preconditions.checkArgument(size >= 0 && size <= Integer.SIZE);
         
-        int clipped = 0;
-        for (int index = 0 ; index < size ; index++) {
-            if (test(bits, index))
-                clipped += mask(index);
+        if(size == Integer.SIZE) {
+            return bits;
         }
-        return clipped;
+        int mask = (1 << size) - 1;
+        return(bits & mask);
+        
     }
     /**
      * Extracts required number of bits from start location (inclusive) to start+size (exclusive) in bits
