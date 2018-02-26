@@ -181,6 +181,7 @@ public final class Alu {
         
         int borrow = b0 ? 1 : 0;
         int sub = l - r - borrow;
+        sub = Bits.clip(8, sub);
         
         boolean H = (Bits.clip(4, l) < Bits.clip(4, r));
         boolean C = (l < r);
