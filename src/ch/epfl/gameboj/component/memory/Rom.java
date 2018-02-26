@@ -7,8 +7,10 @@ package ch.epfl.gameboj.component.memory;
 
 import java.util.Arrays;
 
+import ch.epfl.gameboj.component.Component;
 
-public final class Rom {
+
+public final class Rom implements Component {
     
     private final byte[] data;
     
@@ -38,5 +40,10 @@ public final class Rom {
         if (index >= this.size() || index < 0)
             throw new IndexOutOfBoundsException();
         return Byte.toUnsignedInt(data[index]);
+    }
+
+    @Override
+    public void write(int address, int data) {
+        //nothing here
     }
 }
