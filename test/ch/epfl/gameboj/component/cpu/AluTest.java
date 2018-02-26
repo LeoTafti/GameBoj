@@ -90,6 +90,7 @@ class AluTest {
         assertEquals(0x10010, Alu.add16L(0x80, 0x80)); //C
         assertEquals(0x00, Alu.add16L(0X8000, 0X8000)); // high C doesnt trigger flag
         assertEquals(0x30, Alu.add16L(0xFFFF, 0x1)); //ripple through 00HC
+        assertEquals(0x120030, Alu.add16L(0x11FF, 0x0001));
         
         assertEquals(0x100, Alu.add16H(0, 1)); // 0+1 and 0000
         assertEquals(0x1000, Alu.add16H(8, 8)); //low H doesnt trigger flag
@@ -98,6 +99,7 @@ class AluTest {
         assertEquals(0x10, Alu.add16H(0X8000, 0X8000)); // C
         assertEquals(0x000030, Alu.add16H(0xFFFF, 0x1)); //ripple through 00HC
         assertEquals(0x100020 , Alu.add16H(0x0FFF, 0x0001));
+        assertEquals(0x120000, Alu.add16H(0x11FF, 0x0001));
         
     }
     
@@ -165,7 +167,7 @@ class AluTest {
         assertEquals(0x90, Alu.shiftLeft(0x80)); //last bit shift Z00C
         assertEquals(0xFE10, Alu.shiftLeft(0xFF)); //full int and C
         assertEquals(0x1000, Alu.shiftLeft(0x8));
-        // TODO must arithmetic shift me 'made' arithmetic???? 
+        
         assertEquals(0x80, Alu.shiftRightA(0)); //0
         assertEquals(0x90, Alu.shiftRightA(1)); //0 Z00C
         assertEquals(0xC000, Alu.shiftRightA(0x80)); //arithmetic shift 1100...
@@ -253,7 +255,7 @@ class AluTest {
     }
     
     @Test
-    void subWorksOnKnownValues() {
+    void subWorksOnValidInput() {
         assertEquals(0x00C0, Alu.sub(0x10, 0x10));
         assertEquals(0x9050, Alu.sub(0x10,  0x80));
         assertEquals(0xFF70, Alu.sub(0x01, 0x01, true));
@@ -264,7 +266,18 @@ class AluTest {
     }
     
     @Test
-    void bcdAdjustWorksOnKnownVlaues() {
+    void subFailsOnInvalidInput() {
+        assertThrows(IllegalArgumentException.class, () -> Alu.sub(0x100, 0x00));
+        assertThrows(IllegalArgumentException.class, () -> Alu.sub(0x00, 0x100));
+    }
+    
+    @Test
+    void bcdAdjustWorksOnValidInput() {
+        
+    }
+    
+    @Test
+    void bcdAdjustFailsOnInvalidInput() {
         
     }
     
