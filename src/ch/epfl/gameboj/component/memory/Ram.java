@@ -9,8 +9,10 @@ import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.component.Component;
 
 public final class Ram implements Component {
+    
     private byte[] data;
 
+    
     /**
      * Constructor
      * @param size of Ram in byte      

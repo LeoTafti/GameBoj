@@ -16,7 +16,10 @@ public class GameBoy {
     private RamController workRamController;
     private RamController echoRamController;
     
-    
+    /**
+     * Constructor
+     * @param cartirdge
+     */
     public GameBoy(Object cartirdge) {
         
         bus = new Bus();

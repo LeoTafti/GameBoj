@@ -14,6 +14,7 @@ public final class Rom implements Component {
     
     private final byte[] data;
     
+    
     /**
      * Constructor
      * @param data final data
