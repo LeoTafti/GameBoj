@@ -183,8 +183,8 @@ public final class Alu {
         int sub = l - r - borrow;
         sub = Bits.clip(8, sub);
         
-        boolean H = (Bits.clip(4, l) < Bits.clip(4, r));
-        boolean C = (l < r);
+        boolean H = (Bits.clip(4, l) < Bits.clip(4, r) + borrow);
+        boolean C = (l < r + borrow);
         
         return packValueZNHC( sub, getZFlag(sub), true, H, C );
     
