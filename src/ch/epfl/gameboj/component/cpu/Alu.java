@@ -137,8 +137,6 @@ public final class Alu {
             sum = Bits.set(sum, 16, false); //crops the result (to simulate overflow)
         }
         
-        //TODO : Ask – project guidelines says to return flags 00HC
-        //Why can't Z be true ? Why don't we compute Z ?
         return packValueZNHC(sum, false, false, h, c);
     }
     
@@ -153,7 +151,7 @@ public final class Alu {
      * @see Alu#add16L(int l, int r)
      */
     public static int add16H(int l, int r) {
-        //TODO : better to reuse add16L() or copy add16L() code and change flags-related portion ?
+        //Reuses add16L, changes flag-related portion
         int valueFlags = add16L(l, r);
         
         int l8H = Bits.extract(l, 8, 8);
