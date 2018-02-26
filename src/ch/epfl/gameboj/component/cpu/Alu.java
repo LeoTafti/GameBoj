@@ -216,7 +216,7 @@ public final class Alu {
         
         // given algorithm adapted to java
         int fixL = h | (!n & Bits.clip(4, v) > 9)? 1 : 0;
-        int fixH = c | (!n & v > 99 ) ? 1 : 0;
+        int fixH = c | (!n & v > 0x99 ) ? 1 : 0;
         int vAdj = n ? v - (0x60*fixH + 6*fixL) : v + (0x60*fixH + 6*fixL);
         
         return packValueZNHC(vAdj, getZFlag(vAdj), n, false, (fixH == 1));

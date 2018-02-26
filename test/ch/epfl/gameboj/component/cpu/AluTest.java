@@ -64,6 +64,7 @@ class AluTest {
         assertEquals(0xF, Alu.unpackFlags(0xFFFFF0)); //max int and ZNHC
     }
     
+    // not required (TA)
 //    @Test
 //    void unpackFailsOnInvalidInt() {
 //        assertThrows(IndexOutOfBoundsException.class, 
@@ -256,6 +257,8 @@ class AluTest {
     
     @Test
     void subWorksOnValidInput() {
+        assertEquals(0x00C0, Alu.sub(0x0, 0x0));
+        assertEquals(0x00C0, Alu.sub(0xFF, 0xFF));
         assertEquals(0x00C0, Alu.sub(0x10, 0x10));
         assertEquals(0x9050, Alu.sub(0x10,  0x80));
         assertEquals(0xFF70, Alu.sub(0x01, 0x01, true));
@@ -267,18 +270,33 @@ class AluTest {
     
     @Test
     void subFailsOnInvalidInput() {
-        assertThrows(IllegalArgumentException.class, () -> Alu.sub(0x100, 0x00));
+        assertThrows(IllegalArgumentException.class, () -> Alu.sub(-1, 0x00)); //negative int
+        assertThrows(IllegalArgumentException.class, () -> Alu.sub(0x100, -1));
+        assertThrows(IllegalArgumentException.class, () -> Alu.sub(0x100, 0x00)); //9bit int
         assertThrows(IllegalArgumentException.class, () -> Alu.sub(0x00, 0x100));
     }
     
     @Test
-    void bcdAdjustWorksOnValidInput() {
+    void bcdAdjustWorksOnKnownValues() {
+        assertEquals(0x80, Alu.bcdAdjust(0, false, false, false)); // 0
+        assertEquals(0x600, Alu.bcdAdjust(0, false, true, false)); // 0 and H -> 6
+        assertEquals(0xC0, Alu.bcdAdjust(0x6, true, true, false)); // 6 and NH -> 0 and ZN
+        assertEquals(0x6010, Alu.bcdAdjust(0, false, false, true)); // 0 and C -> 60 and C
+        assertEquals(0xD0, Alu.bcdAdjust(0x60, true, false, true)); // 60 and NC -> 0 and ZNC
+        assertEquals(0x6610, Alu.bcdAdjust(0, false, true, true)); // 0 and HC -> 66 and C
+        assertEquals(0x1000, Alu.bcdAdjust(0xA, false, false, false)); //10 and 4LSB > 9 -> 16
+       //TODO assertEquals(0x0, Alu.bcdAdjust(0xA, true, false, false)); //10 and 4LSB > 9 but N -> 10
+       // assertEquals(0x6000, Alu.bcdAdjust(0xA0, false, false, false)); //100 and 4MSB > 99 -> 160
+       // assertEquals(0x6400, Alu.bcdAdjust(0xA0, true, false, false)); //100 and 4MSB > 99 but N -> 100
+        assertEquals(0x7300, Alu.bcdAdjust(0x6D, false, false, false)); //given test
+        assertEquals(0x0940, Alu.bcdAdjust(0x0F, true, true, false)); //given test
         
     }
     
     @Test
     void bcdAdjustFailsOnInvalidInput() {
-        
+        assertThrows(IllegalArgumentException.class, () -> Alu.bcdAdjust(-1, false, false, false)); //negative int
+        assertThrows(IllegalArgumentException.class, () -> Alu.bcdAdjust(0X100, false, false, false)); //9bit int
     }
     
     @Test
@@ -289,12 +307,12 @@ class AluTest {
     
     @Test
     void swapFailsOnInvalidInput() {
-        assertThrows(IllegalArgumentException.class, () -> Alu.swap(0x100));
-        assertThrows(IllegalArgumentException.class, () -> Alu.swap(0x12340));
+        assertThrows(IllegalArgumentException.class, () -> Alu.swap(0x100)); //9bit int
+        assertThrows(IllegalArgumentException.class, () -> Alu.swap(-1)); //negative int
     }
     
     @Test
-    void testBitWorksOnValidInput() {
+    void testBitWorksOnKnownValues() {
         assertEquals(0b10100000, Alu.testBit(0x80, 7));
         assertEquals(0b00100000, Alu.testBit(0x80, 6));
         
@@ -304,8 +322,10 @@ class AluTest {
     
     @Test
     void testBitFailsOnInvalidInput() {
-        assertThrows(IndexOutOfBoundsException.class, () -> Alu.testBit(0x80, 8));
-        assertThrows(IndexOutOfBoundsException.class, () -> Alu.testBit(0x00, -1));
+        assertThrows(IllegalArgumentException.class, () -> Alu.testBit(-1, 0)); //negative int
+        assertThrows(IllegalArgumentException.class, () -> Alu.testBit(0x100, 8)); //9bit int
+        assertThrows(IndexOutOfBoundsException.class, () -> Alu.testBit(0x80, 8)); //index too big
+        assertThrows(IndexOutOfBoundsException.class, () -> Alu.testBit(0x00, -1)); //negative index
     }
     
 }
