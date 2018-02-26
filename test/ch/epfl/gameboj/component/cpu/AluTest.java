@@ -253,12 +253,17 @@ class AluTest {
     
     @Test
     void subWorksOnKnownValues() {
+        assertEquals(0x00C0, Alu.sub(0x10, 0x10));
+        assertEquals(0x9050, Alu.sub(0x10,  0x80));
         assertEquals(0xFF70, Alu.sub(0x01, 0x01, true));
+        assertEquals(0b11000000, Alu.sub(0, 0));
+        assertEquals(0xE160, Alu.sub(0xF0, 0x0F));
+        assertEquals(0xD040 , Alu.sub(0xE0, 0x10));
+        assertEquals(0x00C0, Alu.sub(0x01, 0x00, true));
     }
     
     @Test
     void bcdAdjustWorksOnKnownVlaues() {
-//        assertEquals(0xFF70)
+        
     }
-    
 }
