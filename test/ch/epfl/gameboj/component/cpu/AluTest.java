@@ -251,4 +251,14 @@ class AluTest {
                 () -> Alu.rotate(RotDir.LEFT, -1, t)); 
     }
     
+    @Test
+    void subWorksOnKnownValues() {
+        assertEquals(0xFF70, Alu.sub(0x01, 0x01, true));
+    }
+    
+    @Test
+    void bcdAdjustWorksOnKnownVlaues() {
+//        assertEquals(0xFF70)
+    }
+    
 }
