@@ -297,9 +297,16 @@ public final class Alu {
         Preconditions.checkBits8(v);
         
         boolean c = Bits.test(v, 0);
+        
+        
         int res = v >> 1;
-        // TODO TODO must the shift be 'made' arithmetic (adding 1 if most-significant bit was 1)??
-        // using the usual ">>" working on bytes doesn't consider the 8th bit as the most-significant
+        if(Bits.test(v, 7)) {
+            int maskMSB = Bits.mask(7);
+            res |= maskMSB;
+        }
+   
+        
+        
         return packValueZNHC(res, getZFlag(res), false, false, c);
     }
     
@@ -360,7 +367,13 @@ public final class Alu {
         
         int res = 0;
         res = Bits.set(v, 8, c);
-        res = Bits.rotate(9, res, 1);
+        
+        if(d == RotDir.LEFT) {
+            res = Bits.rotate(9, res, 1);
+        }
+        else {
+            res = Bits.rotate(9, res, -1);
+        }
         
         boolean newC = Bits.test(res, 8);
         

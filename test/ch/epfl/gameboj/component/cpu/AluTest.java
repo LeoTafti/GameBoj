@@ -96,7 +96,7 @@ class AluTest {
         assertEquals(0x100020, Alu.add16H(0x800,  0x800)); //H
         assertEquals(0x10000, Alu.add16H(0x80, 0x80)); //low C doesnt trigger flag
         assertEquals(0x10, Alu.add16H(0X8000, 0X8000)); // C
-        assertEquals(0x30, Alu.add16H(0xFFFF, 0x1)); //ripple through 00HC
+        assertEquals(0x0, Alu.add16H(0xFFFF, 0x1)); //ripple through 00HC
         
     }
     
@@ -165,11 +165,11 @@ class AluTest {
         assertEquals(0xFE10, Alu.shiftLeft(0xFF)); //full int and C
         assertEquals(0x1000, Alu.shiftLeft(0x8));
         // TODO must arithmetic shift me 'made' arithmetic???? 
-//        assertEquals(0x80, Alu.shiftRightA(0)); //0
-//        assertEquals(0x90, Alu.shiftRightA(1)); //0 Z00C
-//        assertEquals(0xC000, Alu.shiftRightA(0x80)); //arithmetic shift 1100...
-//        assertEquals(0xFF10, Alu.shiftRightA(0xFF)); //full int and C
-//        assertEquals(0x400, Alu.shiftRightA(0x8));
+        assertEquals(0x80, Alu.shiftRightA(0)); //0
+        assertEquals(0x90, Alu.shiftRightA(1)); //0 Z00C
+        assertEquals(0xC000, Alu.shiftRightA(0x80)); //arithmetic shift 1100...
+        assertEquals(0xFF10, Alu.shiftRightA(0xFF)); //full int and C
+        assertEquals(0x400, Alu.shiftRightA(0x8));
         
         assertEquals(0x80, Alu.shiftRightL(0)); //0
         assertEquals(0x90, Alu.shiftRightL(1)); //0 Z00C
