@@ -25,10 +25,10 @@ public class GameBoy {
         bus = new Bus();
         
         workRam = new Ram(8192);
-        workRamController = new RamController(workRam, 0xC000, 0xE000);
+        workRamController = new RamController(workRam, AddressMap.WORK_RAM_START, AddressMap.WORK_RAM_END);
         
         echoRam = new Ram(7680);
-        echoRamController = new RamController(workRam, 0xE000, 0xFE00);
+        echoRamController = new RamController(echoRam, AddressMap.ECHO_RAM_START, AddressMap.ECHO_RAM_END);
         
         bus.attach(workRam);
         bus.attach(echoRam);        
