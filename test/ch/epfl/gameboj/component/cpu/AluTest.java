@@ -223,7 +223,7 @@ class AluTest {
     }
 
     @Test
-    void rotateWorksOnInvalidInput() {
+    void rotateFailsOnInvalidInput() {
         assertThrows(IllegalArgumentException.class,
                 () -> Alu.rotate(RotDir.LEFT, 384)); // 9bits
         assertThrows(IllegalArgumentException.class,
@@ -260,11 +260,38 @@ class AluTest {
         assertEquals(0xE160, Alu.sub(0xF0, 0x0F));
         assertEquals(0xD040 , Alu.sub(0xE0, 0x10));
         assertEquals(0x00C0, Alu.sub(0x01, 0x00, true));
-        //
     }
     
     @Test
     void bcdAdjustWorksOnKnownVlaues() {
         
     }
+    
+    @Test
+    void swapWorksOnValidInput() {
+        assertEquals(0x0F00, Alu.swap(0xF0));
+        assertEquals(0x0080, Alu.swap(0x00));
+    }
+    
+    @Test
+    void swapFailsOnInvalidInput() {
+        assertThrows(IllegalArgumentException.class, () -> Alu.swap(0x100));
+        assertThrows(IllegalArgumentException.class, () -> Alu.swap(0x12340));
+    }
+    
+    @Test
+    void testBitWorksOnValidInput() {
+        assertEquals(0b10100000, Alu.testBit(0x80, 7));
+        assertEquals(0b00100000, Alu.testBit(0x80, 6));
+        
+        assertEquals(0b10100000, Alu.testBit(0x01, 0));
+        assertEquals(0b00100000, Alu.testBit(0x02, 0));
+    }
+    
+    @Test
+    void testBitFailsOnInvalidInput() {
+        assertThrows(IndexOutOfBoundsException.class, () -> Alu.testBit(0x80, 8));
+        assertThrows(IndexOutOfBoundsException.class, () -> Alu.testBit(0x00, -1));
+    }
+    
 }
