@@ -157,8 +157,9 @@ public final class Alu {
         int l8H = Bits.extract(l, 8, 8);
         int r8H = Bits.extract(r, 8, 8);
         
-        boolean h = getHFlag(l8H, r8H, false);
-        boolean c = getCFlag(l8H, r8H, false);
+        boolean lsbCFlag = Bits.test(valueFlags, 4);
+        boolean h = getHFlag(l8H, r8H, lsbCFlag);
+        boolean c = getCFlag(l8H, r8H, lsbCFlag);
         
         valueFlags = Bits.set(valueFlags, Flag.H.index(), h);
         valueFlags = Bits.set(valueFlags, Flag.C.index(), c);

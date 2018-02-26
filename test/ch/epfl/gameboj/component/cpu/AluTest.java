@@ -96,7 +96,8 @@ class AluTest {
         assertEquals(0x100020, Alu.add16H(0x800,  0x800)); //H
         assertEquals(0x10000, Alu.add16H(0x80, 0x80)); //low C doesnt trigger flag
         assertEquals(0x10, Alu.add16H(0X8000, 0X8000)); // C
-        assertEquals(0x0, Alu.add16H(0xFFFF, 0x1)); //ripple through 00HC
+        assertEquals(0x000030, Alu.add16H(0xFFFF, 0x1)); //ripple through 00HC
+        assertEquals(0x100020 , Alu.add16H(0x0FFF, 0x0001));
         
     }
     
