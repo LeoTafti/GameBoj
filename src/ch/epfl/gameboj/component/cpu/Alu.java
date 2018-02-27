@@ -466,6 +466,13 @@ public final class Alu {
         return (l + r + carry > 0xFF);
     }
     
+    /**
+     * Checks that given value respects given standard, namely that
+     *      all bits at index [0, 3] or [24, 31] (all boundaries inclusive)
+     *      are set to 0
+     * @param value value to check
+     * @throws IllegalArgumentExcepetion if given value doen't respect standard
+     */
     private static void checkIntValue(int value) {
         int mask = (1 << 12)-1;
         mask = Bits.rotate(32, mask, -8);
