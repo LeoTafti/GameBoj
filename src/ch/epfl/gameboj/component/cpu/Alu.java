@@ -55,8 +55,11 @@ public final class Alu {
      * unpacks value form given int
      * @param valueFlags int in which value is packed
      * @return unpacked value
+     * @throws IllegalArgumentException if given value has any active bits
+     *      at index [0, 3] or [24, 31] (all boundaries inclusive)
      */
     public static int unpackValue(int valueFlags) {
+        checkIntValue(valueFlags);
         return Bits.extract(valueFlags, 8, 16);
     }
     
@@ -64,8 +67,11 @@ public final class Alu {
      * unpacks flags from given int
      * @param valueFlags int in which flags are packed
      * @return unpacked flags
+     * @throws IllegalArgumentException if given value has any active bits
+     *      at index [0, 3] or [24, 31] (all boundaries inclusive)
      */
     public static int unpackFlags(int valueFlags) {
+        checkIntValue(valueFlags);
         return Bits.extract(valueFlags, 4, 4);
     }
     
@@ -460,14 +466,12 @@ public final class Alu {
         return (l + r + carry > 0xFF);
     }
     
-    private static checkIntValue(int value) {
-        //TODO :
-        //create mask for bits 31 to 24 (both inclusive) and 3 to 0 (both inclusive)
-        //make & with given value
-        //check if result != 0
-        //eventually throw an IllegalArgumentException
-        
-        //check given int values in unpackValue() and unpackFlags()
+    private static void checkIntValue(int value) {
+        int mask = (1 << 12)-1;
+        mask = Bits.rotate(32, mask, -8);
+        if((mask & value) != 0) {
+            throw new IllegalArgumentException();
+        }
     }
     
 }
