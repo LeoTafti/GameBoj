@@ -64,17 +64,23 @@ class AluTest {
         assertEquals(0xF, Alu.unpackFlags(0xFFFFF0)); //max int and ZNHC
     }
     
-    // not required (TA)
-//    @Test
-//    void unpackFailsOnInvalidInt() {
-//        assertThrows(IndexOutOfBoundsException.class, 
-//                () -> Alu.unpackValue(0x1)); //not formatted
-//        assertThrows(IndexOutOfBoundsException.class, 
-//                () -> Alu.unpackValue(0x1000000)); //17bit int and 0000
-//        assertThrows(IndexOutOfBoundsException.class, 
-//                () -> Alu.unpackFlags(0x1000000)); //17bit int and 0000
-//    
-//    }
+    @Test
+    void unpackFailsOnInvalidInt() {
+         
+        assertThrows(IllegalArgumentException.class, 
+                () -> Alu.unpackValue(0x1)); //flags not formated
+        assertThrows(IllegalArgumentException.class, 
+                () -> Alu.unpackFlags(0x1)); 
+        assertThrows(IllegalArgumentException.class, 
+                () -> Alu.unpackValue(0x1000000)); //17bit int and 0000
+        assertThrows(IllegalArgumentException.class, 
+                () -> Alu.unpackFlags(0x1000000)); 
+        assertThrows(IllegalArgumentException.class, 
+                () -> Alu.unpackValue(Integer.MAX_VALUE)); // full int
+        assertThrows(IllegalArgumentException.class, 
+                () -> Alu.unpackFlags(Integer.MAX_VALUE));
+    
+    }
     
     @Test
     void addWorksOnKnownValues() {
