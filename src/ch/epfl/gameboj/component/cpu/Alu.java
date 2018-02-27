@@ -460,4 +460,14 @@ public final class Alu {
         return (l + r + carry > 0xFF);
     }
     
+    private static checkIntValue(int value) {
+        //TODO :
+        //create mask for bits 31 to 24 (both inclusive) and 3 to 0 (both inclusive)
+        //make & with given value
+        //check if result != 0
+        //eventually throw an IllegalArgumentException
+        
+        //check given int values in unpackValue() and unpackFlags()
+    }
+    
 }
