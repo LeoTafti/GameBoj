@@ -1,5 +1,5 @@
 /*
- *  @Author : Paul Juillard (288519)
+z *  @Author : Paul Juillard (288519)
  *  @Author : Leo Tafti (285418)
 */
 
@@ -72,7 +72,7 @@ public final class Alu {
      */
     public static int unpackFlags(int valueFlags) {
         checkIntValue(valueFlags);
-        return Bits.extract(valueFlags, 4, 4);
+        return Bits.clip(8, valueFlags);
     }
     
     /**
