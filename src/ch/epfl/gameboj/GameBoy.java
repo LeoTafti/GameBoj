@@ -10,28 +10,46 @@ import ch.epfl.gameboj.component.memory.RamController;
 
 public class GameBoy {
 
+//    private Bus bus;
+//    private Ram workRam;
+//    private Ram echoRam;
+//    private RamController workRamController;
+//    private RamController echoRamController;
+//    
+//    /**
+//     * Constructor
+//     * @param cartirdge
+//     */
+//    public GameBoy(Object cartirdge) {
+//        
+//        bus = new Bus();
+//        
+//        workRam = new Ram(8192);
+//        workRamController = new RamController(workRam, AddressMap.WORK_RAM_START, AddressMap.WORK_RAM_END);
+//        
+//        echoRam = new Ram(7680);
+//        echoRamController = new RamController(echoRam, AddressMap.ECHO_RAM_START, AddressMap.ECHO_RAM_END);
+//        
+//        bus.attach(workRam);
+//        bus.attach(echoRam);        
+//    }
+//    
+    
     private Bus bus;
-    private Ram workRam;
-    private Ram echoRam;
-    private RamController workRamController;
-    private RamController echoRamController;
     
     /**
      * Constructor
-     * @param cartirdge
+     * @param cartridge
      */
-    public GameBoy(Object cartirdge) {
+    public GameBoy(Object cartridge) {
+        this.bus = new Bus();
         
-        bus = new Bus();
+        Ram ram = new Ram(8192);
+        RamController workRamController = new RamController(ram, AddressMap.WORK_RAM_START, AddressMap.WORK_RAM_END);
+        RamController echoRamController = new RamController(ram, AddressMap.ECHO_RAM_START, AddressMap.ECHO_RAM_END);
         
-        workRam = new Ram(8192);
-        workRamController = new RamController(workRam, AddressMap.WORK_RAM_START, AddressMap.WORK_RAM_END);
-        
-        echoRam = new Ram(7680);
-        echoRamController = new RamController(echoRam, AddressMap.ECHO_RAM_START, AddressMap.ECHO_RAM_END);
-        
-        bus.attach(workRam);
-        bus.attach(echoRam);        
+        bus.attach(workRamController);
+        bus.attach(echoRamController);
     }
     
     /**
