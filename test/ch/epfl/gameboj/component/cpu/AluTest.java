@@ -54,14 +54,14 @@ class AluTest {
     
     @Test
     void unpackFlagsWorksOnKnownValue() {
-        assertEquals(0xF, Alu.unpackFlags(0xF0)); // 0 and ZNHC
-        assertEquals(0xF, Alu.unpackFlags(0x1F0)); //1 and ZNHC
+        assertEquals(0xF0, Alu.unpackFlags(0xF0)); // 0 and ZNHC
+        assertEquals(0xF0, Alu.unpackFlags(0x1F0)); //1 and ZNHC
         assertEquals(0, Alu.unpackFlags(0x100)); //1 and 0000
-        assertEquals(0x8, Alu.unpackFlags(0x180)); //1 and Z000
-        assertEquals(0x4, Alu.unpackFlags(0x140)); //1 and 0N00
-        assertEquals(0x2, Alu.unpackFlags(0x120)); //1 and 00H0
-        assertEquals(0x1, Alu.unpackFlags(0x110)); //1 and 000C
-        assertEquals(0xF, Alu.unpackFlags(0xFFFFF0)); //max int and ZNHC
+        assertEquals(0x80, Alu.unpackFlags(0x180)); //1 and Z000
+        assertEquals(0x40, Alu.unpackFlags(0x140)); //1 and 0N00
+        assertEquals(0x20, Alu.unpackFlags(0x120)); //1 and 00H0
+        assertEquals(0x10, Alu.unpackFlags(0x110)); //1 and 000C
+        assertEquals(0xF0, Alu.unpackFlags(0xFFFFF0)); //max int and ZNHC
     }
     
     @Test
