@@ -7,8 +7,6 @@ package ch.epfl.gameboj.component.cpu;
 
 import java.util.Objects;
 
-import javax.sound.sampled.Clip;
-
 import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.bits.Bit;
 import ch.epfl.gameboj.bits.Bits;

@@ -11,10 +11,6 @@ import ch.epfl.gameboj.component.memory.RamController;
 public class GameBoy {
     
     private Bus bus;
-//  private Ram workRam;
-//  private RamController workRamController;
-//  private RamController echoRamController;
-    
     
     /**
      * Constructor

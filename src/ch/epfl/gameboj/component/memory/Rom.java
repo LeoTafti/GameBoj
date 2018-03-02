@@ -7,8 +7,6 @@ package ch.epfl.gameboj.component.memory;
 
 import java.util.Arrays;
 
-import ch.epfl.gameboj.component.Component;
-
 
 public final class Rom {
     
