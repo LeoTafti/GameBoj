@@ -5,17 +5,22 @@
 
 package ch.epfl.gameboj.component.cpu;
 
+import ch.epfl.gameboj.Register;
+import ch.epfl.gameboj.RegisterFile;
+import ch.epfl.gameboj.component.Clocked;
 import ch.epfl.gameboj.component.Component;
 
 public final class cpu implements Component, Clocked {
 
+    
     private enum Reg implements Register {
         A, F, B, C, D, E, H, L
       }
     private enum Reg16 implements Register {
         AF, BC, DE, HL, PC, SP
     }
-    
+    private RegisterFile<Reg> registerFile = new RegisterFile<>(Reg.values());
+    private RegisterFile<Reg16> register16File = new RegisterFile<>(Reg16.values());
     private static final Opcode[] DIRECT_OPCODE_TABLE =
             buildOpcodeTable(Opcode.Kind.DIRECT);
    
@@ -27,7 +32,8 @@ public final class cpu implements Component, Clocked {
         
         if(cycle != nextNonIdleCycle) return;
         // TODO maybe
-        //int op = RegisterFile.get(Reg16.PC);
+        int op = register16File.get(Reg16.PC);
+        //dispatch(op);
         
     };
     
