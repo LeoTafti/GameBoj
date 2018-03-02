@@ -416,7 +416,7 @@ public final class Alu {
      * returns O and flags Z010 where Z is 1 if bit at index is 1
      * @param v byte to be tested
      * @param bitIndex index of tested bit (0 to 7)
-     * @return 0-Z010 with Z the truth value of tested bit
+     * @return 0-Z010 with Z the negation of truth value of tested bit
      * @throws IllegalArgumentException if v isn't 8bit value
      * @throws IndexOutOfBoundsException if bitIndex is not in [0 : 7]
      */

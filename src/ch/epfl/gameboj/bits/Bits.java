@@ -40,7 +40,7 @@ public final class Bits {
     /**
      * Verifies if bit at index is 1
      * @param bits bit-string
-     * @param index position of tested bit
+     * @param bit bit to check
      * @return True if given bit is 1, False if 0 
      * @throws IndexOutOfBoundsException if index is out-of-bound
      * @see Bits#test(int bits, int index)
