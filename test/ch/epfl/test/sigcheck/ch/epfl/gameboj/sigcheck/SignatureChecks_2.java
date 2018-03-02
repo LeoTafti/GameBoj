@@ -1,4 +1,4 @@
-package ch.epfl.test;
+package ch.epfl.test.sigcheck.ch.epfl.gameboj.sigcheck;
 
 
 import ch.epfl.gameboj.Bus;
