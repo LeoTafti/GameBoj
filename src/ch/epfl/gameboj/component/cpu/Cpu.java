@@ -30,7 +30,7 @@ public final class Cpu implements Component, Clocked {
         if(cycle != nextNonIdleCycle) return;
         // TODO maybe
         int op = register16File.get(Reg16.PC);
-        //dispatch(op);
+        dispatch(op);
         
     };
     
