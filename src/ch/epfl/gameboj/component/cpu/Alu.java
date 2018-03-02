@@ -424,7 +424,7 @@ public final class Alu {
         Preconditions.checkBits8(v);
         Objects.checkIndex(bitIndex, 8);
         
-        return packValueZNHC( 0, Bits.test(v, bitIndex), false, true, false);
+        return packValueZNHC( 0, !Bits.test(v, bitIndex), false, true, false);
     }
     
     
