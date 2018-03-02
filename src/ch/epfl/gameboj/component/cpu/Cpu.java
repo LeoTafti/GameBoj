@@ -10,7 +10,7 @@ import ch.epfl.gameboj.RegisterFile;
 import ch.epfl.gameboj.component.Clocked;
 import ch.epfl.gameboj.component.Component;
 
-public final class cpu implements Component, Clocked {
+public final class Cpu implements Component, Clocked {
 
     
     private enum Reg implements Register {
