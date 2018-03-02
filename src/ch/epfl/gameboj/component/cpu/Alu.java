@@ -7,6 +7,8 @@ package ch.epfl.gameboj.component.cpu;
 
 import java.util.Objects;
 
+import javax.sound.sampled.Clip;
+
 import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.bits.Bit;
 import ch.epfl.gameboj.bits.Bits;
@@ -224,6 +226,7 @@ public final class Alu {
         int fixL = h | (!n & Bits.clip(4, v) > 9)? 1 : 0;
         int fixH = c | (!n & v > 0x99 ) ? 1 : 0;
         int vAdj = n ? v - (0x60*fixH + 6*fixL) : v + (0x60*fixH + 6*fixL);
+        vAdj = Bits.clip(8, vAdj);
         
         return packValueZNHC(vAdj, getZFlag(vAdj), n, false, (fixH == 1));
     }
@@ -301,15 +304,20 @@ public final class Alu {
      */
     public static int shiftRightA(int v) {
         Preconditions.checkBits8(v);
-        
+       
         boolean c = Bits.test(v, 0);
-        
-        
-        int res = v >> 1;
-        if(Bits.test(v, 7)) {
-            int maskMSB = Bits.mask(7);
-            res |= maskMSB;
-        }
+        int res = Bits.signExtend8(v);
+        res = res>>1;
+        res = Bits.clip(8,  res);
+     
+        //TODO TODO pas beau
+//        
+//        
+//        int res = v >> 1;
+//        if(Bits.test(v, 7)) {
+//            int maskMSB = Bits.mask(7);
+//            res |= maskMSB;
+//        }
    
         
         

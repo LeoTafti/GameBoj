@@ -10,7 +10,7 @@ import java.util.Arrays;
 import ch.epfl.gameboj.component.Component;
 
 
-public final class Rom implements Component {
+public final class Rom {
     
     private final byte[] data;
     
@@ -43,8 +43,4 @@ public final class Rom implements Component {
         return Byte.toUnsignedInt(data[index]);
     }
 
-    @Override
-    public void write(int address, int data) {
-        //nothing here
-    }
 }
