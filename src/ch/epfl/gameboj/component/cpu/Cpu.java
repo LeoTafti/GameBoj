@@ -5,6 +5,7 @@
 
 package ch.epfl.gameboj.component.cpu;
 
+import ch.epfl.gameboj.Bus;
 import ch.epfl.gameboj.Register;
 import ch.epfl.gameboj.RegisterFile;
 import ch.epfl.gameboj.component.Clocked;
@@ -23,6 +24,13 @@ public final class Cpu implements Component, Clocked {
    
     private long nextNonIdleCycle;
     
+    private Bus bus;
+    
+    @Override
+    public void attachTo(Bus bus) {
+        Component.super.attachTo(bus);
+        this.bus = bus;
+    }
     
     @Override
     public void cycle(long cycle) {
