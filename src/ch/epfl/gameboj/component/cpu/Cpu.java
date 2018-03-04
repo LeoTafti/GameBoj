@@ -8,6 +8,7 @@ package ch.epfl.gameboj.component.cpu;
 import ch.epfl.gameboj.Bus;
 import ch.epfl.gameboj.Register;
 import ch.epfl.gameboj.RegisterFile;
+import ch.epfl.gameboj.bits.Bits;
 import ch.epfl.gameboj.component.Clocked;
 import ch.epfl.gameboj.component.Component;
 
@@ -36,17 +37,16 @@ public final class Cpu implements Component, Clocked {
     public void cycle(long cycle) {
         
         if(cycle != nextNonIdleCycle) return;
-        // TODO maybe
-        int op = register16File.get(Reg16.PC);
+        int nextProgramAddress = register16File.get(Reg16.PC);
+        int op = bus.read(nextProgramAddress);
         dispatch(op);
         
     };
     
     public void dispatch(int op) {
         Opcode opcode = DIRECT_OPCODE_TABLE[op];
-        
         //TODO : implement each case
-        
+        //TODO : take care of op not beeing associated with an instruction
         switch(opcode.family) {
             case NOP: {
             } break;
@@ -97,6 +97,8 @@ public final class Cpu implements Component, Clocked {
         }
         
         //TODO : update PC value, wait for x cycles, etc (cf guidlines 2.5.1.3)
+        nextNonIdleCycle += opcode.cycles;
+//        register16File.set(Reg16.PC, newValue);
     }
 
     
@@ -130,5 +132,54 @@ public final class Cpu implements Component, Clocked {
             }
         }
         return table;
+    }
+    
+    private int read8(int address) {
+        return bus.read(address);
+    }
+    
+    private int read8AtHl() {
+        return bus.read(register16File.get(Reg16.HL));
+    }
+    
+    private int read8AfterOpcode() {
+        return bus.read(register16File.get(Reg16.PC) + 1);
+    }
+    
+    private int read16(int address) {
+        //little endian
+        int lsByte = bus.read(address);
+        int msByte = bus.read(address + 1);
+        return Bits.make16(msByte, lsByte);
+    }
+    
+    private int read16AfterOpcode() {
+        return read16(register16File.get(Reg16.PC) + 1);
+    }
+    
+    private void write8(int address, int v) {
+        bus.write(address, v);
+    }
+    
+    private void write16(int address, int v) {
+        bus.write(address, Bits.clip(8, v));            //writes 8 lsb first
+        bus.write(address + 1 , Bits.extract(v, 8, 8)); //then 8 msb
+    }
+    
+    private void write8AtHl(int v) {
+        bus.write(register16File.get(Reg16.HL), v);
+    }
+    
+    private void push16(int v) {
+        int newAddress = register16File.get(Reg16.SP) - 2;
+        register16File.set(Reg16.SP, newAddress);
+        write16(newAddress, v);
+    }
+    
+    private int pop16() {
+        int address = register16File.get(Reg16.SP);
+        int value = read16(address);
+        register16File.set(Reg16.SP, address - 2);
+        return value;
     }
 }
