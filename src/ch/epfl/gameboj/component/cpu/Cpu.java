@@ -15,10 +15,10 @@ import ch.epfl.gameboj.component.Component;
 public final class Cpu implements Component, Clocked {
 
     private enum Reg implements Register { A, F, B, C, D, E, H, L }
-    private enum Reg16 implements Register { AF, BC, DE, HL, PC, SP }
+    private enum Reg16 implements Register { AF, BC, DE, HL}
     
     private RegisterFile<Reg> registerFile = new RegisterFile<>(Reg.values());
-//    private RegisterFile<Reg16> register16File = new RegisterFile<>(Reg16.values());
+    private int SP = 0, PC = 0;
     
     private static final Opcode[] DIRECT_OPCODE_TABLE =
             buildOpcodeTable(Opcode.Kind.DIRECT);
@@ -37,10 +37,9 @@ public final class Cpu implements Component, Clocked {
     public void cycle(long cycle) {
         
         if(cycle != nextNonIdleCycle) return;
-//        int nextProgramAddress = register16File.get(Reg16.PC);
         
-        int nextProgramAddress = reg16(Reg16.PC);
-        int op = bus.read(nextProgramAddress);
+        //TODO : not sure about that
+        int op = bus.read(PC);
         dispatch(op);
         
     };
@@ -103,7 +102,7 @@ public final class Cpu implements Component, Clocked {
         
         //TODO : update PC value, wait for x cycles, etc (cf guidlines 2.5.1.3)
         nextNonIdleCycle += opcode.cycles;
-//        register16File.set(Reg16.PC, newValue);
+        PC += opcode.totalBytes; //TODO : not sure of that
     }
 
     
@@ -144,13 +143,11 @@ public final class Cpu implements Component, Clocked {
     }
     
     private int read8AtHl() {
-//        return bus.read(register16File.get(Reg16.HL));
         return bus.read(reg16(Reg16.HL));
     }
     
     private int read8AfterOpcode() {
-//        return bus.read(register16File.get(Reg16.PC) + 1);
-        return bus.read(reg16(Reg16.PC) + 1);
+        return bus.read(PC + 1);
     }
     
     private int read16(int address) {
@@ -161,8 +158,7 @@ public final class Cpu implements Component, Clocked {
     }
     
     private int read16AfterOpcode() {
-//        return read16(register16File.get(Reg16.PC) + 1);
-        return read16(reg16(Reg16.PC));
+        return read16(PC + 1);
     }
     
     private void write8(int address, int v) {
@@ -175,54 +171,119 @@ public final class Cpu implements Component, Clocked {
     }
     
     private void write8AtHl(int v) {
-//        bus.write(register16File.get(Reg16.HL), v);
         bus.write(reg16(Reg16.HL), v);
     }
     
     private void push16(int v) {
-//        int newAddress = register16File.get(Reg16.SP) - 2;
-//        register16File.set(Reg16.SP, newAddress);
-        int newAddress = reg16(Reg16.SP) - 2;
-        
-        //TODO : see comment in setReg16SP(), eventually modify param Reg16.AF to Reg16.SP
-        setReg16SP(Reg16.AF, newAddress);
-        write16(newAddress, v);
+        SP -= 2;
+        write16(SP, v);
     }
     
     private int pop16() {
-//        int address = register16File.get(Reg16.SP);
-//        int value = read16(address);
-//        register16File.set(Reg16.SP, address - 2);
-        int address = reg16(Reg16.SP);
-        int value = read16(address);
-        
-        //TODO : same remark as above in push16()
-        setReg16SP(Reg16.AF, address - 2);
+        int value = read16(SP);
+        SP += 2;
         return value;
     }
     
     private int reg16(Reg16 r) {
+        
+        //TODO : better method (more concise) than switch ?
+        
+        int highB = 0, lowB = 0;
+        
         switch (r) {
         case AF :
-            return Bits.make16(registerFile.get(Reg.A), registerFile.get(Reg.F));
+            highB = registerFile.get(Reg.A);
+            lowB = registerFile.get(Reg.F);
+            break;
         case BC :
-            return Bits.make16(registerFile.get(Reg.B), registerFile.get(Reg.C));
+            highB = registerFile.get(Reg.B);
+            lowB = registerFile.get(Reg.C);
+            break;
         case DE :
-            return Bits.make16(registerFile.get(Reg.D), registerFile.get(Reg.E));
+            highB = registerFile.get(Reg.D);
+            lowB = registerFile.get(Reg.E);
+            break;
         case HL:
-            return Bits.make16(registerFile.get(Reg.H), registerFile.get(Reg.L));
-        case PC :
-            
-        case SP :
-            
+            highB = registerFile.get(Reg.H);
+            lowB = registerFile.get(Reg.L);
+            break;
         }
+        return Bits.make16(highB, lowB);
     }
     
     private void setReg16(Reg16 r, int newV) {
+        int highB = Bits.extract(newV, 8, 8);
+        int lowB = Bits.clip(newV, 8);
         
+        switch (r) {
+        case AF :
+            registerFile.set(Reg.A, highB);
+            registerFile.set(Reg.B, lowB);
+            break;
+        case BC :
+            registerFile.set(Reg.B, highB);
+            registerFile.set(Reg.C, lowB);
+            break;
+        case DE :
+            registerFile.set(Reg.D, highB);
+            registerFile.set(Reg.E, lowB);
+            break;
+        case HL:
+            registerFile.set(Reg.H, highB);
+            registerFile.set(Reg.L, lowB);
+            break;
+        }
     }
     
     private void setReg16SP(Reg16 r, int newV) {
-        
+        if(r == Reg16.AF) {
+            SP = newV;
+        }
+        setReg16(r, newV);
+    }
+    
+    private Reg extractReg(Opcode opcode, int startBit) {
+        int regCode = Bits.extract(opcode.encoding, startBit, 3);
+        switch (regCode) {
+        case 0b000:
+            return Reg.B;
+        case 0b001:
+            return Reg.C;
+        case 0b010:
+            return Reg.D;
+        case 0b011:
+            return Reg.E;
+        case 0b100:
+            return Reg.H;
+        case 0b101:
+            return Reg.L;
+        case 0b111:
+            return Reg.A;
+            
+        default:
+            throw new IllegalArgumentException();
+        }
+    }
+    
+    private Reg16 extractReg16(Opcode opcode) {
+        int regsCode = Bits.extract(opcode.encoding, 4, 2);
+        switch (regsCode) {
+        case 0b00:
+            return Reg16.BC;
+        case 0b01:
+            return Reg16.DE;
+        case 0b10:
+            return Reg16.HL;
+        case 0b11:
+            return Reg16.AF;
+            //TODO : what about if 0b11 is used to represent SP ?
+        default:
+            throw new IllegalArgumentException();
+        }
+    }
+    
+    private int extractHlIncrement(Opcode opcode) {
+        return Bits.test(opcode.encoding, 4) ? -1 : 1;
     }
 }
