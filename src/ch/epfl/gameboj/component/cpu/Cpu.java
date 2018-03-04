@@ -18,7 +18,7 @@ public final class Cpu implements Component, Clocked {
     private enum Reg16 implements Register { AF, BC, DE, HL, PC, SP }
     
     private RegisterFile<Reg> registerFile = new RegisterFile<>(Reg.values());
-    private RegisterFile<Reg16> register16File = new RegisterFile<>(Reg16.values());
+//    private RegisterFile<Reg16> register16File = new RegisterFile<>(Reg16.values());
     
     private static final Opcode[] DIRECT_OPCODE_TABLE =
             buildOpcodeTable(Opcode.Kind.DIRECT);
@@ -37,13 +37,16 @@ public final class Cpu implements Component, Clocked {
     public void cycle(long cycle) {
         
         if(cycle != nextNonIdleCycle) return;
-        int nextProgramAddress = register16File.get(Reg16.PC);
+//        int nextProgramAddress = register16File.get(Reg16.PC);
+        
+        int nextProgramAddress = reg16(Reg16.PC);
         int op = bus.read(nextProgramAddress);
         dispatch(op);
         
     };
     
     public void dispatch(int op) {
+        //TODO : may not be logical at all, think about what it really is supposed to do !
         Opcode opcode = DIRECT_OPCODE_TABLE[op];
         //TODO : implement each case
         //TODO : take care of op not beeing associated with an instruction
@@ -94,6 +97,8 @@ public final class Cpu implements Component, Clocked {
             } break;
             case PUSH_R16: {
             } break;
+//            default:
+//                throw new NullPointerException();
         }
         
         //TODO : update PC value, wait for x cycles, etc (cf guidlines 2.5.1.3)
@@ -139,11 +144,13 @@ public final class Cpu implements Component, Clocked {
     }
     
     private int read8AtHl() {
-        return bus.read(register16File.get(Reg16.HL));
+//        return bus.read(register16File.get(Reg16.HL));
+        return bus.read(reg16(Reg16.HL));
     }
     
     private int read8AfterOpcode() {
-        return bus.read(register16File.get(Reg16.PC) + 1);
+//        return bus.read(register16File.get(Reg16.PC) + 1);
+        return bus.read(reg16(Reg16.PC) + 1);
     }
     
     private int read16(int address) {
@@ -154,7 +161,8 @@ public final class Cpu implements Component, Clocked {
     }
     
     private int read16AfterOpcode() {
-        return read16(register16File.get(Reg16.PC) + 1);
+//        return read16(register16File.get(Reg16.PC) + 1);
+        return read16(reg16(Reg16.PC));
     }
     
     private void write8(int address, int v) {
@@ -167,19 +175,54 @@ public final class Cpu implements Component, Clocked {
     }
     
     private void write8AtHl(int v) {
-        bus.write(register16File.get(Reg16.HL), v);
+//        bus.write(register16File.get(Reg16.HL), v);
+        bus.write(reg16(Reg16.HL), v);
     }
     
     private void push16(int v) {
-        int newAddress = register16File.get(Reg16.SP) - 2;
-        register16File.set(Reg16.SP, newAddress);
+//        int newAddress = register16File.get(Reg16.SP) - 2;
+//        register16File.set(Reg16.SP, newAddress);
+        int newAddress = reg16(Reg16.SP) - 2;
+        
+        //TODO : see comment in setReg16SP(), eventually modify param Reg16.AF to Reg16.SP
+        setReg16SP(Reg16.AF, newAddress);
         write16(newAddress, v);
     }
     
     private int pop16() {
-        int address = register16File.get(Reg16.SP);
+//        int address = register16File.get(Reg16.SP);
+//        int value = read16(address);
+//        register16File.set(Reg16.SP, address - 2);
+        int address = reg16(Reg16.SP);
         int value = read16(address);
-        register16File.set(Reg16.SP, address - 2);
+        
+        //TODO : same remark as above in push16()
+        setReg16SP(Reg16.AF, address - 2);
         return value;
+    }
+    
+    private int reg16(Reg16 r) {
+        switch (r) {
+        case AF :
+            return Bits.make16(registerFile.get(Reg.A), registerFile.get(Reg.F));
+        case BC :
+            return Bits.make16(registerFile.get(Reg.B), registerFile.get(Reg.C));
+        case DE :
+            return Bits.make16(registerFile.get(Reg.D), registerFile.get(Reg.E));
+        case HL:
+            return Bits.make16(registerFile.get(Reg.H), registerFile.get(Reg.L));
+        case PC :
+            
+        case SP :
+            
+        }
+    }
+    
+    private void setReg16(Reg16 r, int newV) {
+        
+    }
+    
+    private void setReg16SP(Reg16 r, int newV) {
+        
     }
 }
