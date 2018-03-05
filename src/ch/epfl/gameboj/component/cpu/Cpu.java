@@ -117,14 +117,23 @@ public final class Cpu implements Component, Clocked {
     }
 
     /**
-     * creates table containing the PcSpABCDEHL 
+     * creates table containing the PcSpAFBCDEHL 
      *  register's information
      * @return
      */
     public int[] _testGetPcSpAFBCDEHL() {
-        int[] table = new int[10];
-        table[0] = PC;
-        return new int[0];
+        int[] array = {PC,
+                SP,
+                registerFile.get(Reg.A),
+                registerFile.get(Reg.F),
+                registerFile.get(Reg.B),
+                registerFile.get(Reg.C),
+                registerFile.get(Reg.D),
+                registerFile.get(Reg.E),
+                registerFile.get(Reg.H),
+                registerFile.get(Reg.L)
+        };
+        return array;
     }
     
     /**
