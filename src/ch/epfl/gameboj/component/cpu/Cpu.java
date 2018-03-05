@@ -172,18 +172,36 @@ public final class Cpu implements Component, Clocked {
         return table;
     }
     
+    /**
+     * Reads 8-bits value at given address from bus
+     * @param address address of value
+     * @return value at BUS[address]
+     */
     private int read8(int address) {
         return bus.read(address);
     }
     
+    /**
+     * Reads 8-bits value from bus at address given by regs HL
+     * @return value at BUS[HL]
+     */
     private int read8AtHl() {
         return bus.read(reg16(Reg16.HL));
     }
     
+    /**
+     * Reads 8-bits value from bus at address given by reg PC + 1
+     * @return value at BUS[PC+1]
+     */
     private int read8AfterOpcode() {
         return bus.read(PC + 1);
     }
     
+    /**
+     * Reads 16-bits value from bus at given address
+     * @param address address first 8 bits of value
+     * @return 16-bits value made from BUS[address] (8 lsb) and BUS[address+1] (8 msb)
+     */
     private int read16(int address) {
         //little endian
         int lsByte = bus.read(address);
@@ -191,34 +209,70 @@ public final class Cpu implements Component, Clocked {
         return Bits.make16(msByte, lsByte);
     }
     
+    /**
+     * Reads 16-bits value from bus at address given by reg PC + 1
+     * @return 16-bits value made from BUS[PC + 1] (8 lsb) and BUS[PC + 2] (8 msb)
+     * @see Cpu#read16(int address)
+     */
     private int read16AfterOpcode() {
         return read16(PC + 1);
     }
     
+    /**
+     * Writes given 8-bits value on bus at given address
+     * @param address write location
+     * @param v value to write
+     */
     private void write8(int address, int v) {
         bus.write(address, v);
     }
     
+    /**
+     * Writes given 16-bits value on bus at given address
+     *      First 8 lsb at BUS[address], then 8 msb at BUS[address + 1]
+     *      (little endian)
+     * @param address write location
+     * @param v value to write
+     */
     private void write16(int address, int v) {
         bus.write(address, Bits.clip(8, v));            //writes 8 lsb first
         bus.write(address + 1 , Bits.extract(v, 8, 8)); //then 8 msb
     }
     
+    /**
+     * Writes given 8-btis value on bus at addres given by regs HL
+     * @param v value to write
+     */
     private void write8AtHl(int v) {
         bus.write(reg16(Reg16.HL), v);
     }
     
+    /**
+     * Decrements SP by 2, then writes given 16-bits value at address given by new SP value
+     * (ie. writes given value at old SP - 2)
+     * @param v value to write
+     */
     private void push16(int v) {
         SP -= 2;
         write16(SP, v);
     }
     
+    /**
+     * Reads 16-bits value from bus at address given by SP, then increments SP by 2
+     * @return value at BUS[old SP]
+     */
     private int pop16() {
         int value = read16(SP);
         SP += 2;
         return value;
     }
     
+    /**
+     * Returns value stored in pair of 8-bits regs
+     *      (note : 8 msb in first reg, 8 lsb in second reg)
+     * @param r pair of 8-bits regs
+     * @return value stored in given 16-bits reg
+     */
     private int reg16(Reg16 r) {
         
         //TODO : better method (more concise) than switch ?
@@ -246,6 +300,12 @@ public final class Cpu implements Component, Clocked {
         return Bits.make16(highB, lowB);
     }
     
+    /**
+     * Puts given 16-bits value in given pair of 8-bits regs
+     *      note : 8 msb in first reg, 8 lsb in second reg
+     * @param r pair of 8-bits registers
+     * @param newV value to store
+     */
     private void setReg16(Reg16 r, int newV) {
         int highB = Bits.extract(newV, 8, 8);
         int lowB = Bits.clip(newV, 8);
@@ -270,6 +330,13 @@ public final class Cpu implements Component, Clocked {
         }
     }
     
+    /**
+     * Puts given 16-bits value in given pair of 8-bits reas
+     *      If given 17-bits reg is AF, puts given value in SP instead
+     *      @see Cpu#setReg16(Reg16 r, int newV)
+     * @param r pair of 8-bits regs
+     * @param newV value to store
+     */
     private void setReg16SP(Reg16 r, int newV) {
         if(r == Reg16.AF) {
             SP = newV;
@@ -299,7 +366,7 @@ public final class Cpu implements Component, Clocked {
             throw new IllegalArgumentException();
         }
     }
-    
+   
     private Reg16 extractReg16(Opcode opcode) {
         int regsCode = Bits.extract(opcode.encoding, 4, 2);
         switch (regsCode) {
@@ -311,6 +378,7 @@ public final class Cpu implements Component, Clocked {
             return Reg16.HL;
         case 0b11:
             return Reg16.AF;
+            //TODO : what about if 0b11 is used to represent SP ?
         default:
             throw new IllegalArgumentException();
         }
@@ -318,5 +386,13 @@ public final class Cpu implements Component, Clocked {
     
     private int extractHlIncrement(Opcode opcode) {
         return Bits.test(opcode.encoding, 4) ? -1 : 1;
+    }
+    
+    protected void reset() {
+        for(Reg reg : Reg.values()) {
+            registerFile.set(reg, 0);
+        }
+        SP = 0;
+        PC = 0;
     }
 }
