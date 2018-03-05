@@ -52,11 +52,14 @@ public final class Cpu implements Component, Clocked {
         switch(opcode.family) {
             case NOP: {
             } break;
-            case LD_R8_HLR: {
+            case LD_R8_HLR: { 
+                write8AtHl(registerFile.get(extractReg(opcode, 3)));
             } break;
             case LD_A_HLRU: {
+                write8AtHl(registerFile.get(Reg.A) + extractHlIncrement(opcode));
             } break;
             case LD_A_N8R: {
+                write8(registerFile.set(Reg.A, newValue))
             } break;
             case LD_A_CR: {
             } break;
