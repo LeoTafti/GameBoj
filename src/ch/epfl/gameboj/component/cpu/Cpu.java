@@ -116,8 +116,14 @@ public final class Cpu implements Component, Clocked {
         
     }
 
+    /**
+     * creates table containing the PcSpABCDEHL 
+     *  register's information
+     * @return
+     */
     public int[] _testGetPcSpAFBCDEHL() {
-        
+        int[] table = new int[10];
+        table[0] = PC;
         return new int[0];
     }
     
