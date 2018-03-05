@@ -5,6 +5,7 @@
 
 package ch.epfl.gameboj.component.cpu;
 
+import ch.epfl.gameboj.AddressMap;
 import ch.epfl.gameboj.Bus;
 import ch.epfl.gameboj.Register;
 import ch.epfl.gameboj.RegisterFile;
@@ -53,39 +54,54 @@ public final class Cpu implements Component, Clocked {
             case NOP: {
             } break;
             case LD_R8_HLR: { 
-                write8AtHl(registerFile.get(extractReg(opcode, 3)));
+                registerFile.set(extractReg(opcode, 3), read8AtHl());
             } break;
             case LD_A_HLRU: {
-                write8AtHl(registerFile.get(Reg.A) + extractHlIncrement(opcode));
+                registerFile.set(Reg.A , read8AtHl());
+                write8AtHl(read8AtHl()+extractHlIncrement(opcode));
             } break;
             case LD_A_N8R: {
-                write8(registerFile.set(Reg.A, newValue))
+                registerFile.set(Reg.A, read8AfterOpcode());
             } break;
             case LD_A_CR: {
+                registerFile.set(Reg.A, read8(AddressMap.REGS_START + registerFile.get(Reg.C)));
             } break;
             case LD_A_N16R: {
+                registerFile.set(Reg.A, read8(read16AfterOpcode()));
             } break;
             case LD_A_BCR: {
+                registerFile.set(Reg.A, read8(reg16(Reg16.BC)));
             } break;
             case LD_A_DER: {
+                registerFile.set(Reg.A, read8(reg16(Reg16.DE)));
             } break;
             case LD_R8_N8: {
+                registerFile.set(extractReg(opcode, 3), read8AfterOpcode());
             } break;
             case LD_R16SP_N16: {
+                setReg16(extractReg16(opcode), read8AfterOpcode());
             } break;
             case POP_R16: {
+                setReg16(extractReg16(opcode), pop16());
             } break;
             case LD_HLR_R8: {
+                write8(reg16(Reg16.HL), read8AfterOpcode());
             } break;
             case LD_HLRU_A: {
+                write8(reg16(Reg16.HL), registerFile.get(Reg.A));
+                write8AtHl(read8AtHl()+extractHlIncrement(opcode));
             } break;
             case LD_N8R_A: {
+                write8(AddressMap.REGS_START+read8AfterOpcode(), registerFile.get(Reg.A));
             } break;
             case LD_CR_A: {
+                write8(AddressMap.REGS_START+registerFile.get(Reg.C), registerFile.get(Reg.A));
             } break;
             case LD_N16R_A: {
+                write8(read16AfterOpcode(), registerFile.get(Reg.A));
             } break;
             case LD_BCR_A: {
+                write8(reg16(Reg16.BC), registerFile.get(Reg.A));
             } break;
             case LD_DER_A: {
             } break;
@@ -237,7 +253,7 @@ public final class Cpu implements Component, Clocked {
         switch (r) {
         case AF :
             registerFile.set(Reg.A, highB);
-            registerFile.set(Reg.B, lowB);
+            registerFile.set(Reg.F, 0);
             break;
         case BC :
             registerFile.set(Reg.B, highB);
@@ -295,7 +311,6 @@ public final class Cpu implements Component, Clocked {
             return Reg16.HL;
         case 0b11:
             return Reg16.AF;
-            //TODO : what about if 0b11 is used to represent SP ?
         default:
             throw new IllegalArgumentException();
         }
