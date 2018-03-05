@@ -104,16 +104,23 @@ public final class Cpu implements Component, Clocked {
                 write8(reg16(Reg16.BC), registerFile.get(Reg.A));
             } break;
             case LD_DER_A: {
+                write8(reg16(Reg16.DE), registerFile.get(Reg.A));
             } break;
             case LD_HLR_N8: {
+                write8AtHl(read8AfterOpcode());
             } break;
             case LD_N16R_SP: {
+                write8(read16AfterOpcode(), SP);
             } break;
-            case LD_R8_R8: {
+            case LD_R8_R8: { //TODO r != s ?? different regs or different values?
+                if(extractReg(opcode, 3)!=extractReg(opcode, 0))
+                    registerFile.set(extractReg(opcode, 3), registerFile.get(extractReg(opcode, 0)));
             } break;
             case LD_SP_HL: {
+                SP = reg16(Reg16.HL);
             } break;
             case PUSH_R16: {
+                push16(reg16(extractReg16(opcode)));
             } break;
 //            default:
 //                throw new NullPointerException();
