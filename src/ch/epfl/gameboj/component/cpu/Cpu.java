@@ -79,7 +79,7 @@ public final class Cpu implements Component, Clocked {
                 registerFile.set(extractReg(opcode, 3), read8AfterOpcode());
             } break;
             case LD_R16SP_N16: {
-                setReg16(extractReg16(opcode), read8AfterOpcode());
+                setReg16(extractReg16(opcode), read16AfterOpcode());
             } break;
             case POP_R16: {
                 setReg16(extractReg16(opcode), pop16());
@@ -315,7 +315,7 @@ public final class Cpu implements Component, Clocked {
      */
     private void setReg16(Reg16 r, int newV) {
         int highB = Bits.extract(newV, 8, 8);
-        int lowB = Bits.clip(newV, 8);
+        int lowB = Bits.clip(8, newV);
         
         switch (r) {
         case AF :
