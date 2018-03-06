@@ -1,14 +1,19 @@
 package ch.epfl.gameboj.component.cpu;
 
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import ch.epfl.gameboj.Bus;
 import ch.epfl.gameboj.Preconditions;
+import ch.epfl.gameboj.bits.Bits;
 import ch.epfl.gameboj.component.memory.Ram;
 import ch.epfl.gameboj.component.memory.RamController;
+import ch.epfl.gameboj.component.cpu.Opcode;
 
 class CpuTest {
     private Bus bus;
@@ -46,7 +51,69 @@ class CpuTest {
             bus.write(i, instr);
         }
     }
+     
+    private Opcode getOpcode(int encoding) {
+        Preconditions.checkBits8(encoding);
+        for(Opcode a: Opcode.values()) {
+            if(encoding == a.encoding) return a;
+        }
+        return Opcode.NOP; 
+    }
     
+    @Test
+    public void AllOpcodesRun() {
+        
+        assertAll( () -> {
+        // LD opcodes
+        for(int i = Opcode.LD_B_B.encoding; i<=Opcode.LD_HLR_A.encoding; ++i) {
+            Opcode op = getOpcode(i);
+            switch (op.cycles) {
+            case 1 : writeAllBytes(i);
+            case 2 : writeAllBytes(i, 0);
+            case 3 : writeAllBytes(i, 0, 0);
+            }
+            cycleCpu(op.cycles);     
+        }
+        for(int i = Opcode.LD_SP_HL.encoding; i<=Opcode.LD_CR_A.encoding; ++i) {
+            Opcode op = getOpcode(i);
+            switch (op.cycles) {
+            case 1 : writeAllBytes(i);
+            case 2 : writeAllBytes(i, 0);
+            case 3 : writeAllBytes(i, 0, 0);
+            }
+            cycleCpu(op.cycles);         
+        }
+        for(int i = Opcode.LD_A_N8R.encoding; i<=Opcode.LD_N8R_A.encoding; ++i) {
+            Opcode op = getOpcode(i);
+            switch (op.cycles) {
+            case 1 : writeAllBytes(i);
+            case 2 : writeAllBytes(i, 0);
+            case 3 : writeAllBytes(i, 0, 0);
+            }
+            cycleCpu(op.cycles);         
+        }
+        for(int i = Opcode.LD_A_N16R.encoding; i<=Opcode.LD_N16R_SP.encoding; ++i) {
+            Opcode op = getOpcode(i);
+            switch (op.cycles) {
+            case 1 : writeAllBytes(i);
+            case 2 : writeAllBytes(i, 0);
+            case 3 : writeAllBytes(i, 0, 0);
+            }
+            cycleCpu(op.cycles);     
+        }
+        //POP and PUSH
+        for(int i = Opcode.PUSH_BC.encoding; i<=Opcode.POP_AF.encoding; ++i) {
+            Opcode op = getOpcode(i);
+            switch (op.cycles) {
+            case 1 : writeAllBytes(i);
+            case 2 : writeAllBytes(i, 0);
+            case 3 : writeAllBytes(i, 0, 0);
+            }
+            cycleCpu(op.cycles);         
+        }
+        });
+        
+    }
     
     @Test
     public void LD_HL_N16_isCorrectlyExecuted() {
