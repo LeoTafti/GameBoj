@@ -23,7 +23,7 @@ class CpuTest {
         bus = new Bus();
         Ram ram = new Ram(20);
         RamController ramController = new RamController(ram, 0);
-        bus.attach(cpu);
+        cpu.attachTo(bus);
         bus.attach(ramController);
     }
     
@@ -35,8 +35,19 @@ class CpuTest {
     
     @Test
     public void LD_R8_HLR_areCorrectlyExecuted() {
-        bus.write(0, 0x46);
-        System.out.println(cpu._testGetPcSpAFBCDEHL());
+        //Write 10 in HL
+        bus.write(0, 0x21); //LD_HL_
+        bus.write(11, 10); //10
+        
+//        bus.write(0, 0x46);
+        cpu.cycle(0);
+//        cpu.cycle(1);
+//        cpu.cycle(2);
+//        cpu.cycle(3);
+        //But HL = 0 so it will put the first opcode into reg B...
+        for(int value : cpu._testGetPcSpAFBCDEHL()) {
+            System.out.println(value);
+        }
     }
 
 }
