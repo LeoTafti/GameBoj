@@ -4,6 +4,8 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.util.ArrayList;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -58,6 +60,17 @@ class CpuTest {
             if(encoding == a.encoding) return a;
         }
         return Opcode.NOP; 
+    }
+    
+    private static ArrayList<Opcode> buildOpcodeFamilyTable(Opcode.Family family) {
+        
+        ArrayList<Opcode> table = new ArrayList<Opcode>();
+        for (Opcode o: Opcode.values()) {
+            if(o.family == family) {
+                table.add(o);
+            }
+        }
+        return table;
     }
     
     @Test
@@ -129,6 +142,21 @@ class CpuTest {
         cycleCpu(Opcode.LD_HL_N16.cycles);
 
         assertArrayEquals(new int[] {3, 0, 0, 0, 0, 0, 0, 0, 1, 4}, cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void LD_R8_R8_isCorrectlyExecuted() {
+        
+        ArrayList<Opcode> opFamily = buildOpcodeFamilyTable(Opcode.Family.LD_R8_R8);
+        for(Opcode o : opFamily) {
+            
+            writeAllBytes(o.encoding);
+            
+            cycleCpu(o.cycles);
+            
+            assertArrayEquals(new int[] {3, 0, 0, 0, 0, 0, 0, 0, 1, 4}, cpu._testGetPcSpAFBCDEHL());
+            
+        }
     }
 
 }
