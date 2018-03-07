@@ -50,6 +50,7 @@ class CpuTest {
         for(int i = 0; i<bytes.length; i++) {
             int instr = bytes[i];
             Preconditions.checkBits8(instr);
+            System.out.println(Integer.toBinaryString(instr));
             bus.write(i, instr);
         }
     }
@@ -75,9 +76,10 @@ class CpuTest {
     
     private void initiateReg(int regId, int value) {
         Preconditions.checkBits8(value);
-        Preconditions.checkArgument(regId<=0b111);
+        System.out.print("*");
+        writeAllBytes((regId<<3) + 0b110, value); //LD r8 n8
+        cycleCpu(2);
         
-        writeAllBytes(regId<<3 + 0b110, value); //LD r8 n8
     }
     /**
      * 
@@ -89,10 +91,18 @@ class CpuTest {
         Preconditions.checkArgument(regId<=0b11);
         int msb = Bits.extract(value, 8, 8);
         int lsb = Bits.clip(8, value);
-        writeAllBytes(regId<<4 + 0b1, msb , lsb); //LD r8 n8
+        writeAllBytes((regId<<4) + 0b1, msb , lsb); //LD r8 n8
+        cycleCpu(3);
     }
     
     private void initiateRegs(int a, int b, int c, int d, int e, int h, int l) {
+        Preconditions.checkBits8(a);
+        Preconditions.checkBits8(b);
+        Preconditions.checkBits8(c);
+        Preconditions.checkBits8(d);
+        Preconditions.checkBits8(e);
+        Preconditions.checkBits8(h);
+        Preconditions.checkBits8(l);
         initiateReg(0b111, a);
         initiateReg(0b000, b);
         initiateReg(0b001, c);
@@ -164,6 +174,16 @@ class CpuTest {
         
     }
     
+    
+    @Test
+    public void LD_R8_N8_isCorrectlyExecuted() {
+        writeAllBytes(Opcode.LD_A_N8.encoding,
+                0x1);
+        cycleCpu(Opcode.LD_A_N8.cycles);
+        
+        assertArrayEquals(new int[] {2, 0, 1, 0, 0, 0, 0, 0, 0, 0}, cpu._testGetPcSpAFBCDEHL());
+    }
+    
     @Test
     public void LD_HL_N16_isCorrectlyExecuted() {
         //Write 0x14 in HL
@@ -183,7 +203,23 @@ class CpuTest {
     @Test
     public void LD_R8_R8_isCorrectlyExecuted() {
         
-
+        initiateRegs(1, 1, 1, 0, 0xF, 0, 0);
+             
+        writeAllBytes(Opcode.LD_A_B.encoding,
+                      Opcode.LD_C_D.encoding,
+                      Opcode.LD_E_H.encoding);
+        
+        cycleCpu(Opcode.LD_A_B.cycles+
+                 Opcode.LD_C_D.cycles+
+                 Opcode.LD_E_H.cycles);
+        int[] regVals = cpu._testGetPcSpAFBCDEHL();
+        System.out.println("testGet:");
+        for (int i = 0; i<regVals.length; ++i) {
+        System.out.println(regVals[i]);
+        }   
+        assertArrayEquals(new int[] {3, 0, 0, 0, 0, 1, 1, 0XFF, 0XFF, 0},
+                cpu._testGetPcSpAFBCDEHL());
+        
         
     }
 
