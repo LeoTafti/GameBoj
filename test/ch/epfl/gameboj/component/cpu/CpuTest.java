@@ -250,12 +250,24 @@ class CpuTest {
     
     @Test
     public void LD_A_CR_isCorrectlyExecuted() {
+        initiateRegs(0, 0, 0, 1, 0, 0, 0, 0);
+        writeAllBytes(Opcode.LD_A_CR.encoding);
+        bus.write(0xFF01, 0xF);
+        cycleCpu(Opcode.LD_A_CR.cycles);
         
+        assertArrayEquals(new int[] {Opcode.LD_A_CR.cycles, 0, 0xF, 0, 0, 1, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
     }
     
     @Test
     public void LD_A_N16R_isCorrectlyExecuted() {
+        writeAllBytes(Opcode.LD_A_N16R.encoding, 
+                0x1, 0xFF);
+        bus.write(0xFF01, 0xF);
+        cycleCpu(Opcode.LD_A_N16R.cycles);
         
+        assertArrayEquals(new int[] {Opcode.LD_A_N16R.cycles, 0, 0xF, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
     }
     
     @Test
