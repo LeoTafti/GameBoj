@@ -54,29 +54,29 @@ public final class Cpu implements Component, Clocked {
             case NOP: {
             } break;
             case LD_R8_HLR: { 
-                registerFile.set(extractReg(opcode, 3), read8AtHl());
+                setReg(extractReg(opcode, 3), read8AtHl());
             } break;
             case LD_A_HLRU: {
-                registerFile.set(Reg.A , read8AtHl());
+                setReg(Reg.A , read8AtHl());
                 write8AtHl(read8AtHl()+extractHlIncrement(opcode));
             } break;
             case LD_A_N8R: {
-                registerFile.set(Reg.A, read8AfterOpcode());
+                setReg(Reg.A, read8AfterOpcode());
             } break;
             case LD_A_CR: {
-                registerFile.set(Reg.A, read8(AddressMap.REGS_START + registerFile.get(Reg.C)));
+                setReg(Reg.A, read8(AddressMap.REGS_START + registerFile.get(Reg.C)));
             } break;
             case LD_A_N16R: {
-                registerFile.set(Reg.A, read8(read16AfterOpcode()));
+                setReg(Reg.A, read8(read16AfterOpcode()));
             } break;
             case LD_A_BCR: {
-                registerFile.set(Reg.A, read8(reg16(Reg16.BC)));
+                setReg(Reg.A, read8(reg16(Reg16.BC)));
             } break;
             case LD_A_DER: {
-                registerFile.set(Reg.A, read8(reg16(Reg16.DE)));
+                setReg(Reg.A, read8(reg16(Reg16.DE)));
             } break;
             case LD_R8_N8: {
-                registerFile.set(extractReg(opcode, 3), read8AfterOpcode());
+                setReg(extractReg(opcode, 3), read8AfterOpcode());
             } break;
             case LD_R16SP_N16: {
                 setReg16(extractReg16(opcode), read16AfterOpcode());
@@ -112,9 +112,9 @@ public final class Cpu implements Component, Clocked {
             case LD_N16R_SP: {
                 write8(read16AfterOpcode(), SP);
             } break;
-            case LD_R8_R8: { //TODO r != s ?? different regs or different values?
+            case LD_R8_R8: {
                 if(extractReg(opcode, 3)!=extractReg(opcode, 0))
-                    registerFile.set(extractReg(opcode, 3), registerFile.get(extractReg(opcode, 0)));
+                    setReg(extractReg(opcode, 3), registerFile.get(extractReg(opcode, 0)));
             } break;
             case LD_SP_HL: {
                 SP = reg16(Reg16.HL);
@@ -306,6 +306,12 @@ public final class Cpu implements Component, Clocked {
         }
         return Bits.make16(highB, lowB);
     }
+    /**
+     * sets register to given value
+     */
+    private void setReg(Reg r, int newV) {
+        setReg(r, newV);
+    }
     
     /**
      * Puts given 16-bits value in given pair of 8-bits regs
@@ -319,20 +325,20 @@ public final class Cpu implements Component, Clocked {
         
         switch (r) {
         case AF :
-            registerFile.set(Reg.A, highB);
-            registerFile.set(Reg.F, lowB & ((1 << 4)-1)<<4); //takes only 4 msb of lowB (ie. the flags, rest is 0)
+            setReg(Reg.A, highB);
+            setReg(Reg.F, lowB & ((1 << 4)-1)<<4); //takes only 4 msb of lowB (ie. the flags, rest is 0)
             break;
         case BC :
-            registerFile.set(Reg.B, highB);
-            registerFile.set(Reg.C, lowB);
+            setReg(Reg.B, highB);
+            setReg(Reg.C, lowB);
             break;
         case DE :
-            registerFile.set(Reg.D, highB);
-            registerFile.set(Reg.E, lowB);
+            setReg(Reg.D, highB);
+            setReg(Reg.E, lowB);
             break;
         case HL:
-            registerFile.set(Reg.H, highB);
-            registerFile.set(Reg.L, lowB);
+            setReg(Reg.H, highB);
+            setReg(Reg.L, lowB);
             break;
         }
     }
@@ -397,13 +403,27 @@ public final class Cpu implements Component, Clocked {
     
     protected void reset() {
         for(Reg reg : Reg.values()) {
-            registerFile.set(reg, 0);
+            setReg(reg, 0);
         }
         SP = 0;
         PC = 0;
     }
-    
+    // TODO remove before commit
     protected void setAllRegs(int a, int f, int b, int c, int d, int e, int h, int l) {
-        //TODO : implement
+        setReg(Reg.A, a);
+        setReg(Reg.F, f);
+        setReg(Reg.B, b);
+        setReg(Reg.C, c);
+        setReg(Reg.D, d);
+        setReg(Reg.E, e);
+        setReg(Reg.H, h);
+        setReg(Reg.L, l);
+    }
+    //TODO remove before commit
+    protected void setAllRegs16(int af, int bc, int de, int hl) {
+        setReg16(Reg16.AF, af);
+        setReg16(Reg16.BC, bc);
+        setReg16(Reg16.DE, de);
+        setReg16(Reg16.HL, hl);
     }
 }
