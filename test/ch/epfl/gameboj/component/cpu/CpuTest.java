@@ -73,7 +73,43 @@ class CpuTest {
         return table;
     }
     
-    @Test
+    private void initiateReg(int regId, int value) {
+        Preconditions.checkBits8(value);
+        Preconditions.checkArgument(regId<=0b111);
+        
+        writeAllBytes(regId<<3 + 0b110, value); //LD r8 n8
+    }
+    /**
+     * 
+     * @param regId reg16 id 
+     * @param value 2 bytes in BIG-ENDIAN format
+     */
+    private void initiateReg16(int regId, int value) {
+        Preconditions.checkBits16(value);
+        Preconditions.checkArgument(regId<=0b11);
+        int msb = Bits.extract(value, 8, 8);
+        int lsb = Bits.clip(8, value);
+        writeAllBytes(regId<<4 + 0b1, msb , lsb); //LD r8 n8
+    }
+    
+    private void initiateRegs(int a, int b, int c, int d, int e, int h, int l) {
+        initiateReg(0b111, a);
+        initiateReg(0b000, b);
+        initiateReg(0b001, c);
+        initiateReg(0b010, d);
+        initiateReg(0b011, e);
+        initiateReg(0b100, h);
+        initiateReg(0b101, l);
+    }
+    
+    private void initiateRegs16 (int bc, int de, int hl, int af) {
+        initiateReg16(0b11, af);
+        initiateReg16(0b00, bc);
+        initiateReg16(0b01, de);
+        initiateReg16(0b10, hl);        
+    }
+    
+    //useless opcodes are not encoded this way
     public void AllOpcodesRun() {
         
         assertAll( () -> {
@@ -147,16 +183,8 @@ class CpuTest {
     @Test
     public void LD_R8_R8_isCorrectlyExecuted() {
         
-        ArrayList<Opcode> opFamily = buildOpcodeFamilyTable(Opcode.Family.LD_R8_R8);
-        for(Opcode o : opFamily) {
-            
-            writeAllBytes(o.encoding);
-            
-            cycleCpu(o.cycles);
-            
-            assertArrayEquals(new int[] {3, 0, 0, 0, 0, 0, 0, 0, 1, 4}, cpu._testGetPcSpAFBCDEHL());
-            
-        }
+
+        
     }
 
 }
