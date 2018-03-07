@@ -204,7 +204,11 @@ class CpuTest {
     public void LD_R8_R8_isCorrectlyExecuted() {
         
         initiateRegs(1, 1, 1, 0, 0xF, 0, 0);
-             
+        int[] regVals = cpu._testGetPcSpAFBCDEHL();
+        System.out.println("testGet:");
+        for (int i = 0; i<regVals.length; ++i) {
+        System.out.println(regVals[i]);
+        }
         writeAllBytes(Opcode.LD_A_B.encoding,
                       Opcode.LD_C_D.encoding,
                       Opcode.LD_E_H.encoding);
@@ -212,11 +216,7 @@ class CpuTest {
         cycleCpu(Opcode.LD_A_B.cycles+
                  Opcode.LD_C_D.cycles+
                  Opcode.LD_E_H.cycles);
-        int[] regVals = cpu._testGetPcSpAFBCDEHL();
-        System.out.println("testGet:");
-        for (int i = 0; i<regVals.length; ++i) {
-        System.out.println(regVals[i]);
-        }   
+          
         assertArrayEquals(new int[] {3, 0, 0, 0, 0, 1, 1, 0XFF, 0XFF, 0},
                 cpu._testGetPcSpAFBCDEHL());
         
