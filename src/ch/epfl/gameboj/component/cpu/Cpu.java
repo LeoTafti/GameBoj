@@ -320,7 +320,7 @@ public final class Cpu implements Component, Clocked {
         switch (r) {
         case AF :
             registerFile.set(Reg.A, highB);
-            registerFile.set(Reg.F, 0);
+            registerFile.set(Reg.F, lowB & ((1 << 4)-1)<<4); //takes only 4 msb of lowB (ie. the flags, rest is 0)
             break;
         case BC :
             registerFile.set(Reg.B, highB);
@@ -401,5 +401,9 @@ public final class Cpu implements Component, Clocked {
         }
         SP = 0;
         PC = 0;
+    }
+    
+    protected void setAllRegs(int a, int f, int b, int c, int d, int e, int h, int l) {
+        //TODO : implement
     }
 }
