@@ -310,7 +310,7 @@ public final class Cpu implements Component, Clocked {
      * sets register to given value
      */
     private void setReg(Reg r, int newV) {
-        setReg(r, newV);
+        registerFile.set(r, newV);
     }
     
     /**
