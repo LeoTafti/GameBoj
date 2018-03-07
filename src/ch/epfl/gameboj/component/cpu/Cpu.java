@@ -40,7 +40,7 @@ public final class Cpu implements Component, Clocked {
         if(cycle != nextNonIdleCycle) return;
         
         //TODO : not sure about that
-        int op = bus.read(PC);
+        int op = read8(PC);
         dispatch(op);
         
     };
@@ -61,10 +61,10 @@ public final class Cpu implements Component, Clocked {
                 write8AtHl(read8AtHl()+extractHlIncrement(opcode));
             } break;
             case LD_A_N8R: {
-                setReg(Reg.A, read8AfterOpcode());
+                setReg(Reg.A, read8(AddressMap.REGS_START + read8AfterOpcode()));
             } break;
             case LD_A_CR: {
-                setReg(Reg.A, read8(AddressMap.REGS_START + registerFile.get(Reg.C)));
+                setReg(Reg.A, read8(AddressMap.REGS_START + reg(Reg.C)));
             } break;
             case LD_A_N16R: {
                 setReg(Reg.A, read8(read16AfterOpcode()));
@@ -79,7 +79,7 @@ public final class Cpu implements Component, Clocked {
                 setReg(extractReg(opcode, 3), read8AfterOpcode());
             } break;
             case LD_R16SP_N16: {
-                setReg16(extractReg16(opcode), read16AfterOpcode());
+                setReg16SP(extractReg16(opcode), read16AfterOpcode());
             } break;
             case POP_R16: {
                 setReg16(extractReg16(opcode), pop16());
@@ -88,23 +88,23 @@ public final class Cpu implements Component, Clocked {
                 write8(reg16(Reg16.HL), read8AfterOpcode());
             } break;
             case LD_HLRU_A: {
-                write8(reg16(Reg16.HL), registerFile.get(Reg.A));
+                write8(reg16(Reg16.HL), reg(Reg.A));
                 write8AtHl(read8AtHl()+extractHlIncrement(opcode));
             } break;
             case LD_N8R_A: {
-                write8(AddressMap.REGS_START+read8AfterOpcode(), registerFile.get(Reg.A));
+                write8(AddressMap.REGS_START+read8AfterOpcode(), reg(Reg.A));
             } break;
             case LD_CR_A: {
-                write8(AddressMap.REGS_START+registerFile.get(Reg.C), registerFile.get(Reg.A));
+                write8(AddressMap.REGS_START+reg(Reg.C), reg(Reg.A));
             } break;
             case LD_N16R_A: {
-                write8(read16AfterOpcode(), registerFile.get(Reg.A));
+                write8(read16AfterOpcode(), reg(Reg.A));
             } break;
             case LD_BCR_A: {
-                write8(reg16(Reg16.BC), registerFile.get(Reg.A));
+                write8(reg16(Reg16.BC), reg(Reg.A));
             } break;
             case LD_DER_A: {
-                write8(reg16(Reg16.DE), registerFile.get(Reg.A));
+                write8(reg16(Reg16.DE), reg(Reg.A));
             } break;
             case LD_HLR_N8: {
                 write8AtHl(read8AfterOpcode());
@@ -114,7 +114,7 @@ public final class Cpu implements Component, Clocked {
             } break;
             case LD_R8_R8: {
                 if(extractReg(opcode, 3)!=extractReg(opcode, 0))
-                    setReg(extractReg(opcode, 3), registerFile.get(extractReg(opcode, 0)));
+                    setReg(extractReg(opcode, 3), reg(extractReg(opcode, 0)));
             } break;
             case LD_SP_HL: {
                 SP = reg16(Reg16.HL);
@@ -122,11 +122,11 @@ public final class Cpu implements Component, Clocked {
             case PUSH_R16: {
                 push16(reg16(extractReg16(opcode)));
             } break;
-//            default:
-//                throw new NullPointerException();
+            default:
+                throw new NullPointerException();
         }
         
-        //TODO : update PC value, wait for x cycles, etc (cf guidlines 2.5.1.3)
+        //TODO : PC overflow ???
         nextNonIdleCycle += opcode.cycles;
         PC += opcode.totalBytes; //TODO : not sure of that
     }
@@ -150,14 +150,14 @@ public final class Cpu implements Component, Clocked {
     public int[] _testGetPcSpAFBCDEHL() {
         int[] array = {PC,
                 SP,
-                registerFile.get(Reg.A),
-                registerFile.get(Reg.F),
-                registerFile.get(Reg.B),
-                registerFile.get(Reg.C),
-                registerFile.get(Reg.D),
-                registerFile.get(Reg.E),
-                registerFile.get(Reg.H),
-                registerFile.get(Reg.L)
+                reg(Reg.A),
+                reg(Reg.F),
+                reg(Reg.B),
+                reg(Reg.C),
+                reg(Reg.D),
+                reg(Reg.E),
+                reg(Reg.H),
+                reg(Reg.L)
         };
         return array;
     }
@@ -193,7 +193,7 @@ public final class Cpu implements Component, Clocked {
      * @return value at BUS[HL]
      */
     private int read8AtHl() {
-        return bus.read(reg16(Reg16.HL));
+        return read8(reg16(Reg16.HL));
     }
     
     /**
@@ -201,7 +201,9 @@ public final class Cpu implements Component, Clocked {
      * @return value at BUS[PC+1]
      */
     private int read8AfterOpcode() {
-        return bus.read(PC + 1);
+        assert PC != 0xFFFF;
+        
+        return read8(PC + 1);
     }
     
     /**
@@ -210,9 +212,11 @@ public final class Cpu implements Component, Clocked {
      * @return 16-bits value made from BUS[address] (8 lsb) and BUS[address+1] (8 msb)
      */
     private int read16(int address) {
+        assert address != 0xFFFF;
+        
         //little endian
-        int lsByte = bus.read(address);
-        int msByte = bus.read(address + 1);
+        int lsByte = read8(address);
+        int msByte = read8(address + 1);
         return Bits.make16(msByte, lsByte);
     }
     
@@ -222,6 +226,9 @@ public final class Cpu implements Component, Clocked {
      * @see Cpu#read16(int address)
      */
     private int read16AfterOpcode() {
+        assert PC != 0xFFFE;
+        assert PC != 0xFFFF;
+        
         return read16(PC + 1);
     }
     
@@ -242,16 +249,18 @@ public final class Cpu implements Component, Clocked {
      * @param v value to write
      */
     private void write16(int address, int v) {
-        bus.write(address, Bits.clip(8, v));            //writes 8 lsb first
-        bus.write(address + 1 , Bits.extract(v, 8, 8)); //then 8 msb
+        assert address != 0xFFFF;
+        
+        write8(address, Bits.clip(8, v));            //writes 8 lsb first
+        write8(address + 1 , Bits.extract(v, 8, 8)); //then 8 msb
     }
     
     /**
-     * Writes given 8-btis value on bus at addres given by regs HL
+     * Writes given 8-bits value on bus at address given by regs HL
      * @param v value to write
      */
     private void write8AtHl(int v) {
-        bus.write(reg16(Reg16.HL), v);
+        write8(reg16(Reg16.HL), v);
     }
     
     /**
@@ -261,6 +270,13 @@ public final class Cpu implements Component, Clocked {
      */
     private void push16(int v) {
         SP -= 2;
+        if(SP == -2) {
+            SP = 0xFFFE;
+        }
+        else if(SP == -1) {
+            SP = 0xFFFF;
+        }
+        
         write16(SP, v);
     }
     
@@ -271,7 +287,14 @@ public final class Cpu implements Component, Clocked {
     private int pop16() {
         int value = read16(SP);
         SP += 2;
+        if(SP > 0xFFFF) {
+            SP = Bits.clip(18, SP);
+        }
         return value;
+    }
+    
+    private int reg(Reg r) {
+        return registerFile.get(r);
     }
     
     /**
@@ -288,20 +311,20 @@ public final class Cpu implements Component, Clocked {
         
         switch (r) {
         case AF :
-            highB = registerFile.get(Reg.A);
-            lowB = registerFile.get(Reg.F);
+            highB = reg(Reg.A);
+            lowB = reg(Reg.F);
             break;
         case BC :
-            highB = registerFile.get(Reg.B);
-            lowB = registerFile.get(Reg.C);
+            highB = reg(Reg.B);
+            lowB = reg(Reg.C);
             break;
         case DE :
-            highB = registerFile.get(Reg.D);
-            lowB = registerFile.get(Reg.E);
+            highB = reg(Reg.D);
+            lowB = reg(Reg.E);
             break;
         case HL:
-            highB = registerFile.get(Reg.H);
-            lowB = registerFile.get(Reg.L);
+            highB = reg(Reg.H);
+            lowB = reg(Reg.L);
             break;
         }
         return Bits.make16(highB, lowB);
@@ -345,7 +368,7 @@ public final class Cpu implements Component, Clocked {
     
     /**
      * Puts given 16-bits value in given pair of 8-bits reas
-     *      If given 17-bits reg is AF, puts given value in SP instead
+     *      If given 16-bits reg is AF, puts given value in SP instead
      *      @see Cpu#setReg16(Reg16 r, int newV)
      * @param r pair of 8-bits regs
      * @param newV value to store
