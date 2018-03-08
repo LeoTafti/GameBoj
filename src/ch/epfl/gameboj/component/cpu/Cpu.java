@@ -284,7 +284,6 @@ public final class Cpu implements Component, Clocked {
      */
     private int pop16() {
         int value = read16(SP);
-        System.out.println(value);
         SP += 2;
         if(SP > 0xFFFF) {
             SP = Bits.clip(16, SP);
