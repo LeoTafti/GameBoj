@@ -58,7 +58,7 @@ public final class Cpu implements Component, Clocked {
             } break;
             case LD_A_HLRU: {
                 setReg(Reg.A , read8AtHl());
-                write8AtHl(read8AtHl()+extractHlIncrement(opcode));
+                setReg16(Reg16.HL, reg16(Reg16.HL) + extractHlIncrement(opcode));
             } break;
             case LD_A_N8R: {
                 setReg(Reg.A, read8(AddressMap.REGS_START + read8AfterOpcode()));
@@ -131,7 +131,7 @@ public final class Cpu implements Component, Clocked {
         
         //TODO : PC overflow ???
         nextNonIdleCycle += opcode.cycles;
-        PC += opcode.totalBytes; //TODO : not sure of that
+        PC += opcode.totalBytes;
     }
 
     
@@ -291,7 +291,7 @@ public final class Cpu implements Component, Clocked {
         int value = read16(SP);
         SP += 2;
         if(SP > 0xFFFF) {
-            SP = Bits.clip(18, SP);
+            SP = Bits.clip(16, SP);
         }
         return value;
     }

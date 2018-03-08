@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,7 +25,7 @@ class CpuTest {
     private Bus bus;
     private Cpu cpu;
     
-    private final int RAM_SIZE = 20 ;
+    private final int RAM_SIZE = 0xFFFF ;
     
     @BeforeEach
     public void initialize() {
@@ -81,29 +82,8 @@ class CpuTest {
 //        cpu.setReg(reg, value);
 //    }
     
-    /**
-     * 
-     * @param regId reg16 id 
-     * @param value 2 bytes in BIG-ENDIAN format
-     */
-    private void initiateReg16(int regId, int value) {
-        Preconditions.checkBits16(value);
-        Preconditions.checkArgument(regId<=0b11);
-        int msb = Bits.extract(value, 8, 8);
-        int lsb = Bits.clip(8, value);
-        writeAllBytes((regId<<4) + 0b1, msb , lsb); //LD r8 n8
-        cycleCpu(3);
-    }
-    
     private void initiateRegs(int a, int f, int b, int c, int d, int e, int h, int l) {
         cpu.setAllRegs(a, f, b, c, d, e, h, l);
-    }
-    
-    private void initiateRegs16 (int bc, int de, int hl, int af) {
-        initiateReg16(0b11, af);
-        initiateReg16(0b00, bc);
-        initiateReg16(0b01, de);
-        initiateReg16(0b10, hl);   
     }
     
     
@@ -179,7 +159,7 @@ class CpuTest {
         cycleCpu(Opcode.LD_A_HLRD.cycles);
         
         
-        assertArrayEquals(new int[] {4, 0, 0xF, 0, 0, 0, 0, 0, 0, 0xE},
+        assertArrayEquals(new int[] {1, 0, 0xF, 0, 0, 0, 0, 0, 0, 0xE},
                 cpu._testGetPcSpAFBCDEHL());
     }
     
@@ -200,7 +180,7 @@ class CpuTest {
     public void LD_A_CR_isCorrectlyExecuted() {
         initiateRegs(0, 0, 0, 1, 0, 0, 0, 0);
         writeAllBytes(Opcode.LD_A_CR.encoding);
-        bus.write(0xF, 0xF);
+        bus.write(0xFF01, 0xF);
         cycleCpu(Opcode.LD_A_CR.cycles);
         
         assertArrayEquals(new int[] {Opcode.LD_A_CR.totalBytes, 0, 0xF, 0, 0, 1, 0, 0, 0, 0},
@@ -221,25 +201,25 @@ class CpuTest {
     //TODO doesnt pass test
     @Test
     public void LD_A_BCR_isCorrectlyExecuted() {
-        initiateRegs16(0xF, 0, 0, 0);
+        initiateRegs(0, 0, 0, 0xf, 0, 0, 0, 0);
         bus.write(0xF, 0xF);
         writeAllBytes(Opcode.LD_A_BCR.encoding);
         
         cycleCpu(Opcode.LD_A_BCR.cycles);
         
-        assertArrayEquals(new int[] {3, 0, 0xF, 0, 0, 0xF, 0, 0, 0, 0},
+        assertArrayEquals(new int[] {1, 0, 0xF, 0, 0, 0xF, 0, 0, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());
     }
     
     //doesnt pass test
     @Test
     public void LD_A_DER_isCorrectlyExecuted() {
-        initiateRegs16(0, 0xF, 0, 0);
+        initiateRegs(0, 0, 0, 0, 0, 0xF, 0, 0);
         writeAllBytes(Opcode.LD_A_DER.encoding);
         bus.write(0xF, 0xF);
         cycleCpu(Opcode.LD_A_DER.cycles);
         
-        assertArrayEquals(new int[] {3, 0, 0xF, 0, 0, 0, 0, 0xF, 0, 0},
+        assertArrayEquals(new int[] {1, 0, 0xF, 0, 0, 0, 0, 0xF, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());
     }
     
@@ -264,11 +244,11 @@ class CpuTest {
     //TODO doesnt increment SP
     @Test
     public void POP_R16_isCorrectlyExecuted() {
-        initiateRegs16(0xA, 0, 0, 0);
-        writeAllBytes(0, Opcode.POP_BC.encoding);
-        cycleCpu(Opcode.POP_BC.cycles + 1);
+        initiateRegs(0, 0, 0, 0xA, 0, 0, 0, 0);
+        writeAllBytes(0, 0, Opcode.POP_BC.encoding);
+        cycleCpu(Opcode.POP_BC.cycles + 2);
         
-        assertArrayEquals(new int[] {4, 2, 0, 0, 0, 0, 0, 0, 0, 0},
+        assertArrayEquals(new int[] {3, 2, 0, 0, 0, 0, 0, 0, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());
         
     }
@@ -364,12 +344,14 @@ class CpuTest {
     //TODO test not passed
     @Test
     public void LD_HLR_N8_isCorrectlyExecuted() {
-        initiateRegs16(0, 0, 0xA, 0);
-        bus.write(0xA, 3);
-        writeAllBytes(Opcode.LD_HLR_N8.encoding, 0xF);
+        int HL = 0xA;
+        int value = 0xF;
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0xA);
+        bus.write(HL, 3);
+        writeAllBytes(Opcode.LD_HLR_N8.encoding, value);
         cycleCpu(Opcode.LD_HLR_N8.cycles);
         
-        assertEquals(0xF, bus.read(0xA));
+        assertEquals(value, bus.read(HL));
     }
     
     @Test
@@ -402,11 +384,11 @@ class CpuTest {
     //TODO doesnt pass test
     @Test
     public void LD_SP_HL_isCorrectlyExecuted() {
-        initiateRegs16(0, 0, 0xF, 0);
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0xF);
         writeAllBytes(Opcode.LD_SP_HL.encoding);
         cycleCpu(Opcode.LD_SP_HL.cycles);
         
-        assertArrayEquals(new int[] {3, 0xF, 0, 0, 0, 0, 0, 0, 0, 0xF},
+        assertArrayEquals(new int[] {1, 0xF, 0, 0, 0, 0, 0, 0, 0, 0xF},
                 cpu._testGetPcSpAFBCDEHL());
     }
     
