@@ -273,12 +273,7 @@ public final class Cpu implements Component, Clocked {
      */
     private void push16(int v) {
         SP -= 2;
-        if(SP == -2) {
-            SP = 0xFFFE;
-        }
-        else if(SP == -1) {
-            SP = 0xFFFF;
-        }
+        SP = Bits.clip(16, SP);
         
         write16(SP, v);
     }
@@ -289,6 +284,7 @@ public final class Cpu implements Component, Clocked {
      */
     private int pop16() {
         int value = read16(SP);
+        System.out.println(value);
         SP += 2;
         if(SP > 0xFFFF) {
             SP = Bits.clip(16, SP);
@@ -451,5 +447,10 @@ public final class Cpu implements Component, Clocked {
         setReg16(Reg16.BC, bc);
         setReg16(Reg16.DE, de);
         setReg16(Reg16.HL, hl);
+    }
+    
+    //TODO remove before commit
+    protected void setSP(int sp) {
+        SP = sp;
     }
 }

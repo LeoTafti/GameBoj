@@ -392,11 +392,30 @@ class CpuTest {
                 cpu._testGetPcSpAFBCDEHL());
     }
     
-    //TODO need to setup SP here
     @Test
-    public void PUSH_R16_isCorrectlyExecuted() {
+    public void underflow_R16() {
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        writeAllBytes(Opcode.LD_A_HLRD.encoding);
+        cycleCpu(Opcode.LD_A_HLRD.cycles);
         
+        assertArrayEquals(new int[] {1, 0, 58, 0, 0, 0, 0, 0, 0xff, 0xff},
+                cpu._testGetPcSpAFBCDEHL());
     }
+    //TODO need to setup SP here
+//    @Test
+//    public void POP_R16_isCorrectlyExecuted2() {
+//        cpu.setSP(0xFFFE);
+//        bus.write(0xFFFE, 0xA);
+//        bus.write(0xFFFF, 0x1);
+//        
+//        writeAllBytes(Opcode.POP_AF.encoding);
+//        cycleCpu(Opcode.POP_AF.cycles);
+//        
+//        System.out.println(Arrays.toString(cpu._testGetPcSpAFBCDEHL()));
+//        
+//        assertArrayEquals(new int[] {1, 0, 0xF, 0x1, 0, 0, 0, 0, 0, 0},
+//                cpu._testGetPcSpAFBCDEHL());
+//    }
 
     //TODO add limit cases
 
