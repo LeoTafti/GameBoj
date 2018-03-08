@@ -209,6 +209,7 @@ class CpuTest {
                 cpu._testGetPcSpAFBCDEHL());
     }
     
+    //TODO add limit cases
     @Test
     public void LD_A_HLRI_isCorrectlyExecuted() {
         initiateRegs(1, 0, 0, 0, 0, 0, 0, 0);
@@ -222,6 +223,7 @@ class CpuTest {
                 cpu._testGetPcSpAFBCDEHL());
     }
     
+    //TODO add limit cases
     @Test
     public void LD_A_HLRD_isCorrectlyExecuted() {
         initiateRegs(1, 0, 0, 0, 0, 0, 0, 1);
@@ -314,6 +316,7 @@ class CpuTest {
         
     }
     
+    //TODO add limit cases
     @Test
     public void POP_R16_isCorrectlyExecuted() {
         initiateRegs16(0x01F0, 0, 0, 0);
@@ -334,39 +337,90 @@ class CpuTest {
         assertEquals(1, bus.read(0xFF01));
     }
     
+    //TODO add limit cases
     @Test
-    public void LD_HLRU_A_isCorrectlyExecuted() {
+    public void LD_HLRI_A_isCorrectlyExecuted() {
+        bus.write(0xFF01, 0xF);
+        initiateRegs(1, 0, 0, 0, 0, 0, 0xFF, 0x01);
+        writeAllBytes(Opcode.LD_HLRI_A.encoding);
+        cycleCpu(Opcode.LD_HLRI_A.cycles);
         
+        assertArrayEquals(new int[] {Opcode.LD_HLRI_A.cycles, 0, 1, 0, 0, 0, 0, 0, 0xFF, 2},
+                cpu._testGetPcSpAFBCDEHL());
+        assertEquals(1, bus.read(0xFF01));
+    }
+    
+    //TODO add limit cases
+    @Test
+    public void LD_HLRD_A_isCorrectlyExecuted() {
+        bus.write(0xFF01, 0xF);
+        initiateRegs(1, 0, 0, 0, 0, 0, 0xFF, 0x01);
+        writeAllBytes(Opcode.LD_HLRD_A.encoding);
+        cycleCpu(Opcode.LD_HLRD_A.cycles);
+        
+        assertArrayEquals(new int[] {Opcode.LD_HLRI_A.cycles, 0, 1, 0, 0, 0, 0, 0, 0xFF, 0},
+                cpu._testGetPcSpAFBCDEHL());
+        assertEquals(1, bus.read(0xFF01));
     }
     
     @Test
-    public void LD_NR8_A_isCorrectlyExecuted() {
+    public void LD_N8R_A_isCorrectlyExecuted() {
+        initiateRegs(0xF, 0, 0, 0, 0, 0, 0, 0);
+        bus.write(0xFF04, 1);
+        writeAllBytes(Opcode.LD_N8R_A.encoding, 04);
+        cycleCpu(Opcode.LD_N8R_A.cycles);
         
+        assertEquals(0xF, bus.read(0xFF04));
     }
     
     @Test
     public void LD_CR_A_isCorrectlyExecuted() {
+        initiateRegs(0xF, 0, 0, 5, 0, 0, 0, 0);
+        bus.write(0xFF05, 1);
+        writeAllBytes(Opcode.LD_CR_A.encoding);
+        cycleCpu(Opcode.LD_CR_A.cycles);
         
+        assertEquals(0xF, bus.read(0xFF05));
     }
-    
+    //TODO big-endian?
     @Test
     public void LD_N16R_A_isCorrectlyExecuted() {
+        initiateRegs(0xF, 0, 0, 0, 0, 0, 0, 0);
+        bus.write(0xFF03, 1);
+        writeAllBytes(Opcode.LD_N16R_A.encoding, 3, 0xFF); //big endian addresses??
+        cycleCpu(Opcode.LD_N16R_A.cycles);
         
+        assertEquals(0xF, bus.read(0xFF03));
     }
     
     @Test
     public void LD_BCR_A_isCorrectlyExecuted() {
+        initiateRegs(0xF, 0, 0xFF, 0x3, 0, 0, 0, 0);
+        bus.write(0xFF03, 1);
+        writeAllBytes(Opcode.LD_BCR_A.encoding);
+        cycleCpu(Opcode.LD_BCR_A.cycles);
         
+        assertEquals(0xF, bus.read(0xFF03));
     }
     
     @Test
     public void LD_DER_A_isCorrectlyExecuted() {
+        initiateRegs(0xF, 0, 0, 0, 0xFF, 0x3, 0, 0 );
+        bus.write(0xFF03, 1);
+        writeAllBytes(Opcode.LD_DER_A.encoding);
+        cycleCpu(Opcode.LD_DER_A.cycles);
         
+        assertEquals(0xF, bus.read(0xFF03));
     }
     
     @Test
     public void LD_HLR_N8_isCorrectlyExecuted() {
+        initiateRegs16(0, 0, 0xF5, 0);
+        bus.write(0xF5, 3);
+        writeAllBytes(Opcode.LD_HLR_N8.encoding, 0xF);
+        cycleCpu(Opcode.LD_HLR_N8.cycles);
         
+        assertEquals(0xF, bus.read(0xF5));
     }
     
     @Test
@@ -382,21 +436,35 @@ class CpuTest {
         
         cycleCpu(Opcode.LD_HL_N16.cycles);
 
-        assertArrayEquals(new int[] {3, 0, 0, 0, 0, 0, 0, 0, 1, 4}, cpu._testGetPcSpAFBCDEHL());
+        assertArrayEquals(new int[] {3, 0, 0, 0, 0, 0, 0, 0, 1, 4},
+                cpu._testGetPcSpAFBCDEHL());
     }
-    
+    //TODO write in SP? using 0 atm but not clean
     @Test
     public void LD_N16R_SP_isCorrectlyExecuted() {
+        bus.write(0xFF01, 0xF);
+        writeAllBytes(Opcode.LD_N16R_SP.encoding, 1, 0xFF);
+        cycleCpu(Opcode.LD_N16R_SP.cycles);
         
+        assertEquals(0, bus.read(0xFF01));
     }
     
     @Test
     public void LD_SP_HL_isCorrectlyExecuted() {
+        initiateRegs16(0, 0, 0xFF01, 0);
+        writeAllBytes(Opcode.LD_SP_HL.encoding);
+        cycleCpu(Opcode.LD_SP_HL.cycles);
         
+        assertArrayEquals(new int[] {Opcode.LD_SP_HL.cycles, 0xFF01, 0, 0, 0, 0, 0, 0, 0xFF, 1},
+                cpu._testGetPcSpAFBCDEHL());
     }
     
+    //TODO need to setup SP here
     @Test
     public void PUSH_R16_isCorrectlyExecuted() {
         
     }
+
+    //TODO add limit cases
+
 }
