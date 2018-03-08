@@ -170,7 +170,7 @@ class CpuTest {
     }
     
     //TODO add limit cases
-    //TODO doesnt decrement HL
+    //doesnt decrement HL
     @Test
     public void LD_A_HLRD_isCorrectlyExecuted() {
         initiateRegs(1, 0, 0, 0, 0, 0, 0, 0xF);
@@ -206,9 +206,7 @@ class CpuTest {
         assertArrayEquals(new int[] {Opcode.LD_A_CR.totalBytes, 0, 0xF, 0, 0, 1, 0, 0, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());
     }
-    
-    //TODO TODO TODO verify Big-endian, Little-endian
-    
+        
     @Test
     public void LD_A_N16R_isCorrectlyExecuted() {
         writeAllBytes(Opcode.LD_A_N16R.encoding, 
@@ -286,7 +284,6 @@ class CpuTest {
     }
     
     //TODO add limit cases
-    //TODO tets not passed
     @Test
     public void LD_HLRI_A_isCorrectlyExecuted() {
         bus.write(0xA, 0xF);
@@ -333,7 +330,7 @@ class CpuTest {
         
         assertEquals(0xF, bus.read(0xFF05));
     }
-    //TODO big-endian?
+    
     @Test
     public void LD_N16R_A_isCorrectlyExecuted() {
         initiateRegs(0xF, 0, 0, 0, 0, 0, 0, 0);
