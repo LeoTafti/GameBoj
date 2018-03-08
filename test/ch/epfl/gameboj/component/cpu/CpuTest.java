@@ -1,6 +1,7 @@
 package ch.epfl.gameboj.component.cpu;
 
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -16,6 +17,8 @@ import ch.epfl.gameboj.bits.Bits;
 import ch.epfl.gameboj.component.memory.Ram;
 import ch.epfl.gameboj.component.memory.RamController;
 import ch.epfl.gameboj.component.cpu.Opcode;
+import ch.epfl.gameboj.component.cpu.Opcode.Family;
+import ch.epfl.gameboj.component.cpu.Opcode.Kind;
 
 class CpuTest {
     private Bus bus;
@@ -259,6 +262,8 @@ class CpuTest {
                 cpu._testGetPcSpAFBCDEHL());
     }
     
+    //TODO TODO TODO verify Big-endian, Little-endian
+    
     @Test
     public void LD_A_N16R_isCorrectlyExecuted() {
         writeAllBytes(Opcode.LD_A_N16R.encoding, 
@@ -272,27 +277,61 @@ class CpuTest {
     
     @Test
     public void LD_A_BCR_isCorrectlyExecuted() {
+        initiateRegs16(0xFF01, 0, 0, 0);
+        writeAllBytes(Opcode.LD_A_BCR.encoding);
+        bus.write(0xFF01, 0xF);
+        cycleCpu(Opcode.LD_A_BCR.cycles);
         
+        assertArrayEquals(new int[] {Opcode.LD_A_BCR.cycles, 0, 0xF, 0, 01, 0xFF, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
     }
     
     @Test
     public void LD_A_DER_isCorrectlyExecuted() {
+        initiateRegs16(0, 0xFF01, 0, 0);
+        writeAllBytes(Opcode.LD_A_DER.encoding);
+        bus.write(0xFF01, 0xF);
+        cycleCpu(Opcode.LD_A_DER.cycles);
         
+        assertArrayEquals(new int[] {Opcode.LD_A_DER.cycles, 0, 0xF, 0, 0, 0, 01, 0xFF, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
     }
     
     @Test
     public void LD_R16SP_N16_isCorrectlyExecuted() {
+        writeAllBytes(Opcode.LD_BC_N16.encoding,0xFF,0x1,
+                      Opcode.LD_DE_N16.encoding,0xFF,0x1,
+                      Opcode.LD_HL_N16.encoding,0xFF,0x1,
+                      Opcode.LD_SP_N16.encoding,0xFF,0x1);
+        int dur = Opcode.LD_BC_N16.cycles +
+                  Opcode.LD_DE_N16.cycles +
+                  Opcode.LD_HL_N16.cycles +
+                  Opcode.LD_SP_N16.cycles;
+        cycleCpu(dur);
+        
+        assertArrayEquals(new int[] {dur, 0xFF01, 0, 0, 0xFF, 0x01, 0xFF, 0x01, 0xFF, 0x01},
+                cpu._testGetPcSpAFBCDEHL());
         
     }
     
     @Test
     public void POP_R16_isCorrectlyExecuted() {
+        initiateRegs16(0x01F0, 0, 0, 0);
+        writeAllBytes(0, Opcode.POP_BC.encoding);
+        cycleCpu(Opcode.POP_BC.cycles + 1);
+        
+        assertArrayEquals(new int[] {Opcode.POP_BC.cycles + 1, 2, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
         
     }
     
     @Test
     public void LD_HLR_R8_isCorrectlyExecuted() {
+        initiateRegs(1, 0, 0, 0, 0, 0, 0xFF, 01);
+        writeAllBytes(Opcode.LD_HLR_A.encoding);
+        bus.write(0xFF01, 0x0F);
         
+        assertEquals(1, bus.read(0xFF01));
     }
     
     @Test
