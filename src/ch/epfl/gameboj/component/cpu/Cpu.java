@@ -85,7 +85,7 @@ public final class Cpu implements Component, Clocked {
                 setReg16(extractReg16(opcode), pop16());
             } break;
             case LD_HLR_R8: {
-                write8(reg16(Reg16.HL), read8AfterOpcode());
+                write8(reg16(Reg16.HL), reg(extractReg(opcode, 0)));
             } break;
             case LD_HLRU_A: {
                 write8(reg16(Reg16.HL), reg(Reg.A));
