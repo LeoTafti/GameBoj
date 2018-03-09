@@ -631,7 +631,6 @@ public enum Opcode {
     public final int totalBytes;
     public final int cycles, additionalCycles;
 
-    
     private Opcode(Kind kind, Family family, int encoding, int totalBytes, int cycles, int additionalCycles) {
         this.kind = kind;
         this.family = family;
