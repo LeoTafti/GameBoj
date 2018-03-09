@@ -353,6 +353,15 @@ class CpuTest {
                 cpu._testGetPcSpAFBCDEHL());
     }
     
+    @Test
+    void PUSH_R16() {
+        cpu.setSP(765);
+        initiateRegs(0, 0, 0, 0, 0, 54, 0, 0);
+        writeAllBytes(Opcode.PUSH_BC.encoding);
+        cycleCpu(Opcode.PUSH_BC.cycles);
+        assertEquals(54, cpu.read16(0xFFFE)); 
+    }
+    
 //    @Test
 //    public void POP_R16_isCorrectlyExecuted2() {
 //        cpu.setSP(0xFFFE);
