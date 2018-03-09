@@ -51,6 +51,6 @@ public final class RegisterFile<E extends Register> {
      * @param newValue value to assign to bit
      */
     public void setBit(E reg, Bit bit, boolean newValue) {
-        Bits.set(regs[reg.index()], bit.index(), newValue);
+        regs[reg.index()] = (byte) Bits.set(regs[reg.index()], bit.index(), newValue);
     }
 }
