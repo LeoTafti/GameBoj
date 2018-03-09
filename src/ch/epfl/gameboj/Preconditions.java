@@ -18,10 +18,10 @@ public interface Preconditions {
     }
 
     /**
-     * Verifies given int is 8bit
+     * Verifies given value is 8bit
      * @param v subject bit to be tested 
      * @return argument if a correct 8 bit
-     * @throws IllegalArgumentException if given int is bigger then 8 bits or negative
+     * @throws IllegalArgumentException if given value is bigger than 8 bits
      */
     static int checkBits8(int v) {
         if (v > 0xFF || v < 0x00)
@@ -31,10 +31,10 @@ public interface Preconditions {
     }
 
     /**
-     * Verifies given int is 16bit
+     * Verifies given value is 16bit
      * @param v subject bit to be tested
      * @return argument if a correct 16 bit
-     * @throws IllegalArgumentException if given int is bigger then 16 bits or negative
+     * @throws IllegalArgumentException if given value is bigger than 16 bits
      */
     static int checkBits16(int v) {
         if (v > 0xFFFF || v < 0x00)

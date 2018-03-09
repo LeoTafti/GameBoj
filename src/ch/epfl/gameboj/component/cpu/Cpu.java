@@ -7,6 +7,7 @@ package ch.epfl.gameboj.component.cpu;
 
 import ch.epfl.gameboj.AddressMap;
 import ch.epfl.gameboj.Bus;
+import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.Register;
 import ch.epfl.gameboj.RegisterFile;
 import ch.epfl.gameboj.bits.Bits;
@@ -39,17 +40,24 @@ public final class Cpu implements Component, Clocked {
         
         if(cycle != nextNonIdleCycle) return;
         
-        //TODO : not sure about that
         int op = read8(PC);
-        dispatch(op);
+        
+        Opcode opcode = DIRECT_OPCODE_TABLE[op];
+        dispatch(opcode);
+        
+        //TODO : PC overflow ???
+        nextNonIdleCycle += opcode.cycles;
+        PC += opcode.totalBytes;
         
     };
     
-    public void dispatch(int op) {
-        //TODO : may not be logical at all, think about what it really is supposed to do !
-        Opcode opcode = DIRECT_OPCODE_TABLE[op];
-        //TODO : implement each case
-        //TODO : take care of op not beeing associated with an instruction
+    /**
+     * Given an opcode executes corresponding operation
+     * @param opcode opcode to execute
+     * @throws NullPointerException if given opcode doesn't correspond
+     *      to any of the one's handled here
+     */
+    private void dispatch(Opcode opcode) {
         switch(opcode.family) {
             case NOP: {
             } break;
@@ -58,7 +66,7 @@ public final class Cpu implements Component, Clocked {
             } break;
             case LD_A_HLRU: {
                 setReg(Reg.A , read8AtHl());
-                setReg16(Reg16.HL, reg16(Reg16.HL) + extractHlIncrement(opcode));
+                setReg16(Reg16.HL, Bits.clip(16, reg16(Reg16.HL) + extractHlIncrement(opcode)));
             } break;
             case LD_A_N8R: {
                 setReg(Reg.A, read8(AddressMap.REGS_START + read8AfterOpcode()));
@@ -89,8 +97,7 @@ public final class Cpu implements Component, Clocked {
             } break;
             case LD_HLRU_A: {
                 write8(reg16(Reg16.HL), reg(Reg.A));
-//                write8AtHl(read8AtHl()+extractHlIncrement(opcode));
-                setReg16(Reg16.HL, reg16(Reg16.HL)+extractHlIncrement(opcode));
+                setReg16(Reg16.HL, Bits.clip(16, reg16(Reg16.HL)+extractHlIncrement(opcode)));
             } break;
             case LD_N8R_A: {
                 write8(AddressMap.REGS_START+read8AfterOpcode(), reg(Reg.A));
@@ -128,10 +135,6 @@ public final class Cpu implements Component, Clocked {
             default:
                 throw new NullPointerException();
         }
-        
-        //TODO : PC overflow ???
-        nextNonIdleCycle += opcode.cycles;
-        PC += opcode.totalBytes;
     }
 
     
@@ -183,7 +186,7 @@ public final class Cpu implements Component, Clocked {
     }
     
     /**
-     * Reads 8-bits value at given address from bus
+     * Reads 8-bit value at given address from bus
      * @param address address of value
      * @return value at BUS[address]
      */
@@ -192,7 +195,7 @@ public final class Cpu implements Component, Clocked {
     }
     
     /**
-     * Reads 8-bits value from bus at address given by regs HL
+     * Reads 8-bit value from bus at address given by regs HL
      * @return value at BUS[HL]
      */
     private int read8AtHl() {
@@ -200,7 +203,7 @@ public final class Cpu implements Component, Clocked {
     }
     
     /**
-     * Reads 8-bits value from bus at address given by reg PC + 1
+     * Reads 8-bit value from bus at address given by reg PC + 1
      * @return value at BUS[PC+1]
      */
     private int read8AfterOpcode() {
@@ -210,9 +213,9 @@ public final class Cpu implements Component, Clocked {
     }
     
     /**
-     * Reads 16-bits value from bus at given address
+     * Reads 16-bit value from bus at given address
      * @param address address first 8 bits of value
-     * @return 16-bits value made from BUS[address] (8 lsb) and BUS[address+1] (8 msb)
+     * @return 16-bit value made from BUS[address] (8 lsb) and BUS[address+1] (8 msb)
      */
     private int read16(int address) {
         assert address != 0xFFFF;
@@ -224,8 +227,8 @@ public final class Cpu implements Component, Clocked {
     }
     
     /**
-     * Reads 16-bits value from bus at address given by reg PC + 1
-     * @return 16-bits value made from BUS[PC + 1] (8 lsb) and BUS[PC + 2] (8 msb)
+     * Reads 16-bit value from bus at address given by reg PC + 1
+     * @return 16-bit value made from BUS[PC + 1] (8 lsb) and BUS[PC + 2] (8 msb)
      * @see Cpu#read16(int address)
      */
     private int read16AfterOpcode() {
@@ -236,7 +239,7 @@ public final class Cpu implements Component, Clocked {
     }
     
     /**
-     * Writes given 8-bits value on bus at given address
+     * Writes given 8-bit value on bus at given address
      * @param address write location
      * @param v value to write
      */
@@ -245,21 +248,25 @@ public final class Cpu implements Component, Clocked {
     }
     
     /**
-     * Writes given 16-bits value on bus at given address
+     * Writes given 16-bit value on bus at given address
      *      First 8 lsb at BUS[address], then 8 msb at BUS[address + 1]
      *      (little endian)
      * @param address write location
      * @param v value to write
+     * @throws IllegalArgumentException if address or v aren't 16-bit values
      */
     private void write16(int address, int v) {
         assert address != 0xFFFF;
+        
+        Preconditions.checkBits16(address);
+        Preconditions.checkBits16(v);
         
         write8(address, Bits.clip(8, v));            //writes 8 lsb first
         write8(address + 1 , Bits.extract(v, 8, 8)); //then 8 msb
     }
     
     /**
-     * Writes given 8-bits value on bus at address given by regs HL
+     * Writes given 8-bit value on bus at address given by regs HL
      * @param v value to write
      */
     private void write8AtHl(int v) {
@@ -267,7 +274,7 @@ public final class Cpu implements Component, Clocked {
     }
     
     /**
-     * Decrements SP by 2, then writes given 16-bits value at address given by new SP value
+     * Decrements SP by 2, then writes given 16-bit value at address given by new SP value
      * (ie. writes given value at old SP - 2)
      * @param v value to write
      */
@@ -279,32 +286,32 @@ public final class Cpu implements Component, Clocked {
     }
     
     /**
-     * Reads 16-bits value from bus at address given by SP, then increments SP by 2
+     * Reads 16-bit value from bus at address given by SP, then increments SP by 2
      * @return value at BUS[old SP]
      */
     private int pop16() {
         int value = read16(SP);
         SP += 2;
-        if(SP > 0xFFFF) {
-            SP = Bits.clip(16, SP);
-        }
+        SP = Bits.clip(16, SP);
         return value;
     }
     
+    /**
+     * Returns value stored in given reg
+     * @param r register
+     * @return value store in register
+     */
     private int reg(Reg r) {
         return registerFile.get(r);
     }
     
     /**
-     * Returns value stored in pair of 8-bits regs
+     * Returns value stored in pair of 8-bit regs
      *      (note : 8 msb in first reg, 8 lsb in second reg)
-     * @param r pair of 8-bits regs
-     * @return value stored in given 16-bits reg
+     * @param r pair of 8-bit regs
+     * @return value stored in given 16-bit reg
      */
     private int reg16(Reg16 r) {
-        
-        //TODO : better method (more concise) than switch ?
-        
         int highB = 0, lowB = 0;
         
         switch (r) {
@@ -328,19 +335,24 @@ public final class Cpu implements Component, Clocked {
         return Bits.make16(highB, lowB);
     }
     /**
-     * sets register to given value
+     * Sets given reg with given value
+     * @param r register in which to put value
+     * @param newV new value to store
      */
     private void setReg(Reg r, int newV) {
         registerFile.set(r, newV);
     }
     
     /**
-     * Puts given 16-bits value in given pair of 8-bits regs
+     * Puts given 16-bit value in given pair of 8-bit regs
      *      note : 8 msb in first reg, 8 lsb in second reg
-     * @param r pair of 8-bits registers
+     * @param r pair of 8-bit registers
      * @param newV value to store
+     * @throws IllegalArgumentException if newV isn't a 16-bit value
      */
     private void setReg16(Reg16 r, int newV) {
+        Preconditions.checkBits16(newV);
+        
         int highB = Bits.extract(newV, 8, 8);
         int lowB = Bits.clip(8, newV);
         
@@ -365,19 +377,27 @@ public final class Cpu implements Component, Clocked {
     }
     
     /**
-     * Puts given 16-bits value in given pair of 8-bits reas
-     *      If given 16-bits reg is AF, puts given value in SP instead
+     * Puts given 16-bit value in given pair of 8-bit reas
+     *      If given 16-bit reg is AF, puts given value in SP instead
      *      @see Cpu#setReg16(Reg16 r, int newV)
-     * @param r pair of 8-bits regs
+     * @param r pair of 8-bit regs
      * @param newV value to store
+     * @throws IllegalArgumentException if newV isn't a 16-bit value
      */
     private void setReg16SP(Reg16 r, int newV) {
+        Preconditions.checkBits16(newV);
         if(r == Reg16.AF) {
             SP = newV;
         }
         setReg16(r, newV);
     }
     
+    /**
+     * Extracts 8-bit reg identity form opcode encoding, from given bit index
+     * @param opcode opcode in which reg is encoded
+     * @param startBit index from which to extract reg id
+     * @return Reg value
+     */
     private Reg extractReg(Opcode opcode, int startBit) {
         int regCode = Bits.extract(opcode.encoding, startBit, 3);
         switch (regCode) {
@@ -401,6 +421,11 @@ public final class Cpu implements Component, Clocked {
         }
     }
    
+    /**
+     * Extracts 16-bit reg identity from opcode encoding
+     * @param opcode opcode in which reg is encoded
+     * @return Reg value
+     */
     private Reg16 extractReg16(Opcode opcode) {
         int regsCode = Bits.extract(opcode.encoding, 4, 2);
         switch (regsCode) {
@@ -412,12 +437,16 @@ public final class Cpu implements Component, Clocked {
             return Reg16.HL;
         case 0b11:
             return Reg16.AF;
-            //TODO : what about if 0b11 is used to represent SP ?
         default:
             throw new IllegalArgumentException();
         }
     }
     
+    /**
+     * Extracts and return HL increment from opcode encoding
+     * @param opcode opcode in which HL increment is encoded
+     * @return HL increment, -1 or +1
+     */
     private int extractHlIncrement(Opcode opcode) {
         return Bits.test(opcode.encoding, 4) ? -1 : 1;
     }

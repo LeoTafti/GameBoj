@@ -2,24 +2,16 @@ package ch.epfl.gameboj.component.cpu;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import ch.epfl.gameboj.Bus;
 import ch.epfl.gameboj.Preconditions;
-import ch.epfl.gameboj.bits.Bits;
 import ch.epfl.gameboj.component.memory.Ram;
 import ch.epfl.gameboj.component.memory.RamController;
 import ch.epfl.gameboj.component.cpu.Opcode;
-import ch.epfl.gameboj.component.cpu.Opcode.Family;
-import ch.epfl.gameboj.component.cpu.Opcode.Kind;
+
 
 class CpuTest {
     private Bus bus;
@@ -57,30 +49,6 @@ class CpuTest {
             bus.write(i, instr);
         }
     }
-     
-    private Opcode getOpcode(int encoding) {
-        Preconditions.checkBits8(encoding);
-        for(Opcode a: Opcode.values()) {
-            if(encoding == a.encoding) return a;
-        }
-        return Opcode.NOP; 
-    }
-    
-    private static ArrayList<Opcode> buildOpcodeFamilyTable(Opcode.Family family) {
-        
-        ArrayList<Opcode> table = new ArrayList<Opcode>();
-        for (Opcode o: Opcode.values()) {
-            if(o.family == family) {
-                table.add(o);
-            }
-        }
-        return table;
-    }
-    
-//    private void initiateReg(int regId, int value) {
-//        Preconditions.checkBits8(value);
-//        cpu.setReg(reg, value);
-//    }
     
     private void initiateRegs(int a, int f, int b, int c, int d, int e, int h, int l) {
         cpu.setAllRegs(a, f, b, c, d, e, h, l);
@@ -134,8 +102,6 @@ class CpuTest {
                 cpu._testGetPcSpAFBCDEHL());
     }
     
-    //TODO add limit cases
-    //Doesnt increment HL
     @Test
     public void LD_A_HLRI_isCorrectlyExecuted() {
         initiateRegs(1, 0, 0, 0, 0, 0, 0, 0);
@@ -149,8 +115,6 @@ class CpuTest {
                 cpu._testGetPcSpAFBCDEHL());
     }
     
-    //TODO add limit cases
-    //doesnt decrement HL
     @Test
     public void LD_A_HLRD_isCorrectlyExecuted() {
         initiateRegs(1, 0, 0, 0, 0, 0, 0, 0xF);
@@ -163,7 +127,6 @@ class CpuTest {
                 cpu._testGetPcSpAFBCDEHL());
     }
     
-    //cannot test addresses above 0XFF00
     @Test
     public void LD_A_N8R_isCorrectlyExecuted() {
         writeAllBytes(Opcode.LD_A_N8R.encoding,
@@ -175,7 +138,7 @@ class CpuTest {
                 cpu._testGetPcSpAFBCDEHL());
         
     }
-    // TODO cannot be tested because methods uses addresses above 0xFF00
+
     @Test
     public void LD_A_CR_isCorrectlyExecuted() {
         initiateRegs(0, 0, 0, 1, 0, 0, 0, 0);
@@ -198,7 +161,6 @@ class CpuTest {
                 cpu._testGetPcSpAFBCDEHL());
     }
     
-    //TODO doesnt pass test
     @Test
     public void LD_A_BCR_isCorrectlyExecuted() {
         initiateRegs(0, 0, 0, 0xf, 0, 0, 0, 0);
@@ -211,7 +173,6 @@ class CpuTest {
                 cpu._testGetPcSpAFBCDEHL());
     }
     
-    //doesnt pass test
     @Test
     public void LD_A_DER_isCorrectlyExecuted() {
         initiateRegs(0, 0, 0, 0, 0, 0xF, 0, 0);
@@ -228,7 +189,6 @@ class CpuTest {
         writeAllBytes(Opcode.LD_BC_N16.encoding,0x1,0xFF,
                       Opcode.LD_DE_N16.encoding,0x1,0xFF,
                       Opcode.LD_HL_N16.encoding,0x1,0xFF);
-//                      Opcode.LD_SP_N16.encoding,0xFF,0x1);
         int dur = Opcode.LD_BC_N16.cycles +
                   Opcode.LD_DE_N16.cycles +
                   Opcode.LD_HL_N16.cycles +
@@ -240,8 +200,6 @@ class CpuTest {
         
     }
     
-    //TODO add limit cases
-    //TODO doesnt increment SP
     @Test
     public void POP_R16_isCorrectlyExecuted() {
         initiateRegs(0, 0, 0, 0xA, 0, 0, 0, 0);
@@ -263,7 +221,6 @@ class CpuTest {
         assertEquals(1, bus.read(0xF));
     }
     
-    //TODO add limit cases
     @Test
     public void LD_HLRI_A_isCorrectlyExecuted() {
         bus.write(0xA, 0xF);
@@ -276,7 +233,6 @@ class CpuTest {
         assertEquals(1, bus.read(0xA));
     }
     
-    //TODO add limit cases
     @Test
     public void LD_HLRD_A_isCorrectlyExecuted() {
         bus.write(0xF, 0xF);
@@ -289,7 +245,6 @@ class CpuTest {
         assertEquals(1, bus.read(0xF));
     }
     
-    //cannot be tested need access to addresses above 0XFF00
     @Test
     public void LD_N8R_A_isCorrectlyExecuted() {
         initiateRegs(0xF, 0, 0, 0, 0, 0, 0, 0);
@@ -300,7 +255,6 @@ class CpuTest {
         assertEquals(0xF, bus.read(0xFF04));
     }
     
-    //TODO cannot be tested need access to addresses above 0XFF00
     @Test
     public void LD_CR_A_isCorrectlyExecuted() {
         initiateRegs(0xF, 0, 0, 5, 0, 0, 0, 0);
@@ -341,7 +295,6 @@ class CpuTest {
         assertEquals(0xF, bus.read(0xA));
     }
     
-    //TODO test not passed
     @Test
     public void LD_HLR_N8_isCorrectlyExecuted() {
         int HL = 0xA;
@@ -371,7 +324,6 @@ class CpuTest {
                 cpu._testGetPcSpAFBCDEHL());
     }
     
-    //TODO write in SP? using 0 atm but not clean
     @Test
     public void LD_N16R_SP_isCorrectlyExecuted() {
         bus.write(0xF, 0xF);
@@ -381,7 +333,6 @@ class CpuTest {
         assertEquals(0, bus.read(0xF));
     }
     
-    //TODO doesnt pass test
     @Test
     public void LD_SP_HL_isCorrectlyExecuted() {
         initiateRegs(0, 0, 0, 0, 0, 0, 0, 0xF);
@@ -401,7 +352,7 @@ class CpuTest {
         assertArrayEquals(new int[] {1, 0, 58, 0, 0, 0, 0, 0, 0xff, 0xff},
                 cpu._testGetPcSpAFBCDEHL());
     }
-    //TODO need to setup SP here
+    
 //    @Test
 //    public void POP_R16_isCorrectlyExecuted2() {
 //        cpu.setSP(0xFFFE);
@@ -416,7 +367,5 @@ class CpuTest {
 //        assertArrayEquals(new int[] {1, 0, 0xF, 0x1, 0, 0, 0, 0, 0, 0},
 //                cpu._testGetPcSpAFBCDEHL());
 //    }
-
-    //TODO add limit cases
 
 }
