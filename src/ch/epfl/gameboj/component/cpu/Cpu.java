@@ -13,11 +13,14 @@ import ch.epfl.gameboj.RegisterFile;
 import ch.epfl.gameboj.bits.Bits;
 import ch.epfl.gameboj.component.Clocked;
 import ch.epfl.gameboj.component.Component;
+import ch.epfl.gameboj.component.cpu.Alu.RotDir;
 
 public final class Cpu implements Component, Clocked {
 
     private enum Reg implements Register { A, F, B, C, D, E, H, L }
     private enum Reg16 implements Register { AF, BC, DE, HL}
+    
+    private enum FlagSrc { V0, V1, ALU, CPU }
     
     private RegisterFile<Reg> registerFile = new RegisterFile<>(Reg.values());
     private int SP = 0, PC = 0;
@@ -587,6 +590,46 @@ public final class Cpu implements Component, Clocked {
      */
     private int getInitialBorrow(Opcode opcode) {
         return getInitialCarry(opcode);
+    }
+    
+    private int getCFlagSCCF(Opcode opcode) {
+        return Bits.test(opcode.encoding, 3) && Bits.test(reg(Reg.F), 3) ? 0 : 1;
+    }
+    
+    private int addSP_e8(Opcode opcode) {
+        
+    }
+    
+    private void setRegFromAlu(Reg r, int vf) {
+        
+    }
+    
+    private void setFlags(int valueFlags) {
+        
+    }
+    
+    private void setRegFlags(Reg r, int vf) {
+        
+    }
+    
+    private void write8AtHlAndSetFlags(int vf) {
+        
+    }
+    
+    private void combineAluFlags(int vf, FlagSrc z, FlagSrc n, FlagSrc h, FlagSrc c) {
+        
+    }
+    
+    private RotDir extractRotDir(Opcode opcode) {
+        
+    }
+    
+    private int extractTestBitIndex(Opcode opcode) {
+        
+    }
+    
+    private int extractSetBitIndex(Opcode opcode) {
+        
     }
     
 //    protected void reset() {
