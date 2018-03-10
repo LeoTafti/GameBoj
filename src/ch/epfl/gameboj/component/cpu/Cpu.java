@@ -623,6 +623,7 @@ public final class Cpu implements Component, Clocked {
 //        else {
 //            SP = Alu.unpackValue(valueFlags);
 //        }
+        
     }
     
     private void setRegFromAlu(Reg r, int vf) {
