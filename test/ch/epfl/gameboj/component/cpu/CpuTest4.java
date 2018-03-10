@@ -6,6 +6,7 @@
 package ch.epfl.gameboj.component.cpu;
 
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -47,16 +48,16 @@ public class CpuTest4 {
      * @param startAdress
      * @param bytes
      */
-    private void writeAllBytes(int startAdress, int ... bytes) {
-        Preconditions.checkBits16(startAdress);
-        if(bytes.length > RAM_SIZE)
-            throw new IllegalArgumentException("not enough ram for that");
-        for(int i = 0; i<bytes.length; i++) {
-            int instr = bytes[i];
-            Preconditions.checkBits8(instr);
-            bus.write(startAdress+i, instr);
-        }
-    }
+//    private void writeAllBytes(int startAdress, int ... bytes) {
+//        Preconditions.checkBits16(startAdress);
+//        if(bytes.length > RAM_SIZE)
+//            throw new IllegalArgumentException("not enough ram for that");
+//        for(int i = 0; i<bytes.length; i++) {
+//            int instr = bytes[i];
+//            Preconditions.checkBits8(instr);
+//            bus.write(startAdress+i, instr);
+//        }
+//    }
     
     /**
      * writes all bytes at adresses STARTING AT 0
@@ -80,13 +81,15 @@ public class CpuTest4 {
      */
     private int execute(Opcode ... opcodes) {
         int cyclesum = 0;
+        int pcInc = 0;
         for(int i = 0; i<opcodes.length; i++) {
             Opcode op = opcodes[i];
             bus.write(i, op.encoding);
             cyclesum += op.cycles;
+            pcInc += op.totalBytes;
         }
         cycleCpu(cyclesum);
-        return cyclesum;
+        return pcInc;
     }
     
     private void initiateRegs(int a, int f, int b, int c, int d, int e, int h, int l) {
@@ -99,74 +102,133 @@ public class CpuTest4 {
     
     // :::::::::::::::::::: ADD TESTS ::::::::::::::::::
     @Test
-    public void ADD_A_R8_isCorrectlyExecuted() {
+    public void ADD_A_N8_isCorrectlyExecuted() {
         
         initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
-        
-        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        writeAllBytes(Opcode.ADD_A_N8.encoding, 0xff);
+        cycleCpu(Opcode.ADD_A_N8.cycles);
+        assertArrayEquals(new int[] {Opcode.ADD_A_N8.totalBytes, 0, 0xff, 0, 0, 0, 0, 0, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());
     }
     
     @Test
-    public void ADD_A_N8_isCorrectlyExecuted() {
+    public void ADD_A_N8_isCorrectlyExecuted2() {
+        //Z0HC and overflow
+        initiateRegs(1, 0x30, 0, 0, 0, 0, 0, 0);
+        writeAllBytes(Opcode.ADD_A_N8.encoding, 0xff);
+        cycleCpu(Opcode.ADD_A_N8.cycles);
+        assertArrayEquals(new int[] {Opcode.ADD_A_N8.totalBytes, 0, 0xff, 0xB0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void ADD_A_R8_isCorrectlyExecuted() {
         
-        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        initiateRegs(0xF0, 0x30, 0xF, 0, 0, 0, 0, 0);
+        int i = execute(Opcode.ADD_A_B);
         
-        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        assertArrayEquals(new int[] {i, 0, 0xFF, 0, 0xF, 0, 0, 0, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());
     }
     
     @Test
     public void ADD_A_HLR_isCorrectlyExecuted() {
         
-        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        initiateRegs(0, 0x30, 0, 0, 0, 0, 0x01, 0xF0);
+        bus.write(0x1F0, 0xF);
+        int i = execute(Opcode.ADD_A_HLR);
+        assertArrayEquals(new int[] {i, 0, 0xF, 0, 0, 0, 0, 0, 0x01, 0xF0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void ADC_A_R8_isCorrectlyExecuted() {
         
-        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        initiateRegs(0xF, 0x1, 0, 1, 0, 0, 0, 0);
+        int i = execute(Opcode.ADC_A_C);
+        assertArrayEquals(new int[] {Opcode.ADC_A_C.totalBytes, 0, 0x10, 0x20, 0, 1, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void ADC_A_N8_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0x10, 0, 0, 0, 0, 0, 0);
+        writeAllBytes(Opcode.ADC_A_N8.encoding, 0xff);
+        cycleCpu(Opcode.ADC_A_N8.cycles);
+        assertArrayEquals(new int[] {Opcode.ADD_A_N8.totalBytes, 0, 0, 0x90, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void ADC_A_HLR_isCorrectlyExecuted() {
+        
+        initiateRegs(0xFE, 0x1, 0, 0, 0, 0, 0x01, 0xF0);
+        bus.write(0x01F0, 1);
+        int i = execute(Opcode.ADC_A_HLR);
+        assertArrayEquals(new int[] {i, 0, 0, 0xB, 0, 0, 0, 0, 0x01, 0xF0},
                 cpu._testGetPcSpAFBCDEHL());
     }
     
     @Test
     public void INC_R8_isCorrectlyExecuted() {
         
-        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
-        
-        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        initiateRegs(0xE, 0x1, 0xFF, 0, 0, 0, 0, 0);
+        int i = execute(Opcode.INC_A, Opcode.INC_B);
+        assertArrayEquals(new int[] {i, 0, 0xF, 0x9, 0, 0, 0, 0, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());
     }
     
     @Test
     public void INC_HLR_isCorrectlyExecuted() {
         
-        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
-        
-        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        initiateRegs(0, 0, 0, 0, 0, 0, 0x01, 0xF0);
+        bus.write(0x01F0, 0xFF);
+        int i = execute(Opcode.INC_HLR);
+        assertArrayEquals(new int[] {i, 0, 0, 0x9, 0, 0, 0, 0, 0x01, 0xF0},
                 cpu._testGetPcSpAFBCDEHL());
+        assertEquals(0, bus.read(0x01F0));
     }
     
     @Test
     public void INC_R16SP_isCorrectlyExecuted() {
         
-        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
-        
-        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        initiateRegs(0x1, 0x1, 0, 0xFF, 0, 0, 0, 0);
+        int i = execute(Opcode.INC_SP, Opcode.INC_BC);
+        assertArrayEquals(new int[] {i, 1, 1, 1, 1, 0, 0, 0, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());
     }
     
     @Test
     public void ADD_HL_R16SP_isCorrectlyExecuted() {
-        
-        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
-        
-        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        //TODO verify expected value for F (address 0xFFFF management)
+        initiateRegs(0, 0, 1, 1, 0, 0, 0xFE, 0xFF);
+        int i = execute(Opcode.ADD_HL_BC);
+        assertArrayEquals(new int[] {i, 0, 0, 0xB, 1, 1, 0, 0, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());
     }
     
     @Test
-    public void LD_HLSP_isCorrectlyExecuted() {
+    public void LD_HLSP_S8_isCorrectlyExecuted() {
         
+        initiateRegs(0, 0, 0, 0, 0, 0, 0xA, 0xF);
+        cpu.setSP(0x0FFF);
+        writeAllBytes(Opcode.LD_HL_SP_N8.encoding, 1);
+        cycleCpu(Opcode.LD_HL_SP_N8.cycles);
+        
+        assertArrayEquals(new int[] {Opcode.LD_HL_SP_N8.totalBytes, 0xFFF, 0, 0x2, 0, 0, 0, 0, 0X10, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void LD_HLSP_S8_isCorrectlyExecuted2() {
+        //underflow and sub
         initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        cpu.setSP(0x7F);
+        writeAllBytes(Opcode.ADD_SP_N.encoding, 0x80);
+        cycleCpu(Opcode.ADD_SP_N.cycles);
         
-        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        assertArrayEquals(new int[] {Opcode.ADD_SP_N.totalBytes, 0xFFFF, 0, 0x1, 0, 0, 0, 0, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());
     }
     
