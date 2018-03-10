@@ -5,7 +5,10 @@
 
 package ch.epfl.gameboj.component.cpu;
 
+import static org.junit.Assert.assertArrayEquals;
+
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import ch.epfl.gameboj.Bus;
 import ch.epfl.gameboj.Preconditions;
@@ -93,4 +96,438 @@ public class CpuTest4 {
     private void initiateRegs16(int af, int bc, int de, int hl) {
         cpu.setAllRegs16(af, bc, de, hl);
     }
+    
+    // :::::::::::::::::::: ADD TESTS ::::::::::::::::::
+    @Test
+    public void ADD_A_R8_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void ADD_A_N8_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void ADD_A_HLR_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void INC_R8_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void INC_HLR_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void INC_R16SP_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void ADD_HL_R16SP_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void LD_HLSP_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    // ::::::::::::::::::::::::: SUB TESTS :::::::::::::::::::::
+    @Test
+    public void SUB_A_R8_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void SUB_A_N8_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void SUB_A_HLR_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void DEC_R8_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void DEC_HLR_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void CP_A_R8_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void CP_A_N8_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void CP_A_HLR_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void DEC_R16SP_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    //::::::::::::::::::::::::::::: BIT OPERATIONS :::::::::::::::::::::::::
+    
+    @Test
+    public void AND_A_N8_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void AND_A_R8_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void AND_A_HLR_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void OR_A_R8_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void OR_A_N8_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void OR_A_HLR_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void XOR_A_R8_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void XOR_A_N8_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void XOR_A_HLR_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void CPL_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    //:::::::::::::::::::::::::::::: ROTATE & SHIFT :::::::::::::::::::::::::::::
+    
+    @Test
+    public void ROTCA_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void ROTA_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void ROTC_R8_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void ROT_R8_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void ROTC_HLR_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void ROT_HLR_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void SWAP_R8_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void SWAP_HLR_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void SLA_R8_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void SRA_R8_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void SRL_R8_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void SLA_HLR_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void SRA_HLR_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void SRL_HLR_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    //::::::::::::::::::::::::::::::: BIT TEST & SET :::::::::::::::::::::::::::::
+    
+    @Test
+    public void BIT_U3_R8_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void BIT_U3_HLR_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void CHG_U3_R8_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void CHG_U3_HLR_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    //:::::::::::::::::::::::::::::::: MISC ::::::::::::::::::::::::::::::::::::::::
+    
+    @Test
+    public void DAA_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void SCCF_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        
+        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
 }
+
