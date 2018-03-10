@@ -13,6 +13,7 @@ import ch.epfl.gameboj.RegisterFile;
 import ch.epfl.gameboj.bits.Bits;
 import ch.epfl.gameboj.component.Clocked;
 import ch.epfl.gameboj.component.Component;
+import ch.epfl.gameboj.component.cpu.Alu.Flag;
 import ch.epfl.gameboj.component.cpu.Alu.RotDir;
 
 public final class Cpu implements Component, Clocked {
@@ -596,40 +597,89 @@ public final class Cpu implements Component, Clocked {
         return Bits.test(opcode.encoding, 3) && Bits.test(reg(Reg.F), 3) ? 0 : 1;
     }
     
-    private int addSP_e8(Opcode opcode) {
+    /**
+     * Reads 8-bit value after opcode (signed !) adds it with SP value, takes care of Flags
+     *      and returns the result (!)
+     * @return result of add16L with 8-bit value and SP value
+     */
+    private int addSP_e8() {
+        int val = Bits.clip(16, Bits.signExtend8(read8AfterOpcode()));
+        int valueFlags = Alu.add16L(SP, val);
+        //TODO : 2.2.1.6, step 3 : does it mean that we must set SP here or just use its value ?
+        //probably just use value, since then decide where to store result       
+//        SP = Alu.unpackValue(valueFlags);
         
+        combineAluFlags(valueFlags, FlagSrc.V0, FlagSrc.V0, FlagSrc.ALU, FlagSrc.ALU);
+        
+        return Alu.unpackValue(valueFlags);
+        //TODO : remember to STORE result in either SP or HL, cf. 2.2.1.6 step 5 !
+        
+        //NOTE that we could also pass opcode as argument, and take care of storing the result in here
+        //TODO : decide what's the best way
+        
+//        if(Bits.test(opcode.encoding, 4)) {
+//            setReg16(Reg16.HL, Alu.unpackValue(valueFlags));
+//        }   
+//        else {
+//            SP = Alu.unpackValue(valueFlags);
+//        }
     }
     
     private void setRegFromAlu(Reg r, int vf) {
-        
+        setReg(r, Alu.unpackValue(vf));
     }
     
     private void setFlags(int valueFlags) {
-        
+        setReg(Reg.F, Alu.unpackFlags(valueFlags));
     }
     
     private void setRegFlags(Reg r, int vf) {
-        
+        setRegFromAlu(r, vf);
+        setFlags(vf);
     }
     
     private void write8AtHlAndSetFlags(int vf) {
-        
+        write8AtHl(Alu.unpackValue(vf));
+        setFlags(vf);
     }
     
     private void combineAluFlags(int vf, FlagSrc z, FlagSrc n, FlagSrc h, FlagSrc c) {
+        boolean newZ, newN, newH, newC;
         
+        newZ = flagValue(vf, z, Flag.Z);
+        newN = flagValue(vf, n, Flag.N);
+        newH = flagValue(vf, h, Flag.H);
+        newC = flagValue(vf, c, Flag.C);
+        
+        setReg(Reg.F, Alu.maskZNHC(newZ, newN, newH, newC));
+    }
+    
+    private boolean flagValue(int vf, FlagSrc flagSrc, Flag flag) {
+        switch(flagSrc) {
+        case V0:
+           return false;
+        case V1:
+           return true;
+        case ALU:
+            return Bits.test(vf, flag.index());
+        case CPU:
+            return Bits.test(reg(Reg.F), flag.index());
+        default:
+                throw new IllegalArgumentException("Unknown FlagSrc");
+        }
     }
     
     private RotDir extractRotDir(Opcode opcode) {
+        return Bits.test(opcode.encoding, 3) ? RotDir.RIGHT : RotDir.LEFT;
+    }
+    
+    private int extractBitIndex(Opcode opcode) {
+        return Bits.extract(opcode.encoding, 3, 3);
         
     }
     
-    private int extractTestBitIndex(Opcode opcode) {
-        
-    }
-    
-    private int extractSetBitIndex(Opcode opcode) {
-        
+    private int extractBitValue(Opcode opcode) {
+        return Bits.test(opcode.encoding, 6) ? 1 : 0;
     }
     
 //    protected void reset() {
