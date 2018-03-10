@@ -199,16 +199,34 @@ public final class Cpu implements Component, Clocked {
 
             // Rotate, shift
             case ROTCA: {
+                int vf = Alu.rotate(extractRotDir(opcode), reg(Reg.A));
+                combineAluFlags(vf, FlagSrc.V0, FlagSrc.V0, FlagSrc.V0, FlagSrc.ALU);
+                setRegFromAlu(Reg.A, vf);
             } break;
             case ROTA: {
+                int vf = Alu.rotate(extractRotDir(opcode), reg(Reg.A), getCFlag());
+                combineAluFlags(vf, FlagSrc.V0, FlagSrc.V0, FlagSrc.V0, FlagSrc.ALU);
+                setRegFromAlu(Reg.A, vf);
             } break;
             case ROTC_R8: {
+                int vf = Alu.rotate(extractRotDir(opcode), reg(extractReg(opcode, 0)));
+                combineAluFlags(vf, FlagSrc.ALU, FlagSrc.V0, FlagSrc.V0, FlagSrc.ALU);
+                setRegFromAlu(extractReg(opcode, 0), vf);
             } break;
             case ROT_R8: {
+                int vf = Alu.rotate(extractRotDir(opcode), reg(extractReg(opcode, 0)), getCFlag());
+                combineAluFlags(vf, FlagSrc.ALU, FlagSrc.V0, FlagSrc.V0, FlagSrc.ALU);
+                setRegFromAlu(extractReg(opcode, 0), vf);
             } break;
             case ROTC_HLR: {
+                int vf = Alu.rotate(extractRotDir(opcode), read8AtHl());
+                combineAluFlags(vf, FlagSrc.ALU, FlagSrc.V0, FlagSrc.V0, FlagSrc.ALU);
+                write8AtHl(Alu.unpackValue(vf)); //method for Alu.unpackValue???
             } break;
             case ROT_HLR: {
+                int vf = Alu.rotate(extractRotDir(opcode), read8AtHl(), getCFlag());
+                combineAluFlags(vf, FlagSrc.ALU, FlagSrc.V0, FlagSrc.V0, FlagSrc.ALU);
+                write8AtHl(Alu.unpackValue(vf));
             } break;
             case SWAP_R8: {
             } break;
@@ -593,6 +611,14 @@ public final class Cpu implements Component, Clocked {
         return getInitialCarry(opcode);
     }
     
+    /**
+     * 
+     * @return C flag stored in F
+     */
+    private boolean getCFlag() {
+        return Bits.test(reg(Reg.F), 4);
+    }
+    
     private int getCFlagSCCF(Opcode opcode) {
         return Bits.test(opcode.encoding, 3) && Bits.test(reg(Reg.F), 3) ? 0 : 1;
     }
@@ -603,6 +629,7 @@ public final class Cpu implements Component, Clocked {
      * @return result of add16L with 8-bit value and SP value
      */
     private int addSP_e8() {
+        // TODO TODO why clip 16 for single byte?
         int val = Bits.clip(16, Bits.signExtend8(read8AfterOpcode()));
         int valueFlags = Alu.add16L(SP, val);
         //TODO : 2.2.1.6, step 3 : does it mean that we must set SP here or just use its value ?
