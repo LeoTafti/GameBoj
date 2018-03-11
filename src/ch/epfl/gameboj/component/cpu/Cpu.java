@@ -139,18 +139,55 @@ public final class Cpu implements Component, Clocked {
             
             // Add
             case ADD_A_R8: {
+                int vf = Alu.add(
+                        reg(Reg.A),
+                        reg(extractReg(opcode, 0)),
+                        getInitialCarry(opcode));
+                combineAluFlags(vf, FlagSrc.ALU, FlagSrc.V0, FlagSrc.ALU, FlagSrc.ALU);
+                setRegFromAlu(Reg.A, vf);
+                
             } break;
             case ADD_A_N8: {
+                int vf = Alu.add(
+                        reg(Reg.A),
+                        read8AfterOpcode(),
+                        getInitialCarry(opcode));
+                combineAluFlags(vf, FlagSrc.ALU, FlagSrc.V0, FlagSrc.ALU, FlagSrc.ALU);
+                setRegFromAlu(Reg.A, vf);
             } break;
             case ADD_A_HLR: {
+                int vf = Alu.add(
+                        reg(Reg.A),
+                        read8AtHl(),
+                        getInitialCarry(opcode));
+                combineAluFlags(vf, FlagSrc.ALU, FlagSrc.V0, FlagSrc.ALU, FlagSrc.ALU);
+                setRegFromAlu(Reg.A, vf);
             } break;
             case INC_R8: {
+                Reg r8 = extractReg(opcode, 3);
+                int vf = Alu.add(reg(r8), 1);
+                combineAluFlags(vf, FlagSrc.ALU, FlagSrc.V0, FlagSrc.ALU, FlagSrc.CPU);
+                setRegFromAlu(r8, vf);
             } break;
             case INC_HLR: {
+                int vf = Alu.add(read8AtHl(), 1);
+                combineAluFlags(vf, FlagSrc.ALU, FlagSrc.V0, FlagSrc.ALU, FlagSrc.CPU);
+                write8AtHl(Alu.unpackValue(vf));
             } break;
             case INC_R16SP: {
+                Reg16 r16 = extractReg16(opcode);
+                int vf = Alu.add16H(
+                        reg16SP(r16),
+                        1);
+                combineAluFlags(vf, FlagSrc.CPU, FlagSrc.V0, FlagSrc.ALU, FlagSrc.ALU);
+                setReg16SP(r16, Alu.unpackValue(vf));
             } break;
             case ADD_HL_R16SP: {
+                int vf = Alu.add16H(
+                        reg16(Reg16.HL),
+                        reg16SP(extractReg16(opcode)));
+                combineAluFlags(vf, FlagSrc.CPU, FlagSrc.V0, FlagSrc.ALU, FlagSrc.ALU);
+                setReg16(Reg16.HL, Alu.unpackValue(vf));
             } break;
             case LD_HLSP_S8: {
             } break;
@@ -221,7 +258,7 @@ public final class Cpu implements Component, Clocked {
             case ROTC_HLR: {
                 int vf = Alu.rotate(extractRotDir(opcode), read8AtHl());
                 combineAluFlags(vf, FlagSrc.ALU, FlagSrc.V0, FlagSrc.V0, FlagSrc.ALU);
-                write8AtHl(Alu.unpackValue(vf)); //method for Alu.unpackValue???
+                write8AtHl(Alu.unpackValue(vf)); //TODO : method for Alu.unpackValue???
             } break;
             case ROT_HLR: {
                 int vf = Alu.rotate(extractRotDir(opcode), read8AtHl(), getCFlag());
@@ -476,6 +513,13 @@ public final class Cpu implements Component, Clocked {
         }
         return Bits.make16(highB, lowB);
     }
+    
+    private int reg16SP(Reg16 r) {
+        if(r == Reg16.AF) {
+            return SP;
+        }
+        return reg16(r);
+    }
     /**
      * Sets given reg with given value
      * @param r register in which to put value
@@ -596,18 +640,18 @@ public final class Cpu implements Component, Clocked {
     /**
      * Gets (eventual) initial carry from opcode encoding and C Flag
      * @param opcode opcode of ADD operation
-     * @return initial carry (0 or 1)
+     * @return initial carry (true for 1, false for 0)
      */
-    private int getInitialCarry(Opcode opcode) {
-        return Bits.test(opcode.encoding, 3) && Bits.test(reg(Reg.F), 3) ? 1 : 0;
+    private boolean getInitialCarry(Opcode opcode) {
+        return Bits.test(opcode.encoding, 3) && Bits.test(reg(Reg.F), 3);
     }
     
     /**
      * Gets (eventual) initial borrow from opcode encoding and C Flag
      * @param opcode opcode of SUB operation
-     * @return initial borrow (0 or 1)
+     * @return initial borrow (true for 1, false for 0)
      */
-    private int getInitialBorrow(Opcode opcode) {
+    private boolean getInitialBorrow(Opcode opcode) {
         return getInitialCarry(opcode);
     }
     
