@@ -268,24 +268,53 @@ public final class Cpu implements Component, Clocked {
 
             // And, or, xor, complement
             case AND_A_N8: {
+                int vf = Alu.and(reg(Reg.A),
+                        read8AfterOpcode());
+                setRegFlags(Reg.A, vf);
             } break;
             case AND_A_R8: {
+                int vf = Alu.and(reg(Reg.A),
+                        reg(extractReg(opcode, 0)));
+                setRegFlags(Reg.A, vf);
             } break;
             case AND_A_HLR: {
+                int vf = Alu.and(reg(Reg.A),
+                        read8AtHl());
+                setRegFlags(Reg.A, vf);
             } break;
             case OR_A_R8: {
+                int vf = Alu.or(reg(Reg.A),
+                        reg(extractReg(opcode, 0)));
+                setRegFlags(Reg.A, vf);
             } break;
             case OR_A_N8: {
+                int vf = Alu.or(reg(Reg.A),
+                        read8AfterOpcode());
+                setRegFlags(Reg.A, vf);
             } break;
             case OR_A_HLR: {
+                int vf = Alu.or(reg(Reg.A),
+                        read8AtHl());
+                setRegFlags(Reg.A, vf);
             } break;
             case XOR_A_R8: {
+                int vf = Alu.xor(reg(Reg.A),
+                        reg(extractReg(opcode, 0)));
+                setRegFlags(Reg.A, vf);
             } break;
             case XOR_A_N8: {
+                int vf = Alu.or(reg(Reg.A),
+                        read8AfterOpcode());
+                setRegFlags(Reg.A, vf);
             } break;
             case XOR_A_HLR: {
+                int vf = Alu.xor(reg(Reg.A),
+                        read8AtHl());
+                setRegFlags(Reg.A, vf);
             } break;
             case CPL: {
+                setReg(Reg.A, Bits.complement8(reg(Reg.A)));
+                combineAluFlags(0, FlagSrc.CPU, FlagSrc.V1, FlagSrc.V1, FlagSrc.CPU);
             } break;
 
             // Rotate, shift
