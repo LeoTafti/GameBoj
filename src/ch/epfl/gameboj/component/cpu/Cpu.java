@@ -179,7 +179,7 @@ public final class Cpu implements Component, Clocked {
                 int vf = Alu.add16H(
                         reg16SP(r16),
                         1);
-                combineAluFlags(vf, FlagSrc.CPU, FlagSrc.V0, FlagSrc.ALU, FlagSrc.ALU);
+                combineAluFlags(vf, FlagSrc.CPU, FlagSrc.CPU, FlagSrc.CPU, FlagSrc.CPU);
                 setReg16SP(r16, Alu.unpackValue(vf));
             } break;
             case ADD_HL_R16SP: {
@@ -190,26 +190,80 @@ public final class Cpu implements Component, Clocked {
                 setReg16(Reg16.HL, Alu.unpackValue(vf));
             } break;
             case LD_HLSP_S8: {
+                int res = addSP_e8();
+                if(Bits.test(opcode.encoding, 4))
+                    setReg16(Reg16.HL, res);
+                else {
+                    SP = res;
+                }
             } break;
 
             // Subtract
             case SUB_A_R8: {
+                int vf = Alu.sub(
+                        reg(Reg.A),
+                        reg(extractReg(opcode, 0)),
+                        getInitialBorrow(opcode));
+                combineAluFlags(vf, FlagSrc.ALU, FlagSrc.V1, FlagSrc.ALU, FlagSrc.ALU);
+                setRegFromAlu(Reg.A, vf);
             } break;
             case SUB_A_N8: {
+                int vf = Alu.sub(
+                        reg(Reg.A),
+                        read8AfterOpcode(),
+                        getInitialBorrow(opcode));
+                combineAluFlags(vf, FlagSrc.ALU, FlagSrc.V1, FlagSrc.ALU, FlagSrc.ALU);
+                setRegFromAlu(Reg.A, vf);
             } break;
             case SUB_A_HLR: {
+                int vf = Alu.sub(
+                        reg(Reg.A),
+                        read8AtHl(),
+                        getInitialBorrow(opcode));
+                combineAluFlags(vf, FlagSrc.ALU, FlagSrc.V1, FlagSrc.ALU, FlagSrc.ALU);
+                setRegFromAlu(Reg.A, vf);
             } break;
             case DEC_R8: {
+                Reg r8 = extractReg(opcode, 3);
+                int vf = Alu.sub(reg(r8), 1);
+                combineAluFlags(vf, FlagSrc.ALU, FlagSrc.V1, FlagSrc.ALU, FlagSrc.CPU);
+                setRegFromAlu(r8, vf);
             } break;
             case DEC_HLR: {
+                int vf = Alu.sub(read8AtHl(), 1);
+                combineAluFlags(vf, FlagSrc.ALU, FlagSrc.V1, FlagSrc.ALU, FlagSrc.CPU);
+                write8AtHl(Alu.unpackValue(vf));
             } break;
+          //TODO : for all CP , since same as corresponding SUB, just ignoring result
+            //      write a method instead of copying / pasting ?
             case CP_A_R8: {
+                int vf = Alu.sub(
+                        reg(Reg.A),
+                        reg(extractReg(opcode, 0)),
+                        getInitialBorrow(opcode));
+                combineAluFlags(vf, FlagSrc.ALU, FlagSrc.V1, FlagSrc.ALU, FlagSrc.ALU);
             } break;
             case CP_A_N8: {
+                int vf = Alu.sub(
+                        reg(Reg.A),
+                        read8AfterOpcode(),
+                        getInitialBorrow(opcode));
+                combineAluFlags(vf, FlagSrc.ALU, FlagSrc.V1, FlagSrc.ALU, FlagSrc.ALU);
             } break;
             case CP_A_HLR: {
+                int vf = Alu.sub(
+                        reg(Reg.A),
+                        read8AtHl(),
+                        getInitialBorrow(opcode));
+                combineAluFlags(vf, FlagSrc.ALU, FlagSrc.V1, FlagSrc.ALU, FlagSrc.ALU);
             } break;
             case DEC_R16SP: {
+                Reg16 r16 = extractReg16(opcode);
+                int vf = Alu.sub(
+                        reg16SP(r16),
+                        1);
+                combineAluFlags(vf, FlagSrc.CPU, FlagSrc.CPU, FlagSrc.CPU, FlagSrc.CPU);
+                setReg16SP(r16, Alu.unpackValue(vf));
             } break;
 
             // And, or, xor, complement
