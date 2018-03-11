@@ -319,66 +319,77 @@ public final class Cpu implements Component, Clocked {
 
             // Rotate, shift
             case ROTCA: {
-                int vf = Alu.rotate(extractRotDir(opcode), reg(Reg.A));
-                combineAluFlags(vf, FlagSrc.V0, FlagSrc.V0, FlagSrc.V0, FlagSrc.ALU);
-                setRegFromAlu(Reg.A, vf);
+                setRegFlags(Reg.A, Alu.rotate(extractRotDir(opcode), reg(Reg.A)));
             } break;
             case ROTA: {
-                int vf = Alu.rotate(extractRotDir(opcode), reg(Reg.A), getCFlag());
-                combineAluFlags(vf, FlagSrc.V0, FlagSrc.V0, FlagSrc.V0, FlagSrc.ALU);
-                setRegFromAlu(Reg.A, vf);
+                setRegFlags(Reg.A, Alu.rotate(extractRotDir(opcode), reg(Reg.A), getFlag(Flag.C)));              
             } break;
             case ROTC_R8: {
-                int vf = Alu.rotate(extractRotDir(opcode), reg(extractReg(opcode, 0)));
-                combineAluFlags(vf, FlagSrc.ALU, FlagSrc.V0, FlagSrc.V0, FlagSrc.ALU);
-                setRegFromAlu(extractReg(opcode, 0), vf);
+                setRegFlags(extractReg(opcode, 0), 
+                        Alu.rotate(extractRotDir(opcode), reg(extractReg(opcode, 0))));
             } break;
             case ROT_R8: {
-                int vf = Alu.rotate(extractRotDir(opcode), reg(extractReg(opcode, 0)), getCFlag());
-                combineAluFlags(vf, FlagSrc.ALU, FlagSrc.V0, FlagSrc.V0, FlagSrc.ALU);
-                setRegFromAlu(extractReg(opcode, 0), vf);
+                setRegFlags(extractReg(opcode, 0),
+                        Alu.rotate(extractRotDir(opcode), reg(extractReg(opcode, 0)), getFlag(Flag.C)));
             } break;
             case ROTC_HLR: {
-                int vf = Alu.rotate(extractRotDir(opcode), read8AtHl());
-                combineAluFlags(vf, FlagSrc.ALU, FlagSrc.V0, FlagSrc.V0, FlagSrc.ALU);
-                write8AtHl(Alu.unpackValue(vf)); //TODO : method for Alu.unpackValue???
+                write8AtHlAndSetFlags(Alu.rotate(extractRotDir(opcode), read8AtHl()));
             } break;
             case ROT_HLR: {
-                int vf = Alu.rotate(extractRotDir(opcode), read8AtHl(), getCFlag());
-                combineAluFlags(vf, FlagSrc.ALU, FlagSrc.V0, FlagSrc.V0, FlagSrc.ALU);
-                write8AtHl(Alu.unpackValue(vf));
+                write8AtHlAndSetFlags(Alu.rotate(extractRotDir(opcode), read8AtHl(), getFlag(Flag.C)));
             } break;
             case SWAP_R8: {
+                setRegFlags(extractReg(opcode, 0), Alu.swap(reg(extractReg(opcode, 0))));    
             } break;
             case SWAP_HLR: {
+                write8AtHlAndSetFlags(Alu.swap(read8AtHl()));
             } break;
             case SLA_R8: {
+                setRegFlags(extractReg(opcode, 0), Alu.shiftLeft(reg(extractReg(opcode, 0))));
             } break;
             case SRA_R8: {
+                setRegFlags(extractReg(opcode, 0), Alu.shiftRightA(reg(extractReg(opcode, 0))));
             } break;
             case SRL_R8: {
+                setRegFlags(extractReg(opcode, 0), Alu.shiftRightL(reg(extractReg(opcode, 0))));
             } break;
             case SLA_HLR: {
+                write8AtHlAndSetFlags(Alu.shiftLeft(read8AtHl()));
             } break;
             case SRA_HLR: {
+                write8AtHlAndSetFlags(Alu.shiftRightA(read8AtHl()));
             } break;
             case SRL_HLR: {
+                write8AtHlAndSetFlags(Alu.shiftRightL(read8AtHl()));
             } break;
 
             // Bit test and set
             case BIT_U3_R8: {
+                combineAluFlags( Alu.testBit(reg(extractReg(opcode, 0)),  extractBitIndex(opcode)),
+                        FlagSrc.ALU, FlagSrc.V0, FlagSrc.V1, FlagSrc.CPU);
             } break;
             case BIT_U3_HLR: {
+                combineAluFlags( Alu.testBit(read8AtHl(),  extractBitIndex(opcode)),
+                        FlagSrc.ALU, FlagSrc.V0, FlagSrc.V1, FlagSrc.CPU);
             } break;
             case CHG_U3_R8: {
+                setReg(extractReg(opcode, 0),
+                        Bits.set(reg(extractReg(opcode, 0)), extractBitIndex(opcode), extractBitValue(opcode)));
             } break;
             case CHG_U3_HLR: {
+                write8AtHl(Bits.set(read8AtHl(), extractBitIndex(opcode), extractBitValue(opcode)));
             } break;
 
             // Misc. ALU
             case DAA: {
+                int vf = Alu.bcdAdjust(reg(Reg.A), getFlag(Flag.N), getFlag(Flag.H), getFlag(Flag.C));
+                setRegFromAlu(Reg.A, vf);
+                combineAluFlags(vf, FlagSrc.ALU, FlagSrc.CPU, FlagSrc.V0, FlagSrc.ALU);
             } break;
-            case SCCF: {
+            case SCCF: { //method setFlag better??
+                setReg(Reg.F, Bits.set(reg(Reg.F), 4, getCFlagSCCF(opcode)));
+                setReg(Reg.F, Bits.set(reg(Reg.F), 5, false));
+                setReg(Reg.F, Bits.set(reg(Reg.F), 6, false));
             } break;
             
             default:
@@ -415,36 +426,6 @@ public final class Cpu implements Component, Clocked {
                 reg(Reg.L)
         };
         return array;
-    }
-    
-    /**
-     * Creates table of Opcodes of given kind 
-     *      indexed by opcodes encodings
-     * @param kind DIRECT or PREFIXED
-     * @return table of 256 opcodes
-     */
-    private static Opcode[] buildOpcodeTable(Opcode.Kind kind) {
-        
-        Opcode[] table = new Opcode[256];
-        for (Opcode o: Opcode.values()) {
-            if(o.kind == kind) {
-                table[o.encoding] = o;
-            }
-        }
-        return table;
-    }
-    
-    /**
-     * Gets opcode of next op, for direct and prefixed operations
-     * @return opcode of next operation
-     */
-    private Opcode getOpcode() {
-        int op = read8(PC);
-        if(op == 0xCB) {
-            op = read8(PC+1);
-            return PREFIXED_OPCODE_TABLE[op];
-        }
-        return DIRECT_OPCODE_TABLE[op];
     }
     
     /**
@@ -535,29 +516,12 @@ public final class Cpu implements Component, Clocked {
         write8(reg16(Reg16.HL), v);
     }
     
-    /**
-     * Decrements SP by 2, then writes given 16-bit value at address given by new SP value
-     * (ie. writes given value at old SP - 2)
-     * @param v value to write
-     */
-    private void push16(int v) {
-        SP -= 2;
-        SP = Bits.clip(16, SP);
-        
-        write16(SP, v);
+    private void write8AtHlAndSetFlags(int vf) {
+        write8AtHl(Alu.unpackValue(vf));
+        setFlags(vf);
     }
     
-    /**
-     * Reads 16-bit value from bus at address given by SP, then increments SP by 2
-     * @return value at BUS[old SP]
-     */
-    private int pop16() {
-        int value = read16(SP);
-        SP += 2;
-        SP = Bits.clip(16, SP);
-        return value;
-    }
-    
+
     /**
      * Returns value stored in given reg
      * @param r register
@@ -603,6 +567,71 @@ public final class Cpu implements Component, Clocked {
         }
         return reg16(r);
     }
+    
+    private boolean flagValue(int vf, FlagSrc flagSrc, Flag flag) {
+        switch(flagSrc) {
+        case V0:
+           return false;
+        case V1:
+           return true;
+        case ALU:
+            return Bits.test(vf, flag.index());
+        case CPU:
+            return Bits.test(reg(Reg.F), flag.index());
+        default:
+                throw new IllegalArgumentException("Unknown FlagSrc");
+        }
+    }
+
+    /**
+     * 
+     * @param f Z or N or H or C
+     * @return **F**-flag value as boolean
+     */
+    private boolean getFlag(Flag f) {
+        return flagValue(reg(Reg.F), FlagSrc.CPU, f);
+    }
+    
+
+    /**
+     * Gets (eventual) initial carry from opcode encoding and C Flag
+     * @param opcode opcode of ADD operation
+     * @return initial carry (true for 1, false for 0)
+     */
+    private boolean getInitialCarry(Opcode opcode) {
+        return Bits.test(opcode.encoding, 3) && Bits.test(reg(Reg.F), 3);
+    }
+    
+
+    /**
+     * Gets (eventual) initial borrow from opcode encoding and C Flag
+     * @param opcode opcode of SUB operation
+     * @return initial borrow (true for 1, false for 0)
+     */
+    private boolean getInitialBorrow(Opcode opcode) {
+        return getInitialCarry(opcode);
+    }
+    
+
+    private boolean getCFlagSCCF(Opcode opcode) {
+        return !Bits.test(opcode.encoding, 3) && Bits.test(reg(Reg.F), 3);
+    }
+    
+
+    /**
+     * Gets opcode of next op, for direct and prefixed operations
+     * @return opcode of next operation
+     */
+    private Opcode getOpcode() {
+        int op = read8(PC);
+        if(op == 0xCB) {
+            op = read8(PC+1);
+            return PREFIXED_OPCODE_TABLE[op];
+        }
+        return DIRECT_OPCODE_TABLE[op];
+    }
+    
+
     /**
      * Sets given reg with given value
      * @param r register in which to put value
@@ -612,6 +641,11 @@ public final class Cpu implements Component, Clocked {
         registerFile.set(r, newV);
     }
     
+    private void setRegFromAlu(Reg r, int vf) {
+        setReg(r, Alu.unpackValue(vf));
+    }
+    
+
     /**
      * Puts given 16-bit value in given pair of 8-bit regs
      *      note : 8 msb in first reg, 8 lsb in second reg
@@ -661,6 +695,29 @@ public final class Cpu implements Component, Clocked {
         setReg16(r, newV);
     }
     
+    private void setFlags(int valueFlags) {
+        setReg(Reg.F, Alu.unpackFlags(valueFlags));
+    }
+    
+
+    private void setRegFlags(Reg r, int vf) {
+        setRegFromAlu(r, vf);
+        setFlags(vf);
+    }
+    
+
+    private void combineAluFlags(int vf, FlagSrc z, FlagSrc n, FlagSrc h, FlagSrc c) {
+        boolean newZ, newN, newH, newC;
+        
+        newZ = flagValue(vf, z, Flag.Z);
+        newN = flagValue(vf, n, Flag.N);
+        newH = flagValue(vf, h, Flag.H);
+        newC = flagValue(vf, c, Flag.C);
+        
+        setReg(Reg.F, Alu.maskZNHC(newZ, newN, newH, newC));
+    }
+    
+
     /**
      * Extracts 8-bit reg identity form opcode encoding, from given bit index
      * @param opcode opcode in which reg is encoded
@@ -710,7 +767,7 @@ public final class Cpu implements Component, Clocked {
             throw new IllegalArgumentException();
         }
     }
-    
+
     /**
      * Extracts and return HL increment from opcode encoding
      * @param opcode opcode in which HL increment is encoded
@@ -719,37 +776,44 @@ public final class Cpu implements Component, Clocked {
     private int extractHlIncrement(Opcode opcode) {
         return Bits.test(opcode.encoding, 4) ? -1 : 1;
     }
+
+    private RotDir extractRotDir(Opcode opcode) {
+        return Bits.test(opcode.encoding, 3) ? RotDir.RIGHT : RotDir.LEFT;
+    }
     
+
+    private int extractBitIndex(Opcode opcode) {
+        return Bits.extract(opcode.encoding, 3, 3); 
+    }
+    
+
+    private boolean extractBitValue(Opcode opcode) {
+        return Bits.test(opcode.encoding, 6);
+    }
+
     /**
-     * Gets (eventual) initial carry from opcode encoding and C Flag
-     * @param opcode opcode of ADD operation
-     * @return initial carry (true for 1, false for 0)
+     * Decrements SP by 2, then writes given 16-bit value at address given by new SP value
+     * (ie. writes given value at old SP - 2)
+     * @param v value to write
      */
-    private boolean getInitialCarry(Opcode opcode) {
-        return Bits.test(opcode.encoding, 3) && Bits.test(reg(Reg.F), 3);
+    private void push16(int v) {
+        SP -= 2;
+        SP = Bits.clip(16, SP);
+        
+        write16(SP, v);
     }
-    
+
     /**
-     * Gets (eventual) initial borrow from opcode encoding and C Flag
-     * @param opcode opcode of SUB operation
-     * @return initial borrow (true for 1, false for 0)
+     * Reads 16-bit value from bus at address given by SP, then increments SP by 2
+     * @return value at BUS[old SP]
      */
-    private boolean getInitialBorrow(Opcode opcode) {
-        return getInitialCarry(opcode);
+    private int pop16() {
+        int value = read16(SP);
+        SP += 2;
+        SP = Bits.clip(16, SP);
+        return value;
     }
-    
-    /**
-     * 
-     * @return C flag stored in F
-     */
-    private boolean getCFlag() {
-        return Bits.test(reg(Reg.F), 4);
-    }
-    
-    private int getCFlagSCCF(Opcode opcode) {
-        return Bits.test(opcode.encoding, 3) && Bits.test(reg(Reg.F), 3) ? 0 : 1;
-    }
-    
+
     /**
      * Reads 8-bit value after opcode (signed !) adds it with SP value, takes care of Flags
      *      and returns the result (!)
@@ -780,61 +844,21 @@ public final class Cpu implements Component, Clocked {
         
     }
     
-    private void setRegFromAlu(Reg r, int vf) {
-        setReg(r, Alu.unpackValue(vf));
-    }
-    
-    private void setFlags(int valueFlags) {
-        setReg(Reg.F, Alu.unpackFlags(valueFlags));
-    }
-    
-    private void setRegFlags(Reg r, int vf) {
-        setRegFromAlu(r, vf);
-        setFlags(vf);
-    }
-    
-    private void write8AtHlAndSetFlags(int vf) {
-        write8AtHl(Alu.unpackValue(vf));
-        setFlags(vf);
-    }
-    
-    private void combineAluFlags(int vf, FlagSrc z, FlagSrc n, FlagSrc h, FlagSrc c) {
-        boolean newZ, newN, newH, newC;
+    /**
+     * Creates table of Opcodes of given kind 
+     *      indexed by opcodes encodings
+     * @param kind DIRECT or PREFIXED
+     * @return table of 256 opcodes
+     */
+    private static Opcode[] buildOpcodeTable(Opcode.Kind kind) {
         
-        newZ = flagValue(vf, z, Flag.Z);
-        newN = flagValue(vf, n, Flag.N);
-        newH = flagValue(vf, h, Flag.H);
-        newC = flagValue(vf, c, Flag.C);
-        
-        setReg(Reg.F, Alu.maskZNHC(newZ, newN, newH, newC));
-    }
-    
-    private boolean flagValue(int vf, FlagSrc flagSrc, Flag flag) {
-        switch(flagSrc) {
-        case V0:
-           return false;
-        case V1:
-           return true;
-        case ALU:
-            return Bits.test(vf, flag.index());
-        case CPU:
-            return Bits.test(reg(Reg.F), flag.index());
-        default:
-                throw new IllegalArgumentException("Unknown FlagSrc");
+        Opcode[] table = new Opcode[256];
+        for (Opcode o: Opcode.values()) {
+            if(o.kind == kind) {
+                table[o.encoding] = o;
+            }
         }
-    }
-    
-    private RotDir extractRotDir(Opcode opcode) {
-        return Bits.test(opcode.encoding, 3) ? RotDir.RIGHT : RotDir.LEFT;
-    }
-    
-    private int extractBitIndex(Opcode opcode) {
-        return Bits.extract(opcode.encoding, 3, 3);
-        
-    }
-    
-    private int extractBitValue(Opcode opcode) {
-        return Bits.test(opcode.encoding, 6) ? 1 : 0;
+        return table;
     }
     
 //    protected void reset() {
