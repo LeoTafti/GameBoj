@@ -122,7 +122,7 @@ public final class Cpu implements Component, Clocked {
                 write8AtHl(read8AfterOpcode());
             } break;
             case LD_N16R_SP: {
-                write8(read16AfterOpcode(), SP);
+                write16(read16AfterOpcode(), SP);
             } break;
             case LD_R8_R8: {
                 Reg r = extractReg(opcode, 3);
@@ -692,7 +692,9 @@ public final class Cpu implements Component, Clocked {
         if(r == Reg16.AF) {
             SP = newV;
         }
-        setReg16(r, newV);
+        else {
+            setReg16(r, newV);
+        }
     }
     
     private void setFlags(int valueFlags) {
