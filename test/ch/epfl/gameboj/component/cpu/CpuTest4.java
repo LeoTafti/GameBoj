@@ -294,7 +294,7 @@ public class CpuTest4 {
         writeAllBytes(Opcode.SBC_A_N8.encoding, 1);
         cycleCpu(Opcode.SBC_A_N8.cycles);
         
-        assertArrayEquals(new int[] {Opcode.SBC_A_N8.totalBytes, 0, 0, 0xC, 0, 0, 0, 0, 0, 0},
+        assertArrayEquals(new int[] {Opcode.SBC_A_N8.totalBytes, 0, 0, 0xC0, 0, 0, 0, 0, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());
     }
     

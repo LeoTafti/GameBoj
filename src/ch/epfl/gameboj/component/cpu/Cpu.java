@@ -212,6 +212,7 @@ public final class Cpu implements Component, Clocked {
                         reg(Reg.A),
                         read8AfterOpcode(),
                         getInitialBorrow(opcode));
+                System.out.println(getInitialBorrow(opcode));
                 combineAluFlags(vf, FlagSrc.ALU, FlagSrc.V1, FlagSrc.ALU, FlagSrc.ALU);
                 setRegFromAlu(Reg.A, vf);
             } break;
@@ -599,7 +600,7 @@ public final class Cpu implements Component, Clocked {
      * @return initial carry (true for 1, false for 0)
      */
     private boolean getInitialCarry(Opcode opcode) {
-        return Bits.test(opcode.encoding, 3) && Bits.test(reg(Reg.F), 3);
+        return Bits.test(opcode.encoding, 3) && Bits.test(reg(Reg.F), 4);
     }
     
 
@@ -614,7 +615,7 @@ public final class Cpu implements Component, Clocked {
     
 
     private boolean getCFlagSCCF(Opcode opcode) {
-        return !Bits.test(opcode.encoding, 3) && Bits.test(reg(Reg.F), 3);
+        return !Bits.test(opcode.encoding, 3) && Bits.test(reg(Reg.F), 4);
     }
     
 
