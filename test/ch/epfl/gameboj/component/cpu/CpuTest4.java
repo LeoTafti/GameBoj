@@ -485,90 +485,333 @@ public class CpuTest4 {
     @Test
     public void AND_A_N8_isCorrectlyExecuted() {
         
-        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        initiateRegs(0, 0x80, 0, 0, 0, 0, 0, 0);
+        writeAllBytes(Opcode.AND_A_N8.encoding, 0xFF);
+        cycleCpu(Opcode.AND_A_N8.cycles);
         
-        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        assertArrayEquals(new int[] {Opcode.AND_A_N8.totalBytes, 0, 0, 0xA0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void AND_A_N8_isCorrectlyExecuted2() {
+        
+        initiateRegs(0xFF, 0x30, 0, 0, 0, 0, 0, 0);
+        writeAllBytes(Opcode.AND_A_N8.encoding, 0);
+        cycleCpu(Opcode.AND_A_N8.cycles);
+        
+        assertArrayEquals(new int[] {Opcode.AND_A_N8.totalBytes, 0, 0xFF, 0xA0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void AND_A_N8_isCorrectlyExecuted3() {
+        
+        initiateRegs(0xFF, 0x30, 0, 0, 0, 0, 0, 0);
+        writeAllBytes(Opcode.AND_A_N8.encoding, 1);
+        cycleCpu(Opcode.AND_A_N8.cycles);
+        
+        assertArrayEquals(new int[] {Opcode.AND_A_N8.totalBytes, 0, 0x1, 0x20, 0, 0, 0, 0, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());
     }
     
     @Test
     public void AND_A_R8_isCorrectlyExecuted() {
         
-        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        initiateRegs(0, 0x80, 0xFF, 0, 0, 0, 0, 0);
+        int i = execute(Opcode.AND_A_B);
         
-        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        assertArrayEquals(new int[] {i, 0, 0, 0xA0, 0xFF, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void AND_A_R8_isCorrectlyExecuted2() {
+        
+        initiateRegs(0xFF, 0x80, 0, 0, 0, 0, 0, 0);
+        int i = execute(Opcode.AND_A_B);
+        
+        assertArrayEquals(new int[] {i, 0, 0, 0xA0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void AND_A_R8_isCorrectlyExecuted3() {
+        
+        initiateRegs(0xFF, 0x80, 1, 0, 0, 0, 0, 0);
+        int i = execute(Opcode.AND_A_B);
+        
+        assertArrayEquals(new int[] {i, 0, 1, 0x20, 0, 0, 0, 0, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());
     }
     
     @Test
     public void AND_A_HLR_isCorrectlyExecuted() {
         
-        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        initiateRegs(0, 0x80, 0, 0, 0, 0, 1, 0xF0);
+        bus.write(0x1F0, 0xFF);
+        int i = execute(Opcode.AND_A_HLR);
         
-        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        assertArrayEquals(new int[] {i, 0, 0, 0xA0, 0, 0, 0, 0, 1, 0xF0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void AND_A_HLR_isCorrectlyExecuted2() {
+        
+        initiateRegs(0xFF, 0x80, 0, 0, 0, 0, 1, 0xF0);
+        bus.write(0x1F0, 0);
+        int i = execute(Opcode.AND_A_HLR);
+        
+        assertArrayEquals(new int[] {i, 0, 0, 0xA0, 0, 0, 0, 0, 1, 0xF0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void AND_A_HLR_isCorrectlyExecuted3() {
+        
+        initiateRegs(0xFF, 0x80, 0, 0, 0, 0, 1, 0xF0);
+        bus.write(0x1F0, 1);
+        int i = execute(Opcode.AND_A_HLR);
+        
+        assertArrayEquals(new int[] {i, 0, 1, 0x20, 0, 0, 0, 0, 1, 0xF0},
                 cpu._testGetPcSpAFBCDEHL());
     }
     
     @Test
     public void OR_A_R8_isCorrectlyExecuted() {
         
-        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        initiateRegs(0, 0x80, 0xFF, 0, 0, 0, 0, 0);
+        int i = execute(Opcode.OR_A_B);
         
-        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        assertArrayEquals(new int[] {i, 0, 0xFF, 0, 0xFF, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void OR_A_R8_isCorrectlyExecuted2() {
+        
+        initiateRegs(0, 0x80, 0, 0, 0, 0, 0, 0);
+        int i = execute(Opcode.OR_A_B);
+        
+        assertArrayEquals(new int[] {i, 0, 0, 0x80, 0, 0, 0, 0, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());
     }
     
     @Test
     public void OR_A_N8_isCorrectlyExecuted() {
         
-        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        initiateRegs(0, 0x80, 0, 0, 0, 0, 0, 0);
+        writeAllBytes(Opcode.OR_A_N8.encoding, 0xFF);
+        cycleCpu(Opcode.OR_A_N8.cycles);
+        assertArrayEquals(new int[] {Opcode.OR_A_N8.totalBytes, 0, 0xFF, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void OR_A_N8_isCorrectlyExecuted2() {
         
-        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        initiateRegs(0xFF, 0x80, 0, 0, 0, 0, 0, 0);
+        writeAllBytes(Opcode.OR_A_N8.encoding, 0);
+        cycleCpu(Opcode.OR_A_N8.cycles);
+        assertArrayEquals(new int[] {Opcode.OR_A_N8.totalBytes, 0, 0xFF, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void OR_A_N8_isCorrectlyExecuted3() {
+        
+        initiateRegs(0, 0x80, 0, 0, 0, 0, 0, 0);
+        writeAllBytes(Opcode.OR_A_N8.encoding, 0);
+        cycleCpu(Opcode.OR_A_N8.cycles);
+        assertArrayEquals(new int[] {Opcode.OR_A_N8.totalBytes, 0, 0, 0x80, 0, 0, 0, 0, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());
     }
     
     @Test
     public void OR_A_HLR_isCorrectlyExecuted() {
         
-        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        initiateRegs(0xFF, 0x30, 0, 0, 0, 0, 1, 0xF0);
+        bus.write(0x1F0, 0);
+        int i = execute(Opcode.OR_A_HLR);
         
-        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        assertArrayEquals(new int[] {i, 0, 0xFF, 0, 0, 0, 0, 0, 1, 0xF0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void OR_A_HLR_isCorrectlyExecuted2() {
+        
+        initiateRegs(0, 0x30, 0, 0, 0, 0, 1, 0xF0);
+        bus.write(0x1F0, 0xFF);
+        int i = execute(Opcode.OR_A_HLR);
+        
+        assertArrayEquals(new int[] {i, 0, 0xFF, 0, 0, 0, 0, 0, 1, 0xF0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void OR_A_HLR_isCorrectlyExecuted3() {
+        
+        initiateRegs(0, 0x80, 0, 0, 0, 0, 1, 0xF0);
+        bus.write(0x1F0, 0);
+        int i = execute(Opcode.OR_A_HLR);
+        
+        assertArrayEquals(new int[] {i, 0, 0, 0x80, 0, 0, 0, 0, 1, 0xF0},
                 cpu._testGetPcSpAFBCDEHL());
     }
     
     @Test
     public void XOR_A_R8_isCorrectlyExecuted() {
         
-        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        initiateRegs(0, 0x80, 0xFF, 0, 0, 0, 0, 0);
+        int i = execute(Opcode.XOR_A_B);
         
-        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        assertArrayEquals(new int[] {i, 0, 0xFF, 0, 0xFF, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void XOR_A_R8_isCorrectlyExecuted2() {
+        
+        initiateRegs(0xFF, 0x30, 0, 0, 0, 0, 0, 0);
+        int i = execute(Opcode.XOR_A_B);
+        
+        assertArrayEquals(new int[] {i, 0, 0xFF, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void XOR_A_R8_isCorrectlyExecuted3() {
+        
+        initiateRegs(0, 0x80, 0, 0, 0, 0, 0, 0);
+        int i = execute(Opcode.XOR_A_B);
+        
+        assertArrayEquals(new int[] {i, 0, 0, 0x80, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void XOR_A_R8_isCorrectlyExecute4() {
+        
+        initiateRegs(0xFF, 0x80, 0xFF, 0, 0, 0, 0, 0);
+        int i = execute(Opcode.XOR_A_B);
+        
+        assertArrayEquals(new int[] {i, 0, 0xFF, 0, 0xFF, 0, 0, 0, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());
     }
     
     @Test
     public void XOR_A_N8_isCorrectlyExecuted() {
         
-        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        initiateRegs(0, 0x80, 0, 0, 0, 0, 0, 0);
+        writeAllBytes(Opcode.XOR_A_N8.encoding, 0xFF);
+        cycleCpu(Opcode.XOR_A_N8.cycles);
+        assertArrayEquals(new int[] {Opcode.XOR_A_N8.totalBytes, 0, 0xFF, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void XOR_A_N8_isCorrectlyExecuted2() {
         
-        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        initiateRegs(0xFF, 0x30, 0, 0, 0, 0, 0, 0);
+        writeAllBytes(Opcode.XOR_A_N8.encoding, 0);
+        cycleCpu(Opcode.XOR_A_N8.cycles);
+        assertArrayEquals(new int[] {Opcode.XOR_A_N8.totalBytes, 0, 0xFF, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void XOR_A_N8_isCorrectlyExecuted3() {
+        
+        initiateRegs(0xFF, 0x30, 0, 0, 0, 0, 0, 0);
+        writeAllBytes(Opcode.XOR_A_N8.encoding, 0xFF);
+        cycleCpu(Opcode.XOR_A_N8.cycles);
+        assertArrayEquals(new int[] {Opcode.XOR_A_N8.totalBytes, 0, 0, 0x80, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void XOR_A_N8_isCorrectlyExecuted4() {
+        
+        initiateRegs(0, 0x30, 0, 0, 0, 0, 0, 0);
+        writeAllBytes(Opcode.XOR_A_N8.encoding, 0);
+        cycleCpu(Opcode.XOR_A_N8.cycles);
+        assertArrayEquals(new int[] {Opcode.XOR_A_N8.totalBytes, 0, 0, 0x80, 0, 0, 0, 0, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());
     }
     
     @Test
     public void XOR_A_HLR_isCorrectlyExecuted() {
         
-        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        initiateRegs(0, 0x80, 0, 0, 0, 0, 1, 0xF0);
+        bus.write(0x1F0, 0xFF);
+        int i = execute(Opcode.XOR_A_HLR);
         
-        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        assertArrayEquals(new int[] {i, 0, 0xFF, 0, 0, 0, 0, 0, 1, 0xF0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void XOR_A_HLR_isCorrectlyExecuted2() {
+        
+        initiateRegs(0xFF, 0x30, 0, 0, 0, 0, 1, 0xF0);
+        bus.write(0x1F0, 0);
+        int i = execute(Opcode.XOR_A_HLR);
+        
+        assertArrayEquals(new int[] {i, 0, 0xFF, 0, 0, 0, 0, 0, 1, 0xF0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void XOR_A_HLR_isCorrectlyExecuted3() {
+        
+        initiateRegs(0, 0x80, 0, 0, 0, 0, 1, 0xF0);
+        bus.write(0x1F0, 0);
+        int i = execute(Opcode.XOR_A_HLR);
+        
+        assertArrayEquals(new int[] {i, 0, 0, 0x80, 0, 0, 0, 0, 1, 0xF0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void XOR_A_HLR_isCorrectlyExecuted4() {
+        
+        initiateRegs(0xFF, 0x30, 0, 0, 0, 0, 1, 0xF0);
+        bus.write(0x1F0, 0xFF);
+        int i = execute(Opcode.XOR_A_HLR);
+        
+        assertArrayEquals(new int[] {i, 0, 0, 0x80, 0, 0, 0, 0, 1, 0xF0},
                 cpu._testGetPcSpAFBCDEHL());
     }
     
     @Test
     public void CPL_isCorrectlyExecuted() {
         
-        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        initiateRegs(0, 0x80, 0, 0, 0, 0, 0, 0);
+        int i = execute(Opcode.CPL);
         
-        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        assertArrayEquals(new int[] {i, 0, 0xFF, 0x30, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void CPL_isCorrectlyExecuted2() {
+        
+        initiateRegs(0xFF, 0x30, 0, 0, 0, 0, 0, 0);
+        int i = execute(Opcode.CPL);
+        
+        assertArrayEquals(new int[] {i, 0, 0, 0x30, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void CPL_isCorrectlyExecuted3() {
+        
+        initiateRegs(0xF, 0x20, 0, 0, 0, 0, 0, 0);
+        int i = execute(Opcode.CPL);
+        
+        assertArrayEquals(new int[] {i, 0, 0xF0, 0x30, 0, 0, 0, 0, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());
     }
     
@@ -888,22 +1131,145 @@ public class CpuTest4 {
     
     //:::::::::::::::::::::::::::::::: MISC ::::::::::::::::::::::::::::::::::::::::
     
+    
     @Test
     public void DAA_isCorrectlyExecuted() {
         
-        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        initiateRegs(0x6D, 0, 0, 0, 0, 0, 0, 0);
+        int i = execute(Opcode.DAA);
         
-        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        assertArrayEquals(new int[] {i, 0, 0x73, 0, 0, 0, 0, 0, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());
     }
     
     @Test
-    public void SCCF_isCorrectlyExecuted() {
+    public void DAA_isCorrectlyExecuted2() {
         
-        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        initiateRegs(0x0F, 0x60, 0, 0, 0, 0, 0, 0);
+        int i = execute(Opcode.DAA);
         
-        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        assertArrayEquals(new int[] {i, 0, 9, 0x40, 0, 0, 0, 0, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());
     }
-}
+    
+    @Test
+    public void DAA_isCorrectlyExecuted3() {
+        
+        initiateRegs(0x0FF, 0xF0, 0, 0, 0, 0, 0, 0);
+        int i = execute(Opcode.DAA);
+        
+        assertArrayEquals(new int[] {i, 0, 0x99, 0x50, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void DAA_isCorrectlyExecuted4() {
+        
+        initiateRegs(0x0FF, 0xB0, 0, 0, 0, 0, 0, 0);
+        int i = execute(Opcode.DAA);
+        
+        assertArrayEquals(new int[] {i, 0, 0x65, 0x10, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void DAA_isCorrectlyExecuted5() {
+        
+        initiateRegs(0, 0x90, 0, 0, 0, 0, 0, 0);
+        int i = execute(Opcode.DAA);
+        
+        assertArrayEquals(new int[] {i, 0, 0x60, 0x10, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void DAA_isCorrectlyExecuted6() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        int i = execute(Opcode.DAA);
+        
+        assertArrayEquals(new int[] {i, 0, 0, 0x80, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void DAA_isCorrectlyExecuted7() {
+        
+        initiateRegs(0xA0, 0x20, 0, 0, 0, 0, 0, 0);
+        int i = execute(Opcode.DAA);
+        
+        assertArrayEquals(new int[] {i, 0, 0x06, 0x10, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void DAA_isCorrectlyExecuted8() {
+        
+        initiateRegs(0xA0, 0x0, 0, 0, 0, 0, 0, 0);
+        int i = execute(Opcode.DAA);
+        
+        assertArrayEquals(new int[] {i, 0, 0, 0x90, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void DAA_isCorrectlyExecuted9() {
+        
+        initiateRegs(0xA0, 0x40, 0, 0, 0, 0, 0, 0);
+        int i = execute(Opcode.DAA);
+        
+        assertArrayEquals(new int[] {i, 0, 0, 0x90, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void SCF_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        int i = execute(Opcode.SCF);
+        
+        assertArrayEquals(new int[] {i, 0, 0, 0x10, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void SCF_isCorrectlyExecuted2() {
+        
+        initiateRegs(0, 0x10, 0, 0, 0, 0, 0, 0);
+        int i = execute(Opcode.SCF);
+        
+        assertArrayEquals(new int[] {i, 0, 0, 0x10, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void SCF_isCorrectlyExecuted3() {
+        
+        initiateRegs(0, 0xF0, 0, 0, 0, 0, 0, 0);
+        int i = execute(Opcode.SCF);
+        
+        assertArrayEquals(new int[] {i, 0, 0, 0xF0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void CCF_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0x20, 0, 0, 0, 0, 0, 0);
+        int i = execute(Opcode.CCF);
+        
+        assertArrayEquals(new int[] {i, 0, 0, 0x30, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void CCF_isCorrectlyExecuted2() {
+        
+        initiateRegs(0, 0x30, 0, 0, 0, 0, 0, 0);
+        int i = execute(Opcode.CCF);
+        
+        assertArrayEquals(new int[] {i, 0, 0, 0x20, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+   }
 
