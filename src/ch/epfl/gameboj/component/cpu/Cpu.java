@@ -591,6 +591,8 @@ public final class Cpu implements Component, Clocked {
      */
     private boolean getFlag(Flag f) {
         return flagValue(reg(Reg.F), FlagSrc.CPU, f);
+        
+        //TODO : why give reg(Reg.F) as vf ???
     }
     
 
