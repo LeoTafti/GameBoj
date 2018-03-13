@@ -577,73 +577,221 @@ public class CpuTest4 {
     @Test
     public void ROTCA_isCorrectlyExecuted() {
         
-        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        initiateRegs(0x90, 0xF0, 0, 0, 0, 0, 0, 0);
+        int i = execute(Opcode.RLCA);
         
-        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        assertArrayEquals(new int[] {i, 0, 0x21, 0x10, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+        
+        i = execute(Opcode.RRCA);
+        
+        assertArrayEquals(new int[] {i, 0, 0x90, 0x10, 0, 0, 0, 0, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());
     }
     
     @Test
     public void ROTA_isCorrectlyExecuted() {
         
-        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        initiateRegs(0b10010000, 0xF0, 0, 0, 0, 0, 0, 0);
+        int i = execute(Opcode.RLA);
         
-        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        assertArrayEquals(new int[] {i, 0, 0b0010_0001, 0x10, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+        
+        initiateRegs(0x10, 0xF0, 0, 0, 0, 0, 0, 0);
+        i = execute(Opcode.RLA);
+        
+        assertArrayEquals(new int[] {i, 0, 0b0010_0001, 0x0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+        
+        initiateRegs(0b1001_0001, 0, 0, 0, 0, 0, 0, 0);
+        i = execute(Opcode.RRA);
+        
+        assertArrayEquals(new int[] {i, 0, 0b0100_1000, 0x10, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+        
+        initiateRegs(0b1001_0011, 0, 0, 0, 0, 0, 0, 0);
+        i = execute(Opcode.RRA);
+        
+        assertArrayEquals(new int[] {i, 0, 0b0100_1001, 0x10, 0, 0, 0, 0, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());
     }
     
     @Test
     public void ROTC_R8_isCorrectlyExecuted() {
         
-        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        initiateRegs(0, 0xF0, 0x90, 0, 0, 0, 0, 0);
+        int i = execute(Opcode.RLC_B);
         
-        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        assertArrayEquals(new int[] {i, 0, 0, 0xF0, 0x21, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+        
+        i = execute(Opcode.RRC_B);
+        
+        assertArrayEquals(new int[] {i, 0, 0, 0xF0, 0x90, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+        
+        
+        initiateRegs(0, 0xF0, 0b0100_0001, 0, 0, 0, 0, 0);
+        i = execute(Opcode.RLC_B);
+        
+        assertArrayEquals(new int[] {i, 0, 0, 0x80, 0b1000_0010, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+        
+        i = execute(Opcode.RRC_B);
+        assertArrayEquals(new int[] {i, 0, 0, 0x80, 0b0100_0001, 0, 0, 0, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());
     }
     
     @Test
     public void ROT_R8_isCorrectlyExecuted() {
         
-        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        initiateRegs(0, 0xF0, 0b10010000, 0, 0, 0, 0, 0);
+        int i = execute(Opcode.RL_B);
         
-        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        assertArrayEquals(new int[] {i, 0, 0, 0xF0, 0b0010_0001, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+        
+        initiateRegs(0, 0xF0, 0x10, 0, 0, 0, 0, 0);
+        i = execute(Opcode.RL_B);
+        
+        assertArrayEquals(new int[] {i, 0, 0, 0x80, 0b0010_0001, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+        
+        initiateRegs(0, 0xF0, 0b1001_0001, 0, 0, 0, 0, 0);
+        i = execute(Opcode.RR_B);
+        
+        assertArrayEquals(new int[] {i, 0, 0, 0xF0, 0b1100_1000, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+        
+        initiateRegs(0, 0, 0b1001_0000, 0, 0, 0, 0, 0);
+        i = execute(Opcode.RR_B);
+        
+        assertArrayEquals(new int[] {i, 0, 0, 0, 0b0100_1000, 0, 0, 0, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());
     }
     
     @Test
     public void ROTC_HLR_isCorrectlyExecuted() {
+        initiateRegs(0, 0xF0, 0, 0, 0, 0, 0x1, 0xF0);
+        bus.write(0x1F0, 0b1001_0001);
+        int i = execute(Opcode.RLC_HLR);
         
-        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
-        
-        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        assertArrayEquals(new int[] {i, 0, 0, 0xF0, 0, 0, 0, 0, 0x1, 0xF0},
                 cpu._testGetPcSpAFBCDEHL());
+        assertEquals(0b0010_0011, bus.read(0x1F0));
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0x1, 0xF0);
+        bus.write(0x1F0, 0b0001_0001);
+        i = execute(Opcode.RLC_HLR);
+        
+        assertArrayEquals(new int[] {i, 0, 0, 0, 0, 0, 0, 0, 0x1, 0xF0},
+                cpu._testGetPcSpAFBCDEHL());
+        assertEquals(0b0010_0010, bus.read(0x1F0));
+        
+        initiateRegs(0, 0xF0, 0, 0, 0, 0, 0x1, 0xF0);
+        bus.write(0x1F0, 0b1001_0001);
+        i = execute(Opcode.RRC_HLR);
+        
+        assertArrayEquals(new int[] {i, 0, 0, 0xF0, 0, 0, 0, 0, 0x1, 0xF0},
+                cpu._testGetPcSpAFBCDEHL());
+        assertEquals(0b1100_1000, bus.read(0x1F0));
+        
+        initiateRegs(0, 0, 0x10, 0, 0, 0, 0x1, 0xF0);
+        bus.write(0x1F0, 0b1001_0001);
+        i = execute(Opcode.RRC_HLR);
+        
+        assertArrayEquals(new int[] {i, 0, 0, 0x10, 0, 0, 0, 0, 0x1, 0xF0},
+                cpu._testGetPcSpAFBCDEHL());
+        assertEquals(0b1100_1000, bus.read(0x1F0));
     }
     
     @Test
     public void ROT_HLR_isCorrectlyExecuted() {
         
-        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        initiateRegs(0, 0xF0, 0, 0, 0, 0, 0x1, 0xF0);
+        bus.write(0x1F0, 0b1001_0001);
+        int i = execute(Opcode.RL_HLR);
         
-        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        assertArrayEquals(new int[] {i, 0, 0, 0xF0, 0, 0, 0, 0, 0x1, 0xF0},
                 cpu._testGetPcSpAFBCDEHL());
+        assertEquals(0b0010_0011, bus.read(0x1F0));
+        
+        
+        initiateRegs(0, 0x10, 0, 0, 0, 0, 0x1, 0xF0);
+        bus.write(0x1F0, 0b1001_0001);
+        i = execute(Opcode.RR_HLR);
+        
+        assertArrayEquals(new int[] {i, 0, 0, 0x10, 0, 0, 0, 0, 0x1, 0xF0},
+                cpu._testGetPcSpAFBCDEHL());
+        assertEquals(0b1110_1000, bus.read(0x1F0));
+        
+        
+        initiateRegs(0, 0xF0, 0, 0, 0, 0, 0x1, 0xF0);
+        bus.write(0x1F0, 0b0001_0001);
+        i = execute(Opcode.RL_HLR);
+        
+        assertArrayEquals(new int[] {i, 0, 0, 0x80, 0, 0, 0, 0, 0x1, 0xF0},
+                cpu._testGetPcSpAFBCDEHL());
+        assertEquals(0b0010_0010, bus.read(0x1F0));
+        
+        
+        initiateRegs(0, 0x10, 0, 0, 0, 0, 0x1, 0xF0);
+        bus.write(0x1F0, 0b1001_0000);
+        i = execute(Opcode.RR_HLR);
+        
+        assertArrayEquals(new int[] {i, 0, 0, 0, 0, 0, 0, 0, 0x1, 0xF0},
+                cpu._testGetPcSpAFBCDEHL());
+        assertEquals(0b1100_1000, bus.read(0x1F0));
+        
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0x1, 0xF0);
+        bus.write(0x1F0, 0b1001_0000);
+        i = execute(Opcode.RR_HLR);
+        
+        assertArrayEquals(new int[] {i, 0, 0, 0, 0, 0, 0, 0, 0x1, 0xF0},
+                cpu._testGetPcSpAFBCDEHL());
+        assertEquals(0b0100_1000, bus.read(0x1F0));
+        
     }
     
     @Test
     public void SWAP_R8_isCorrectlyExecuted() {
         
-        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        initiateRegs(0b1000_0001, 0xFF, 0, 0, 0, 0, 0, 0);
+        int i = execute(Opcode.SWAP_A);
         
-        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        assertArrayEquals(new int[] {i, 0, 0b0001_1000, 0x0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+        
+        initiateRegs(0, 0xFF, 0, 0, 0, 0, 0, 0b0000_0000);
+        i = execute(Opcode.SWAP_L);
+        
+        assertArrayEquals(new int[] {i, 0, 0, 0x80, 0, 0, 0, 0, 0, 0b0000_0000},
                 cpu._testGetPcSpAFBCDEHL());
     }
     
     @Test
     public void SWAP_HLR_isCorrectlyExecuted() {
         
-        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        initiateRegs(0, 0xFF, 0, 0, 0, 0, 0x1, 0xF0);
+        bus.write(0x1F0, 0b1000_0001);
         
-        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        int i = execute(Opcode.SWAP_HLR);
+        
+        assertArrayEquals(new int[] {i, 0, 0, 0x0, 0, 0, 0, 0, 0x1, 0xF0},
                 cpu._testGetPcSpAFBCDEHL());
+        assertEquals(0b0001_1000, bus.read(0x1F0));
+        
+        
+        initiateRegs(0, 0xFF, 0, 0, 0, 0, 0x1, 0xF0);
+        bus.write(0x1F0, 0b0000_0000);
+        
+        i = execute(Opcode.SWAP_HLR);
+        
+        assertArrayEquals(new int[] {i, 0, 0, 0x80, 0, 0, 0, 0, 0x1, 0xF0},
+                cpu._testGetPcSpAFBCDEHL());
+        assertEquals(0b0000_0000, bus.read(0x1F0));
     }
     
     @Test
