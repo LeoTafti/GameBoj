@@ -66,11 +66,11 @@ public class CpuTest4 {
     private void writeAllBytes(int ... bytes) {
         if(bytes.length > RAM_SIZE)
             throw new IllegalArgumentException("not enough ram for that");
-        for(int i = 0; i<bytes.length * 2; i += 2) {
+        for(int i = 0; i<bytes.length * 2; i ++) {
             int instr = bytes[i];
             Preconditions.checkBits8(instr);
-            bus.write(i, 0xCB); //write prefix
-            bus.write(i+1, instr);
+            //bus.write(i, 0xCB); //write prefix
+            bus.write(i, instr);
         }
     }
     
@@ -83,12 +83,16 @@ public class CpuTest4 {
     private int execute(Opcode ... opcodes) {
         int cyclesum = 0;
         int pcInc = 0;
-        for(int i = 0; i<opcodes.length * 2; i += 2) {
+        for(int i = 0; i<opcodes.length * 2; i ++) {
+            
             Opcode op = opcodes[i];
-            bus.write(i, 0xCB); //write prefix
-            bus.write(i+1, op.encoding);
+            if(op.kind == op.kind.PREFIXED) {  //write prefix if prefixed opcode
+                bus.write(i, 0xCB);
+                i ++ ;
+            }
+            bus.write(i, op.encoding);
             cyclesum += op.cycles;
-            pcInc += op.totalBytes + 1;
+            pcInc += op.totalBytes;
         }
         cycleCpu(cyclesum);
         return pcInc;
@@ -1273,5 +1277,6 @@ public class CpuTest4 {
         assertArrayEquals(new int[] {i, 0, 0, 0x20, 0, 0, 0, 0, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());
     }
-   }
+   
+}
 
