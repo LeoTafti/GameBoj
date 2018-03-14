@@ -212,7 +212,6 @@ public final class Cpu implements Component, Clocked {
                         reg(Reg.A),
                         read8AfterOpcode(),
                         getInitialBorrow(opcode));
-                System.out.println(getInitialBorrow(opcode));
                 combineAluFlags(vf, FlagSrc.ALU, FlagSrc.V1, FlagSrc.ALU, FlagSrc.ALU);
                 setRegFromAlu(Reg.A, vf);
             } break;
@@ -628,6 +627,7 @@ public final class Cpu implements Component, Clocked {
     private Opcode getOpcode() {
         int op = read8(PC);
         if(op == 0xCB) {
+            System.out.println("prefixed");
             op = read8(PC+1);
             return PREFIXED_OPCODE_TABLE[op];
         }
