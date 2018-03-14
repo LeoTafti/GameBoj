@@ -66,10 +66,9 @@ public class CpuTest4 {
     private void writeAllBytes(int ... bytes) {
         if(bytes.length > RAM_SIZE)
             throw new IllegalArgumentException("not enough ram for that");
-        for(int i = 0; i<bytes.length * 2; i ++) {
+        for(int i = 0; i<bytes.length; i ++) {
             int instr = bytes[i];
             Preconditions.checkBits8(instr);
-            //bus.write(i, 0xCB); //write prefix
             bus.write(i, instr);
         }
     }
@@ -80,22 +79,54 @@ public class CpuTest4 {
      * @param opcodes Opcode list
      * @return number of cycles
      */
+//    private int execute(Opcode ... opcodes) {
+//        int cyclesum = 0;
+//        int pcInc = 0;
+//        for(int i = 0; i<opcodes.length * 2; i ++) {
+//            
+//            Opcode op = opcodes[i];
+//            if(op.kind == op.kind.PREFIXED) {  //write prefix if prefixed opcode
+//                bus.write(i, 0xCB);
+//                i ++ ;
+//            }
+//            bus.write(i, op.encoding);
+//            cyclesum += op.cycles;
+//            pcInc += op.totalBytes;
+//        }
+//        cycleCpu(cyclesum);
+//        return pcInc;
+//    }
+    
+//    private int execute(Opcode opcode) {
+//        if(opcode.kind == Opcode.Kind.PREFIXED) {
+//            bus.write(0, 0xCB);
+//        }
+//        bus.write(1, opcode.encoding);
+//        
+//        cycleCpu(opcode.cycles);
+//        
+//        return opcode.totalBytes;
+//    }
+    
     private int execute(Opcode ... opcodes) {
-        int cyclesum = 0;
-        int pcInc = 0;
-        for(int i = 0; i<opcodes.length * 2; i ++) {
-            
-            Opcode op = opcodes[i];
-            if(op.kind == op.kind.PREFIXED) {  //write prefix if prefixed opcode
+        int i = 0;
+        int pcValue = 0;
+        int totalCycles = 0;
+        
+        for(Opcode opcode : opcodes) {
+            if(opcode.kind == Opcode.Kind.PREFIXED) {
                 bus.write(i, 0xCB);
-                i ++ ;
+                i++;
             }
-            bus.write(i, op.encoding);
-            cyclesum += op.cycles;
-            pcInc += op.totalBytes;
+            bus.write(i, opcode.encoding);
+            i++;
+            pcValue += opcode.totalBytes;
+            totalCycles += opcode.cycles;
         }
-        cycleCpu(cyclesum);
-        return pcInc;
+        
+        cycleCpu(totalCycles);
+        
+        return pcValue;
     }
     
     private void initiateRegs(int a, int f, int b, int c, int d, int e, int h, int l) {

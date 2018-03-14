@@ -43,9 +43,7 @@ public final class Cpu implements Component, Clocked {
     
     @Override
     public void cycle(long cycle) {
-        
         if(cycle != nextNonIdleCycle) return;
-        
         Opcode opcode = getOpcode();
         dispatch(opcode);
         
@@ -630,7 +628,6 @@ public final class Cpu implements Component, Clocked {
     private Opcode getOpcode() {
         int op = read8(PC);
         if(op == 0xCB) {
-            System.out.println("prefixed");
             op = read8(PC+1);
             return PREFIXED_OPCODE_TABLE[op];
         }
