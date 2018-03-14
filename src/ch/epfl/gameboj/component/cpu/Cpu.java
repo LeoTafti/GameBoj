@@ -259,6 +259,9 @@ public final class Cpu implements Component, Clocked {
             } break;
             case DEC_R16SP: {
                 Reg16 r16 = extractReg16(opcode);
+                
+                //TODO : modify ! sub only works on 8 bit values, will throw an exception
+                
                 int vf = Alu.sub(
                         reg16SP(r16),
                         1);
