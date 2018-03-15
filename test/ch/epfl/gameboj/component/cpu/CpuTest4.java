@@ -164,7 +164,7 @@ public class CpuTest4 {
         initiateRegs(0xF0, 0x30, 0xF, 0, 0, 0, 0, 0);
         int i = execute(Opcode.ADD_A_B);
         
-        assertArrayEquals(new int[] {i, 0, 0xFF, 0, 0xF, 0, 0, 0, 0, 0},
+        assertArrayEquals(new int[] {i, 0, 0xFF, 0, 0xF0, 0, 0, 0, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());
     }
     
@@ -203,7 +203,7 @@ public class CpuTest4 {
         initiateRegs(0xFE, 0x1, 0, 0, 0, 0, 0x01, 0xF0);
         bus.write(0x01F0, 1);
         int i = execute(Opcode.ADC_A_HLR);
-        assertArrayEquals(new int[] {i, 0, 0, 0xB, 0, 0, 0, 0, 0x01, 0xF0},
+        assertArrayEquals(new int[] {i, 0, 0, 0xB0, 0, 0, 0, 0, 0x01, 0xF0},
                 cpu._testGetPcSpAFBCDEHL());
     }
     
@@ -212,7 +212,7 @@ public class CpuTest4 {
         
         initiateRegs(0xE, 0x1, 0xFF, 0, 0, 0, 0, 0);
         int i = execute(Opcode.INC_A, Opcode.INC_B);
-        assertArrayEquals(new int[] {i, 0, 0xF, 0x9, 0, 0, 0, 0, 0, 0},
+        assertArrayEquals(new int[] {i, 0, 0xF, 0x90, 0, 0, 0, 0, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());
     }
     
@@ -222,7 +222,7 @@ public class CpuTest4 {
         initiateRegs(0, 0, 0, 0, 0, 0, 0x01, 0xF0);
         bus.write(0x01F0, 0xFF);
         int i = execute(Opcode.INC_HLR);
-        assertArrayEquals(new int[] {i, 0, 0, 0x9, 0, 0, 0, 0, 0x01, 0xF0},
+        assertArrayEquals(new int[] {i, 0, 0, 0x90, 0, 0, 0, 0, 0x01, 0xF0},
                 cpu._testGetPcSpAFBCDEHL());
         assertEquals(0, bus.read(0x01F0));
     }
@@ -232,7 +232,7 @@ public class CpuTest4 {
         
         initiateRegs(0x1, 0x1, 0, 0xFF, 0, 0, 0, 0);
         int i = execute(Opcode.INC_SP, Opcode.INC_BC);
-        assertArrayEquals(new int[] {i, 1, 1, 1, 1, 0, 0, 0, 0, 0},
+        assertArrayEquals(new int[] {i, 1, 1, 0x10, 1, 0, 0, 0, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());
     }
     
@@ -241,7 +241,7 @@ public class CpuTest4 {
         //TODO verify expected value for F (address 0xFFFF management)
         initiateRegs(0, 0, 1, 1, 0, 0, 0xFE, 0xFF);
         int i = execute(Opcode.ADD_HL_BC);
-        assertArrayEquals(new int[] {i, 0, 0, 0xB, 1, 1, 0, 0, 0, 0},
+        assertArrayEquals(new int[] {i, 0, 0, 0xB0, 1, 1, 0, 0, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());
     }
     
@@ -253,7 +253,7 @@ public class CpuTest4 {
         writeAllBytes(Opcode.LD_HL_SP_N8.encoding, 1);
         cycleCpu(Opcode.LD_HL_SP_N8.cycles);
         
-        assertArrayEquals(new int[] {Opcode.LD_HL_SP_N8.totalBytes, 0xFFF, 0, 0x2, 0, 0, 0, 0, 0X10, 0},
+        assertArrayEquals(new int[] {Opcode.LD_HL_SP_N8.totalBytes, 0xFFF, 0, 0x20, 0, 0, 0, 0, 0X10, 0},
                 cpu._testGetPcSpAFBCDEHL());
     }
     
@@ -265,7 +265,7 @@ public class CpuTest4 {
         writeAllBytes(Opcode.ADD_SP_N.encoding, 0x80);
         cycleCpu(Opcode.ADD_SP_N.cycles);
         
-        assertArrayEquals(new int[] {Opcode.ADD_SP_N.totalBytes, 0xFFFF, 0, 0x1, 0, 0, 0, 0, 0, 0},
+        assertArrayEquals(new int[] {Opcode.ADD_SP_N.totalBytes, 0xFFFF, 0, 0x10, 0, 0, 0, 0, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());
     }
     
@@ -277,7 +277,7 @@ public class CpuTest4 {
         writeAllBytes(Opcode.SUB_A_N8.encoding, 0xFF);
         cycleCpu(Opcode.SUB_A_N8.cycles);
         
-        assertArrayEquals(new int[] {Opcode.SUB_A_N8.totalBytes, 0, 0xFF, 0x7, 0, 0, 0, 0, 0, 0},
+        assertArrayEquals(new int[] {Opcode.SUB_A_N8.totalBytes, 0, 0xFF, 0x70, 0, 0, 0, 0, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());
     }
     
@@ -288,7 +288,7 @@ public class CpuTest4 {
         writeAllBytes(Opcode.SUB_A_N8.encoding, 1);
         cycleCpu(Opcode.SUB_A_N8.cycles);
         
-        assertArrayEquals(new int[] {Opcode.SUB_A_N8.totalBytes, 0, 0, 0xC, 0, 0, 0, 0, 0, 0},
+        assertArrayEquals(new int[] {Opcode.SUB_A_N8.totalBytes, 0, 0, 0xC0, 0, 0, 0, 0, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());
     }
     
@@ -298,7 +298,7 @@ public class CpuTest4 {
         initiateRegs(0xFE, 0, 0xFF, 0, 0, 0, 0, 0);
         int i = execute(Opcode.SUB_A_B);
         
-        assertArrayEquals(new int[] {i, 0, 0xFF, 0x7, 0xFF, 0, 0, 0, 0, 0},
+        assertArrayEquals(new int[] {i, 0, 0xFF, 0x70, 0xFF, 0, 0, 0, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());
     }
     
@@ -309,7 +309,7 @@ public class CpuTest4 {
         bus.write(0x1F0, 0xFF);
         int i = execute(Opcode.SUB_A_HLR);
         
-        assertArrayEquals(new int[] {i, 0, 0xFF, 0x7, 0xFF, 0, 0, 0, 1, 0xF0},
+        assertArrayEquals(new int[] {i, 0, 0xFF, 0x70, 0xFF, 0, 0, 0, 1, 0xF0},
                 cpu._testGetPcSpAFBCDEHL());
     }
     
@@ -320,7 +320,7 @@ public class CpuTest4 {
         writeAllBytes(Opcode.SBC_A_N8.encoding, 0xFE);
         cycleCpu(Opcode.SBC_A_N8.cycles);
         
-        assertArrayEquals(new int[] {Opcode.SBC_A_N8.totalBytes, 0, 0xFF, 0x7, 0, 0, 0, 0, 0, 0},
+        assertArrayEquals(new int[] {Opcode.SBC_A_N8.totalBytes, 0, 0xFF, 0x70, 0, 0, 0, 0, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());
     }
     
@@ -341,7 +341,7 @@ public class CpuTest4 {
         initiateRegs(0xFE, 0x10, 0xFF, 0, 0, 0, 0, 0);
         int i = execute(Opcode.SBC_A_B);
         
-        assertArrayEquals(new int[] {i, 0, 0xFE, 0x7, 0xFF, 0, 0, 0, 0, 0},
+        assertArrayEquals(new int[] {i, 0, 0xFE, 0x70, 0xFF, 0, 0, 0, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());
     }
     
@@ -352,7 +352,7 @@ public class CpuTest4 {
         bus.write(0x1F0, 0xFF);
         int i = execute(Opcode.SBC_A_HLR);
         
-        assertArrayEquals(new int[] {i, 0, 0xFE, 0x7, 0xFF, 0, 0, 0, 1, 0xF0},
+        assertArrayEquals(new int[] {i, 0, 0xFE, 0x70, 0xFF, 0, 0, 0, 1, 0xF0},
                 cpu._testGetPcSpAFBCDEHL());
     }
     
@@ -448,7 +448,7 @@ public class CpuTest4 {
         initiateRegs(1, 0, 1, 0, 0, 0, 0, 0);
         int i = execute(Opcode.CP_A_B);
         
-        assertArrayEquals(new int[] {i, 0, 1, 0xC, 1, 0, 0, 0, 0, 0},
+        assertArrayEquals(new int[] {i, 0, 1, 0xC0, 1, 0, 0, 0, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());
     }
     
@@ -459,7 +459,7 @@ public class CpuTest4 {
         bus.write(0x1F0, 1);
         int i = execute(Opcode.CP_A_HLR);
         
-        assertArrayEquals(new int[] {i, 0, 0, 0x7, 0, 0, 0, 0, 1, 0xF0},
+        assertArrayEquals(new int[] {i, 0, 0, 0x70, 0, 0, 0, 0, 1, 0xF0},
                 cpu._testGetPcSpAFBCDEHL());
         assertEquals(bus.read(0x1F0), 1);
     }
@@ -471,7 +471,7 @@ public class CpuTest4 {
         bus.write(0x1F0, 1);
         int i = execute(Opcode.CP_A_HLR);
         
-        assertArrayEquals(new int[] {i, 0, 1, 0xC, 0, 0, 0, 0, 1, 0xF0},
+        assertArrayEquals(new int[] {i, 0, 1, 0xC0, 0, 0, 0, 0, 1, 0xF0},
                 cpu._testGetPcSpAFBCDEHL());
         assertEquals(bus.read(0x1F0), 1);
     }
