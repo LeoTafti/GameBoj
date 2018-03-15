@@ -826,12 +826,13 @@ public final class Cpu implements Component, Clocked {
      */
     private int addSP_e8() {
         // TODO TODO why clip 16 for single byte?
+        System.out.println(Integer.toBinaryString(Bits.clip(16, Bits.signExtend8(read8AfterOpcode()))));
         int val = Bits.clip(16, Bits.signExtend8(read8AfterOpcode()));
         int valueFlags = Alu.add16L(SP, val);
         //TODO : 2.2.1.6, step 3 : does it mean that we must set SP here or just use its value ?
         //probably just use value, since then decide where to store result       
 //        SP = Alu.unpackValue(valueFlags);
-        
+        System.out.println(Integer.toBinaryString(valueFlags));
         combineAluFlags(valueFlags, FlagSrc.V0, FlagSrc.V0, FlagSrc.ALU, FlagSrc.ALU);
         
         return Alu.unpackValue(valueFlags);

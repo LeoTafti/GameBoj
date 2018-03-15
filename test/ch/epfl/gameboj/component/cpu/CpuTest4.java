@@ -957,7 +957,7 @@ public class CpuTest4 {
         bus.write(0x1F0, 0b1001_0001);
         int i = execute(Opcode.RLC_HLR);
         
-        assertArrayEquals(new int[] {i, 0, 0, 0xF0, 0, 0, 0, 0, 0x1, 0xF0},
+        assertArrayEquals(new int[] {i, 0, 0, 0x10, 0, 0, 0, 0, 0x1, 0xF0},
                 cpu._testGetPcSpAFBCDEHL());
         assertEquals(0b0010_0011, bus.read(0x1F0));
         
