@@ -259,12 +259,7 @@ public final class Cpu implements Component, Clocked {
                 Reg16 r16 = extractReg16(opcode);
                 
                 //TODO : modify ! sub only works on 8 bit values, will throw an exception
-                
-                int vf = Alu.sub(
-                        reg16SP(r16),
-                        1);
-                combineAluFlags(vf, FlagSrc.CPU, FlagSrc.CPU, FlagSrc.CPU, FlagSrc.CPU);
-                setReg16SP(r16, Alu.unpackValue(vf));
+                setReg16SP(r16, Bits.clip(16, reg16SP(r16)-1));
             } break;
 
             // And, or, xor, complement
@@ -304,7 +299,7 @@ public final class Cpu implements Component, Clocked {
                 setRegFlags(Reg.A, vf);
             } break;
             case XOR_A_N8: {
-                int vf = Alu.or(reg(Reg.A),
+                int vf = Alu.xor(reg(Reg.A),
                         read8AfterOpcode());
                 setRegFlags(Reg.A, vf);
             } break;
@@ -388,9 +383,15 @@ public final class Cpu implements Component, Clocked {
                 combineAluFlags(vf, FlagSrc.ALU, FlagSrc.CPU, FlagSrc.V0, FlagSrc.ALU);
             } break;
             case SCCF: { //method setFlag better??
-                setReg(Reg.F, Bits.set(reg(Reg.F), 4, getCFlagSCCF(opcode)));
-                setReg(Reg.F, Bits.set(reg(Reg.F), 5, false));
-                setReg(Reg.F, Bits.set(reg(Reg.F), 6, false));
+//                setReg(Reg.F, Bits.set(reg(Reg.F), 4, getCFlagSCCF(opcode)));
+//                setReg(Reg.F, Bits.set(reg(Reg.F), 5, false));
+//                setReg(Reg.F, Bits.set(reg(Reg.F), 6, false));
+                if(getCFlagSCCF(opcode)) {
+                    combineAluFlags(0, FlagSrc.CPU, FlagSrc.V0, FlagSrc.V0, FlagSrc.V1);
+                }
+                else {
+                    combineAluFlags(0, FlagSrc.CPU, FlagSrc.V0, FlagSrc.V0, FlagSrc.V0);
+                }
             } break;
             
             default:
@@ -617,7 +618,7 @@ public final class Cpu implements Component, Clocked {
     
 
     private boolean getCFlagSCCF(Opcode opcode) {
-        return !Bits.test(opcode.encoding, 3) && Bits.test(reg(Reg.F), 4);
+        return !(Bits.test(opcode.encoding, 3) && Bits.test(reg(Reg.F), 4));
     }
     
 
@@ -825,14 +826,11 @@ public final class Cpu implements Component, Clocked {
      * @return result of add16L with 8-bit value and SP value
      */
     private int addSP_e8() {
-        // TODO TODO why clip 16 for single byte?
-        System.out.println(Integer.toBinaryString(Bits.clip(16, Bits.signExtend8(read8AfterOpcode()))));
         int val = Bits.clip(16, Bits.signExtend8(read8AfterOpcode()));
         int valueFlags = Alu.add16L(SP, val);
         //TODO : 2.2.1.6, step 3 : does it mean that we must set SP here or just use its value ?
         //probably just use value, since then decide where to store result       
 //        SP = Alu.unpackValue(valueFlags);
-        System.out.println(Integer.toBinaryString(valueFlags));
         combineAluFlags(valueFlags, FlagSrc.V0, FlagSrc.V0, FlagSrc.ALU, FlagSrc.ALU);
         
         return Alu.unpackValue(valueFlags);
@@ -873,6 +871,7 @@ public final class Cpu implements Component, Clocked {
         }
         SP = 0;
         PC = 0;
+        nextNonIdleCycle = 0;
     }
     // TODO remove before commit
     protected void setAllRegs(int a, int f, int b, int c, int d, int e, int h, int l) {
