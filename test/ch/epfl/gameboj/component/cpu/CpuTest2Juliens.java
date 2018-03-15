@@ -20,7 +20,7 @@ import ch.epfl.gameboj.component.cpu.Cpu.Reg16;
 import ch.epfl.gameboj.component.memory.Ram;
 import ch.epfl.gameboj.component.memory.RamController;
 
-public class CpuTest2 {
+public class CpuTest2Juliens {
 	
 	
 //	/////////  A METTRE DANS CPU
