@@ -257,8 +257,7 @@ public final class Cpu implements Component, Clocked {
             } break;
             case DEC_R16SP: {
                 Reg16 r16 = extractReg16(opcode);
-                
-                //TODO : modify ! sub only works on 8 bit values, will throw an exception
+
                 setReg16SP(r16, Bits.clip(16, reg16SP(r16)-1));
             } break;
 
@@ -382,10 +381,7 @@ public final class Cpu implements Component, Clocked {
                 setRegFromAlu(Reg.A, vf);
                 combineAluFlags(vf, FlagSrc.ALU, FlagSrc.CPU, FlagSrc.V0, FlagSrc.ALU);
             } break;
-            case SCCF: { //method setFlag better??
-//                setReg(Reg.F, Bits.set(reg(Reg.F), 4, getCFlagSCCF(opcode)));
-//                setReg(Reg.F, Bits.set(reg(Reg.F), 5, false));
-//                setReg(Reg.F, Bits.set(reg(Reg.F), 6, false));
+            case SCCF: {
                 if(getCFlagSCCF(opcode)) {
                     combineAluFlags(0, FlagSrc.CPU, FlagSrc.V0, FlagSrc.V0, FlagSrc.V1);
                 }
@@ -412,8 +408,8 @@ public final class Cpu implements Component, Clocked {
 
     /**
      * creates table containing the PcSpAFBCDEHL 
-     *  register's information
-     * @return
+     *  register's information, for debugging/testing purposes
+     * @return array of all register values
      */
     public int[] _testGetPcSpAFBCDEHL() {
         int[] array = {PC,
@@ -563,6 +559,12 @@ public final class Cpu implements Component, Clocked {
         return Bits.make16(highB, lowB);
     }
     
+    /**
+     * Returns value stored in pair of 8-bit regs, or 16-bit reg SP if given r is Reg16.AF
+     * @param r pair of 8-bit regs
+     * @return value store in given 16-bit reg
+     * @see Cpu#reg16(Reg16 r)
+     */
     private int reg16SP(Reg16 r) {
         if(r == Reg16.AF) {
             return SP;
@@ -570,36 +572,10 @@ public final class Cpu implements Component, Clocked {
         return reg16(r);
     }
     
-    private boolean flagValue(int vf, FlagSrc flagSrc, Flag flag) {
-        switch(flagSrc) {
-        case V0:
-           return false;
-        case V1:
-           return true;
-        case ALU:
-            return Bits.test(vf, flag.index());
-        case CPU:
-            return Bits.test(reg(Reg.F), flag.index());
-        default:
-                throw new IllegalArgumentException("Unknown FlagSrc");
-        }
-    }
-
-    /**
-     * 
-     * @param f Z or N or H or C
-     * @return **F**-flag value as boolean
-     */
-    private boolean getFlag(Flag f) {
-        return flagValue(reg(Reg.F), FlagSrc.CPU, f);
-        
-        //TODO : why give reg(Reg.F) as vf ???
-    }
-    
 
     /**
      * Gets (eventual) initial carry from opcode encoding and C Flag
-     * @param opcode opcode of ADD operation
+     * @param opcode opcode of ADC operation
      * @return initial carry (true for 1, false for 0)
      */
     private boolean getInitialCarry(Opcode opcode) {
@@ -609,7 +585,7 @@ public final class Cpu implements Component, Clocked {
 
     /**
      * Gets (eventual) initial borrow from opcode encoding and C Flag
-     * @param opcode opcode of SUB operation
+     * @param opcode opcode of SBC operation
      * @return initial borrow (true for 1, false for 0)
      */
     private boolean getInitialBorrow(Opcode opcode) {
@@ -617,6 +593,11 @@ public final class Cpu implements Component, Clocked {
     }
     
 
+    /**
+     * Computes new C flag value from bit 3 of given opcode encoding and actual C flag value
+     * @param opcode opcode of SCF or CFF operation
+     * @return new C flag value
+     */
     private boolean getCFlagSCCF(Opcode opcode) {
         return !(Bits.test(opcode.encoding, 3) && Bits.test(reg(Reg.F), 4));
     }
@@ -643,10 +624,6 @@ public final class Cpu implements Component, Clocked {
      */
     private void setReg(Reg r, int newV) {
         registerFile.set(r, newV);
-    }
-    
-    private void setRegFromAlu(Reg r, int vf) {
-        setReg(r, Alu.unpackValue(vf));
     }
     
 
@@ -701,17 +678,75 @@ public final class Cpu implements Component, Clocked {
         }
     }
     
+    /**
+     * Extracts value from given int and puts it in given reg
+     * @param r register in which to store value
+     * @param vf packed value and flags
+     */
+    private void setRegFromAlu(Reg r, int vf) {
+        setReg(r, Alu.unpackValue(vf));
+    }
+    
+    /**
+     * Extracts flags from given int and puts them in reg F
+     * @param valueFlags packed value and flags
+     */
     private void setFlags(int valueFlags) {
         setReg(Reg.F, Alu.unpackFlags(valueFlags));
     }
     
-
+    /**
+     * Extracts flags and value from given int, and puts them in reg F, resp. in given reg.
+     * @param r register in which to store value
+     * @param vf packed value and flags
+     */
     private void setRegFlags(Reg r, int vf) {
         setRegFromAlu(r, vf);
         setFlags(vf);
     }
     
+    /**
+    * Computes new flag value given a flag source (CPU, ALU, V0, V1), the actual flag and packed value and flags from ALU
+    * @param vf packed value and flags
+    * @param flagSrc source of flag to pick
+    * @param flag flag for which a new value needs to be asserted
+    * @return
+    */
+   private boolean flagValue(int vf, FlagSrc flagSrc, Flag flag) {
+       switch(flagSrc) {
+       case V0:
+          return false;
+       case V1:
+          return true;
+       case ALU:
+           return Bits.test(vf, flag.index());
+       case CPU:
+           return Bits.test(reg(Reg.F), flag.index());
+       default:
+               throw new IllegalArgumentException("Unknown FlagSrc");
+       }
+   }
 
+   /**
+    * Gets flag value stored in reg F
+    * @param f flag to get the value of
+    * @return flag value as boolean (true for 1, false for 0)
+    */
+   private boolean getFlag(Flag f) {
+       return flagValue(reg(Reg.F), FlagSrc.CPU, f);
+       
+       //TODO : why give reg(Reg.F) as vf ???
+   }
+    
+    /**
+     * Allows to set Cpu flags (so reg F) by combining old Cpu flags value (by using FlagSrc.CPU)
+     * , flags returned by Alu (by using FlagSrc.ALU) or arbitrary values (FlagSrc.V0 for 0, FlagSrc.V1 for 1)
+     * @param vf packed value and flags form Alu
+     * @param z flag z source
+     * @param n flag n source
+     * @param h flag h source
+     * @param c flag c source
+     */
     private void combineAluFlags(int vf, FlagSrc z, FlagSrc n, FlagSrc h, FlagSrc c) {
         boolean newZ, newN, newH, newC;
         
@@ -728,7 +763,7 @@ public final class Cpu implements Component, Clocked {
      * Extracts 8-bit reg identity form opcode encoding, from given bit index
      * @param opcode opcode in which reg is encoded
      * @param startBit index from which to extract reg id
-     * @return Reg value
+     * @return Reg reg identity
      */
     private Reg extractReg(Opcode opcode, int startBit) {
         int regCode = Bits.extract(opcode.encoding, startBit, 3);
@@ -783,16 +818,30 @@ public final class Cpu implements Component, Clocked {
         return Bits.test(opcode.encoding, 4) ? -1 : 1;
     }
 
+    /**
+     * Extracts from given opcode encoding direction of rotation
+     * @param opcode opcode in which rotation direction is encoded
+     * @return
+     */
     private RotDir extractRotDir(Opcode opcode) {
         return Bits.test(opcode.encoding, 3) ? RotDir.RIGHT : RotDir.LEFT;
     }
     
-
+    /**
+     * Extracts from given opcode encoding index of bit to test/modify
+     * @param opcode opcode in which bit index is encoded
+     * @return index of bit
+     */
     private int extractBitIndex(Opcode opcode) {
         return Bits.extract(opcode.encoding, 3, 3); 
     }
     
 
+    /**
+     * Extracts from given opcode encoding value of bit to set
+     * @param opcode opcode in which new bit value is encoded
+     * @return value of bit
+     */
     private boolean extractBitValue(Opcode opcode) {
         return Bits.test(opcode.encoding, 6);
     }
@@ -828,24 +877,10 @@ public final class Cpu implements Component, Clocked {
     private int addSP_e8() {
         int val = Bits.clip(16, Bits.signExtend8(read8AfterOpcode()));
         int valueFlags = Alu.add16L(SP, val);
-        //TODO : 2.2.1.6, step 3 : does it mean that we must set SP here or just use its value ?
-        //probably just use value, since then decide where to store result       
-//        SP = Alu.unpackValue(valueFlags);
+        
         combineAluFlags(valueFlags, FlagSrc.V0, FlagSrc.V0, FlagSrc.ALU, FlagSrc.ALU);
         
         return Alu.unpackValue(valueFlags);
-        //TODO : remember to STORE result in either SP or HL, cf. 2.2.1.6 step 5 !
-        
-        //NOTE that we could also pass opcode as argument, and take care of storing the result in here
-        //TODO : decide what's the best way
-        
-//        if(Bits.test(opcode.encoding, 4)) {
-//            setReg16(Reg16.HL, Alu.unpackValue(valueFlags));
-//        }   
-//        else {
-//            SP = Alu.unpackValue(valueFlags);
-//        }
-        
     }
     
     /**
@@ -864,36 +899,36 @@ public final class Cpu implements Component, Clocked {
         }
         return table;
     }
-    
-    protected void reset() {
-        for(Reg reg : Reg.values()) {
-            setReg(reg, 0);
-        }
-        SP = 0;
-        PC = 0;
-        nextNonIdleCycle = 0;
-    }
-    // TODO remove before commit
-    protected void setAllRegs(int a, int f, int b, int c, int d, int e, int h, int l) {
-        setReg(Reg.A, a);
-        setReg(Reg.F, f);
-        setReg(Reg.B, b);
-        setReg(Reg.C, c);
-        setReg(Reg.D, d);
-        setReg(Reg.E, e);
-        setReg(Reg.H, h);
-        setReg(Reg.L, l);
-    }
-    //TODO remove before commit
-    protected void setAllRegs16(int af, int bc, int de, int hl) {
-        setReg16(Reg16.AF, af);
-        setReg16(Reg16.BC, bc);
-        setReg16(Reg16.DE, de);
-        setReg16(Reg16.HL, hl);
-    }
-    
-    //TODO remove before commit
-    protected void setSP(int sp) {
-        SP = sp;
-    }
+//    // TODO remove before commit
+//    protected void reset() {
+//        for(Reg reg : Reg.values()) {
+//            setReg(reg, 0);
+//        }
+//        SP = 0;
+//        PC = 0;
+//        nextNonIdleCycle = 0;
+//    }
+//    // TODO remove before commit
+//    protected void setAllRegs(int a, int f, int b, int c, int d, int e, int h, int l) {
+//        setReg(Reg.A, a);
+//        setReg(Reg.F, f);
+//        setReg(Reg.B, b);
+//        setReg(Reg.C, c);
+//        setReg(Reg.D, d);
+//        setReg(Reg.E, e);
+//        setReg(Reg.H, h);
+//        setReg(Reg.L, l);
+//    }
+//    //TODO remove before commit
+//    protected void setAllRegs16(int af, int bc, int de, int hl) {
+//        setReg16(Reg16.AF, af);
+//        setReg16(Reg16.BC, bc);
+//        setReg16(Reg16.DE, de);
+//        setReg16(Reg16.HL, hl);
+//    }
+//    
+//    //TODO remove before commit
+//    protected void setSP(int sp) {
+//        SP = sp;
+//    }
 }
