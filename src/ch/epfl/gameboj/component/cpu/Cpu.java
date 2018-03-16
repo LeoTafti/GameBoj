@@ -10,6 +10,7 @@ import ch.epfl.gameboj.Bus;
 import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.Register;
 import ch.epfl.gameboj.RegisterFile;
+import ch.epfl.gameboj.bits.Bit;
 import ch.epfl.gameboj.bits.Bits;
 import ch.epfl.gameboj.component.Clocked;
 import ch.epfl.gameboj.component.Component;
@@ -22,6 +23,10 @@ public final class Cpu implements Component, Clocked {
     private enum Reg16 implements Register { AF, BC, DE, HL}
     
     private enum FlagSrc { V0, V1, ALU, CPU }
+    
+    public enum Interrupt implements Bit {
+        VBLANK, LCD_STAT, TIMER, SERIAL, JOYPAD
+      }
     
     private RegisterFile<Reg> registerFile = new RegisterFile<>(Reg.values());
     private int SP = 0, PC = 0;
@@ -314,10 +319,14 @@ public final class Cpu implements Component, Clocked {
 
             // Rotate, shift
             case ROTCA: {
-                setRegFlags(Reg.A, Alu.rotate(extractRotDir(opcode), reg(Reg.A)));
+                int vf = Alu.rotate(extractRotDir(opcode), reg(Reg.A));
+                setRegFromAlu(Reg.A, vf);
+                combineAluFlags(vf, FlagSrc.V0, FlagSrc.V0, FlagSrc.V0, FlagSrc.ALU);
             } break;
             case ROTA: {
-                setRegFlags(Reg.A, Alu.rotate(extractRotDir(opcode), reg(Reg.A), getFlag(Flag.C)));              
+                int vf = Alu.rotate(extractRotDir(opcode), reg(Reg.A), getFlag(Flag.C));
+                setRegFromAlu(Reg.A, vf);
+                combineAluFlags(vf, FlagSrc.V0, FlagSrc.V0, FlagSrc.V0, FlagSrc.ALU);
             } break;
             case ROTC_R8: {
                 setRegFlags(extractReg(opcode, 0), 
@@ -398,6 +407,10 @@ public final class Cpu implements Component, Clocked {
     
     @Override
     public int read(int address) {
+        //TODO : return no data or throw exception ?
+//        if(address != AddressMap.REG_IE
+//                && address != AddressMap.REG_IF
+//                && !())
         return NO_DATA;
     }
 
@@ -881,6 +894,10 @@ public final class Cpu implements Component, Clocked {
         return Alu.unpackValue(valueFlags);
     }
     
+//    public void requestInterrupt(Interrupt i) {
+//        //TODO : implement
+//    }
+    
     /**
      * Creates table of Opcodes of given kind 
      *      indexed by opcodes encodings
@@ -897,36 +914,36 @@ public final class Cpu implements Component, Clocked {
         }
         return table;
     }
-    // TODO remove before commit
-    protected void reset() {
-        for(Reg reg : Reg.values()) {
-            setReg(reg, 0);
-        }
-        SP = 0;
-        PC = 0;
-        nextNonIdleCycle = 0;
-    }
-    // TODO remove before commit
-    protected void setAllRegs(int a, int f, int b, int c, int d, int e, int h, int l) {
-        setReg(Reg.A, a);
-        setReg(Reg.F, f);
-        setReg(Reg.B, b);
-        setReg(Reg.C, c);
-        setReg(Reg.D, d);
-        setReg(Reg.E, e);
-        setReg(Reg.H, h);
-        setReg(Reg.L, l);
-    }
-    //TODO remove before commit
-    protected void setAllRegs16(int af, int bc, int de, int hl) {
-        setReg16(Reg16.AF, af);
-        setReg16(Reg16.BC, bc);
-        setReg16(Reg16.DE, de);
-        setReg16(Reg16.HL, hl);
-    }
-    
-    //TODO remove before commit
-    protected void setSP(int sp) {
-        SP = sp;
-    }
+//    // TODO remove before commit
+//    protected void reset() {
+//        for(Reg reg : Reg.values()) {
+//            setReg(reg, 0);
+//        }
+//        SP = 0;
+//        PC = 0;
+//        nextNonIdleCycle = 0;
+//    }
+//    // TODO remove before commit
+//    protected void setAllRegs(int a, int f, int b, int c, int d, int e, int h, int l) {
+//        setReg(Reg.A, a);
+//        setReg(Reg.F, f);
+//        setReg(Reg.B, b);
+//        setReg(Reg.C, c);
+//        setReg(Reg.D, d);
+//        setReg(Reg.E, e);
+//        setReg(Reg.H, h);
+//        setReg(Reg.L, l);
+//    }
+//    //TODO remove before commit
+//    protected void setAllRegs16(int af, int bc, int de, int hl) {
+//        setReg16(Reg16.AF, af);
+//        setReg16(Reg16.BC, bc);
+//        setReg16(Reg16.DE, de);
+//        setReg16(Reg16.HL, hl);
+//    }
+//    
+//    //TODO remove before commit
+//    protected void setSP(int sp) {
+//        SP = sp;
+//    }
 }
