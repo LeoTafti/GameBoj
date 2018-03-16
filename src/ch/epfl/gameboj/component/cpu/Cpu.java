@@ -49,6 +49,7 @@ public final class Cpu implements Component, Clocked {
     
     @Override
     public void cycle(long cycle) {
+        //TODO the condition below will always be false (cycle == Long.MAX_VALUE)
         if(cycle == Long.MAX_VALUE && pendingInterrupt()) { //TODO : need IME to be true too or not ?
             nextNonIdleCycle = cycle;
         }
@@ -64,6 +65,8 @@ public final class Cpu implements Component, Clocked {
             //      Maybe create a interrupt handler function, and simply call it here
             //      to make the code more readable
             //TODO : must handle ALL interrupts before going to next instruction ? (probably)
+        
+            handleInterrupt();
         }
         
         //TODO : structure here may be wrong, be careful / think it through again
@@ -77,6 +80,22 @@ public final class Cpu implements Component, Clocked {
         PC += opcode.totalBytes;
     }
     
+    private void handleInterrupt() {
+        IME = false;
+        int interruptID = Integer.numberOfTrailingZeros(read8(AddressMap.REG_IE) & read8(AddressMap.REG_IF));
+        
+        write8(AddressMap.REG_IF, Bits.set(read8(AddressMap.REG_IF), interruptID, false));
+        
+        //TODO what if bigger the 16 bits? we never clip
+        push16(PC);
+        
+        PC = 0x40 + 8*interruptID;
+        
+        nextNonIdleCycle += 5; // not shure it is supposed to be dealed with here
+        // but the interrupt opcdoes only have 1 cycle + 1 additional cycle
+        
+    }
+
     private boolean pendingInterrupt() {
         return (read8(AddressMap.REG_IE) & read8(AddressMap.REG_IF)) != 0;
     }
