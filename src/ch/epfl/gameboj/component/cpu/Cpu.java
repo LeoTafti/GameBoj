@@ -89,7 +89,7 @@ public final class Cpu implements Component, Clocked {
         //TODO what if bigger the 16 bits? we never clip
         push16(PC);
         
-        PC = 0x40 + 8*interruptID;
+        PC = AddressMap.INTERRUPTS[interruptID];
         
         nextNonIdleCycle += 5; // not shure it is supposed to be dealed with here
         // but the interrupt opcdoes only have 1 cycle + 1 additional cycle
