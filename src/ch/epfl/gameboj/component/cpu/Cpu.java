@@ -733,9 +733,7 @@ public final class Cpu implements Component, Clocked {
     * @return flag value as boolean (true for 1, false for 0)
     */
    private boolean getFlag(Flag f) {
-       return flagValue(reg(Reg.F), FlagSrc.CPU, f);
-       
-       //TODO : why give reg(Reg.F) as vf ???
+       return flagValue(0, FlagSrc.CPU, f);
    }
     
     /**
@@ -899,36 +897,36 @@ public final class Cpu implements Component, Clocked {
         }
         return table;
     }
-//    // TODO remove before commit
-//    protected void reset() {
-//        for(Reg reg : Reg.values()) {
-//            setReg(reg, 0);
-//        }
-//        SP = 0;
-//        PC = 0;
-//        nextNonIdleCycle = 0;
-//    }
-//    // TODO remove before commit
-//    protected void setAllRegs(int a, int f, int b, int c, int d, int e, int h, int l) {
-//        setReg(Reg.A, a);
-//        setReg(Reg.F, f);
-//        setReg(Reg.B, b);
-//        setReg(Reg.C, c);
-//        setReg(Reg.D, d);
-//        setReg(Reg.E, e);
-//        setReg(Reg.H, h);
-//        setReg(Reg.L, l);
-//    }
-//    //TODO remove before commit
-//    protected void setAllRegs16(int af, int bc, int de, int hl) {
-//        setReg16(Reg16.AF, af);
-//        setReg16(Reg16.BC, bc);
-//        setReg16(Reg16.DE, de);
-//        setReg16(Reg16.HL, hl);
-//    }
-//    
-//    //TODO remove before commit
-//    protected void setSP(int sp) {
-//        SP = sp;
-//    }
+    // TODO remove before commit
+    protected void reset() {
+        for(Reg reg : Reg.values()) {
+            setReg(reg, 0);
+        }
+        SP = 0;
+        PC = 0;
+        nextNonIdleCycle = 0;
+    }
+    // TODO remove before commit
+    protected void setAllRegs(int a, int f, int b, int c, int d, int e, int h, int l) {
+        setReg(Reg.A, a);
+        setReg(Reg.F, f);
+        setReg(Reg.B, b);
+        setReg(Reg.C, c);
+        setReg(Reg.D, d);
+        setReg(Reg.E, e);
+        setReg(Reg.H, h);
+        setReg(Reg.L, l);
+    }
+    //TODO remove before commit
+    protected void setAllRegs16(int af, int bc, int de, int hl) {
+        setReg16(Reg16.AF, af);
+        setReg16(Reg16.BC, bc);
+        setReg16(Reg16.DE, de);
+        setReg16(Reg16.HL, hl);
+    }
+    
+    //TODO remove before commit
+    protected void setSP(int sp) {
+        SP = sp;
+    }
 }
