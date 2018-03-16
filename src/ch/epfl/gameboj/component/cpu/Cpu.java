@@ -30,6 +30,7 @@ public final class Cpu implements Component, Clocked {
     
     private RegisterFile<Reg> registerFile = new RegisterFile<>(Reg.values());
     private int SP = 0, PC = 0;
+    private boolean IME = false;
     
     private static final Opcode[] DIRECT_OPCODE_TABLE =
             buildOpcodeTable(Opcode.Kind.DIRECT);
@@ -48,15 +49,37 @@ public final class Cpu implements Component, Clocked {
     
     @Override
     public void cycle(long cycle) {
-        if(cycle != nextNonIdleCycle) return;
+        if(cycle == Long.MAX_VALUE && pendingInterrupt()) { //TODO : need IME to be true too or not ?
+            nextNonIdleCycle = cycle;
+        }
+        else if(cycle != nextNonIdleCycle) return;
+        
+        reallyCycle();
+    };
+    
+    private void reallyCycle() {
+        if(IME == true
+                && pendingInterrupt()) {
+            //TODO : handle interrupt cf. 1.7.3 project guidelines
+            //      Maybe create a interrupt handler function, and simply call it here
+            //      to make the code more readable
+            //TODO : must handle ALL interrupts before going to next instruction ? (probably)
+        }
+        
+        //TODO : structure here may be wrong, be careful / think it through again
+        
         Opcode opcode = getOpcode();
         dispatch(opcode);
         
         //TODO : PC overflow ???
         nextNonIdleCycle += opcode.cycles;
-        PC += opcode.totalBytes;
         
-    };
+        PC += opcode.totalBytes;
+    }
+    
+    private boolean pendingInterrupt() {
+        return (read8(AddressMap.REG_IE) & read8(AddressMap.REG_IF)) != 0;
+    }
     
     /**
      * Given an opcode executes corresponding operation
@@ -399,6 +422,50 @@ public final class Cpu implements Component, Clocked {
                 }
             } break;
             
+         // Jumps
+            case JP_HL: {
+            } break;
+            case JP_N16: {
+            } break;
+            case JP_CC_N16: {
+                //TODO : don't forget to add additionalCycles to nextNonIdleCycle
+                //      if condition is true 
+            } break;
+            case JR_E8: {
+            } break;
+            case JR_CC_E8: {
+                //TODO : don't forget to add additionalCycles to nextNonIdleCycle
+                //      if condition is true 
+            } break;
+
+            // Calls and returns
+            case CALL_N16: {
+            } break;
+            case CALL_CC_N16: {
+              //TODO : don't forget to add additionalCycles to nextNonIdleCycle
+                //      if condition is true 
+            } break;
+            case RST_U3: {
+            } break;
+            case RET: {
+            } break;
+            case RET_CC: {
+              //TODO : don't forget to add additionalCycles to nextNonIdleCycle
+                //      if condition is true 
+            } break;
+
+            // Interrupts
+            case EDI: {
+            } break;
+            case RETI: {
+            } break;
+
+            // Misc control
+            case HALT: {
+            } break;
+            case STOP:
+              throw new Error("STOP is not implemented");
+              
             default:
                 throw new NullPointerException();
         }
@@ -407,16 +474,25 @@ public final class Cpu implements Component, Clocked {
     
     @Override
     public int read(int address) {
-        //TODO : return no data or throw exception ?
-//        if(address != AddressMap.REG_IE
-//                && address != AddressMap.REG_IF
-//                && !())
-        return NO_DATA;
+        if(address != AddressMap.REG_IE
+                && address != AddressMap.REG_IF
+                && !(address >= AddressMap.HIGH_RAM_START && address < AddressMap.HIGH_RAM_END)){
+                    return NO_DATA;
+                }
+        return bus.read(address);
     }
 
     @Override
     public void write(int address, int data) {
-        
+        if(address != AddressMap.REG_IE
+                && address != AddressMap.REG_IF
+                && !(address >= AddressMap.HIGH_RAM_START && address < AddressMap.HIGH_RAM_END)){
+            // Do nothing (behavior conform to documentation)
+            return;
+        }
+        bus.write(address, data);
+        //TODO : read/write only 8 bit values ?
+        //TODO : test behavior with wrong address
     }
 
     /**
@@ -894,9 +970,39 @@ public final class Cpu implements Component, Clocked {
         return Alu.unpackValue(valueFlags);
     }
     
-//    public void requestInterrupt(Interrupt i) {
-//        //TODO : implement
-//    }
+    /**
+     * Given an interrupt, sets IF corresponding bit to 1
+     * @param i interrupt
+     */
+    public void requestInterrupt(Interrupt i) {
+        write8(AddressMap.REG_IF,
+                Bits.set(read8(AddressMap.REG_IF), i.index(), true));
+    }
+    
+    /**
+     * Extracts condition from given opcode encoding, evaluates it and returns its value
+     * @param opcode opcode in which condition is encoded
+     * @return condition value (true/false)
+     */
+    private boolean evaluateCondition(Opcode opcode) {
+        int condition = Bits.extract(opcode.encoding, 3, 2);
+        switch(condition) {
+        case 0b00:
+            //nz
+            return !(getFlag(Flag.Z));
+        case 0b01:
+            //z
+            return getFlag(Flag.Z);
+        case 0b10:
+            //nc
+            return !(getFlag(Flag.C));
+        case 0b11:
+            //c
+            return getFlag(Flag.C);
+            default :
+                throw new IllegalArgumentException();
+        }
+    }
     
     /**
      * Creates table of Opcodes of given kind 

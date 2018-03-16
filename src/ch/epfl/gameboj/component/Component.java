@@ -23,7 +23,7 @@ public interface Component {
      * component doesn't allow to write at this address
      * @param address
      * @param data
-     * @throws IllegalArgumentException if address isn't a 16 bits value or data isn't an 8 bits value
+     * @throws IllegalArgumentException if address isn't a 16 bits value or data isn't a 8 bit value
      */
     abstract void write(int address, int data);
     
