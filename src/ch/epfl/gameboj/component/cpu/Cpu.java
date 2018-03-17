@@ -16,6 +16,7 @@ import ch.epfl.gameboj.component.Clocked;
 import ch.epfl.gameboj.component.Component;
 import ch.epfl.gameboj.component.cpu.Alu.Flag;
 import ch.epfl.gameboj.component.cpu.Alu.RotDir;
+import ch.epfl.gameboj.component.memory.Ram;
 
 public final class Cpu implements Component, Clocked {
 
@@ -31,6 +32,7 @@ public final class Cpu implements Component, Clocked {
     private RegisterFile<Reg> registerFile = new RegisterFile<>(Reg.values());
     private int SP = 0, PC = 0;
     private boolean IME = false;
+    private int IE = 0, IF = 0;
     
     private static final Opcode[] DIRECT_OPCODE_TABLE =
             buildOpcodeTable(Opcode.Kind.DIRECT);
@@ -41,6 +43,8 @@ public final class Cpu implements Component, Clocked {
     
     private Bus bus;
     
+    private Ram highRam = new Ram(127);
+    
     @Override
     public void attachTo(Bus bus) {
         Component.super.attachTo(bus);
@@ -49,8 +53,7 @@ public final class Cpu implements Component, Clocked {
     
     @Override
     public void cycle(long cycle) {
-        //TODO the condition below will always be false (cycle == Long.MAX_VALUE)
-        if(cycle == Long.MAX_VALUE && pendingInterrupt()) { //TODO : need IME to be true too or not ?
+        if(cycle == Long.MAX_VALUE && pendingInterrupt()) {
             nextNonIdleCycle = cycle;
         }
         else if(cycle != nextNonIdleCycle) return;
@@ -82,9 +85,9 @@ public final class Cpu implements Component, Clocked {
     
     private void handleInterrupt() {
         IME = false;
-        int interruptID = Integer.numberOfTrailingZeros(read8(AddressMap.REG_IE) & read8(AddressMap.REG_IF));
+        int interruptID = Integer.numberOfTrailingZeros(IE & IF);
         
-        write8(AddressMap.REG_IF, Bits.set(read8(AddressMap.REG_IF), interruptID, false));
+        IF = Bits.set(IF, interruptID, false);
         
         //TODO what if bigger the 16 bits? we never clip
         push16(PC);
@@ -97,7 +100,7 @@ public final class Cpu implements Component, Clocked {
     }
 
     private boolean pendingInterrupt() {
-        return (read8(AddressMap.REG_IE) & read8(AddressMap.REG_IF)) != 0;
+        return (IE & IF) != 0;
     }
     
     /**
@@ -107,6 +110,8 @@ public final class Cpu implements Component, Clocked {
      *      to any of the one's handled here
      */
     private void dispatch(Opcode opcode) {
+        int nextPC = PC + opcode.totalBytes;
+        
         switch(opcode.family) {
             case NOP: {
             } break;
@@ -443,18 +448,29 @@ public final class Cpu implements Component, Clocked {
             
          // Jumps
             case JP_HL: {
+                nextPC = reg16(Reg16.HL);
             } break;
             case JP_N16: {
+                nextPC = read16AfterOpcode();
             } break;
             case JP_CC_N16: {
                 //TODO : don't forget to add additionalCycles to nextNonIdleCycle
                 //      if condition is true 
+                if(evaluateCondition(opcode)) {
+                    nextPC = read16AfterOpcode();
+                    nextNonIdleCycle += opcode.additionalCycles;
+                }
             } break;
             case JR_E8: {
+                nextPC += Bits.clip(16, Bits.signExtend8(read8AfterOpcode()));
             } break;
             case JR_CC_E8: {
                 //TODO : don't forget to add additionalCycles to nextNonIdleCycle
                 //      if condition is true 
+                if(evaluateCondition(opcode)) {
+                    nextPC += Bits.clip(16, Bits.signExtend8(read8AfterOpcode()));
+                    nextNonIdleCycle += opcode.additionalCycles;
+                }
             } break;
 
             // Calls and returns
@@ -481,6 +497,7 @@ public final class Cpu implements Component, Clocked {
 
             // Misc control
             case HALT: {
+                nextNonIdleCycle = Long.MAX_VALUE;
             } break;
             case STOP:
               throw new Error("STOP is not implemented");
@@ -488,30 +505,36 @@ public final class Cpu implements Component, Clocked {
             default:
                 throw new NullPointerException();
         }
+        
+        PC = nextPC;
+        //TODO : clip ???
     }
 
     
     @Override
     public int read(int address) {
-        if(address != AddressMap.REG_IE
-                && address != AddressMap.REG_IF
-                && !(address >= AddressMap.HIGH_RAM_START && address < AddressMap.HIGH_RAM_END)){
-                    return NO_DATA;
-                }
-        return bus.read(address);
+        Preconditions.checkBits16(address);
+        
+        if(address == AddressMap.REG_IE)
+            return IE;
+        else if (address == AddressMap.REG_IF)
+            return IF;
+        else if(address >= AddressMap.HIGH_RAM_START && address < AddressMap.HIGH_RAM_END)
+            return highRam.read(address-AddressMap.HIGH_RAM_START);
+        return NO_DATA;
     }
 
     @Override
     public void write(int address, int data) {
-        if(address != AddressMap.REG_IE
-                && address != AddressMap.REG_IF
-                && !(address >= AddressMap.HIGH_RAM_START && address < AddressMap.HIGH_RAM_END)){
-            // Do nothing (behavior conform to documentation)
-            return;
-        }
-        bus.write(address, data);
-        //TODO : read/write only 8 bit values ?
-        //TODO : test behavior with wrong address
+        Preconditions.checkBits16(address);
+        Preconditions.checkBits8(data);
+        
+        if(address == AddressMap.REG_IE)
+            IE = data;
+        else if (address == AddressMap.REG_IF)
+            IF = data;
+        else if(address >= AddressMap.HIGH_RAM_START && address < AddressMap.HIGH_RAM_END)
+            highRam.write(address-AddressMap.HIGH_RAM_START, data);
     }
 
     /**
@@ -994,8 +1017,7 @@ public final class Cpu implements Component, Clocked {
      * @param i interrupt
      */
     public void requestInterrupt(Interrupt i) {
-        write8(AddressMap.REG_IF,
-                Bits.set(read8(AddressMap.REG_IF), i.index(), true));
+        IF = Bits.set(IF, i.index(), true);
     }
     
     /**
