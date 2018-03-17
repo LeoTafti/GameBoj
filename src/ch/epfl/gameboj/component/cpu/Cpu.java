@@ -32,6 +32,7 @@ public final class Cpu implements Component, Clocked {
     private RegisterFile<Reg> registerFile = new RegisterFile<>(Reg.values());
     private int SP = 0, PC = 0;
     private boolean IME = false;
+    //use bytes? values are never used but could be given too large int...
     private int IE = 0, IF = 0;
     
     private static final Opcode[] DIRECT_OPCODE_TABLE =
@@ -68,6 +69,7 @@ public final class Cpu implements Component, Clocked {
             //      Maybe create a interrupt handler function, and simply call it here
             //      to make the code more readable
             //TODO : must handle ALL interrupts before going to next instruction ? (probably)
+            //       ==== will be done by opcode "RETI"
         
             handleInterrupt();
         }
@@ -85,6 +87,8 @@ public final class Cpu implements Component, Clocked {
     
     private void handleInterrupt() {
         IME = false;
+        //TODO IE &IF should never be bigger then 8bit but should we safe-clip?
+        //only used privately
         int interruptID = Integer.numberOfTrailingZeros(IE & IF);
         
         IF = Bits.set(IF, interruptID, false);
@@ -475,24 +479,43 @@ public final class Cpu implements Component, Clocked {
 
             // Calls and returns
             case CALL_N16: {
+                //need to clip PC somewhere else... not supposed to be done here
+                //at bottom of dispatch seems ok to me
+                push16(Bits.clip(16, PC));
+                PC = read16AfterOpcode();
             } break;
             case CALL_CC_N16: {
-              //TODO : don't forget to add additionalCycles to nextNonIdleCycle
-                //      if condition is true 
+              //TODO : condition applies to both operations (push and pc update)
+                //not clear because of ";" in instructions
+                if(evaluateCondition(opcode)) {
+                    push16(Bits.clip(16, PC));
+                    PC = read16AfterOpcode();
+                    nextNonIdleCycle += opcode.additionalCycles;
+                }
             } break;
             case RST_U3: {
+                push16(Bits.clip(16, PC));
+                PC = 8*Bits.extract(opcode.encoding, 3, 3);
             } break;
             case RET: {
+                PC = pop16();
             } break;
             case RET_CC: {
-              //TODO : don't forget to add additionalCycles to nextNonIdleCycle
-                //      if condition is true 
+                if(evaluateCondition(opcode)) {
+                    PC = pop16();
+                    nextNonIdleCycle += opcode.additionalCycles;
+                }
             } break;
 
             // Interrupts
             case EDI: {
+                if(Bits.test(opcode.encoding, 4)) {
+                    IME = true;
+                } else IME = false;
             } break;
             case RETI: {
+                IME = true;
+                PC = pop16();
             } break;
 
             // Misc control
@@ -1061,36 +1084,55 @@ public final class Cpu implements Component, Clocked {
         }
         return table;
     }
-//    // TODO remove before commit
-//    protected void reset() {
-//        for(Reg reg : Reg.values()) {
-//            setReg(reg, 0);
-//        }
-//        SP = 0;
-//        PC = 0;
-//        nextNonIdleCycle = 0;
-//    }
-//    // TODO remove before commit
-//    protected void setAllRegs(int a, int f, int b, int c, int d, int e, int h, int l) {
-//        setReg(Reg.A, a);
-//        setReg(Reg.F, f);
-//        setReg(Reg.B, b);
-//        setReg(Reg.C, c);
-//        setReg(Reg.D, d);
-//        setReg(Reg.E, e);
-//        setReg(Reg.H, h);
-//        setReg(Reg.L, l);
-//    }
-//    //TODO remove before commit
-//    protected void setAllRegs16(int af, int bc, int de, int hl) {
-//        setReg16(Reg16.AF, af);
-//        setReg16(Reg16.BC, bc);
-//        setReg16(Reg16.DE, de);
-//        setReg16(Reg16.HL, hl);
-//    }
-//    
-//    //TODO remove before commit
-//    protected void setSP(int sp) {
-//        SP = sp;
-//    }
+    
+    // :::::::::::::::::::::: TESTING UTILITARIES ::::::::::::::::
+    
+    
+    // TODO remove before commit
+    protected void reset() {
+        for(Reg reg : Reg.values()) {
+            setReg(reg, 0);
+        }
+        SP = 0;
+        PC = 0;
+        nextNonIdleCycle = 0;
+    }
+    // TODO remove before commit
+    protected void setAllRegs(int a, int f, int b, int c, int d, int e, int h, int l) {
+        setReg(Reg.A, a);
+        setReg(Reg.F, f);
+        setReg(Reg.B, b);
+        setReg(Reg.C, c);
+        setReg(Reg.D, d);
+        setReg(Reg.E, e);
+        setReg(Reg.H, h);
+        setReg(Reg.L, l);
+    }
+    //TODO remove before commit
+    protected void setAllRegs16(int af, int bc, int de, int hl) {
+        setReg16(Reg16.AF, af);
+        setReg16(Reg16.BC, bc);
+        setReg16(Reg16.DE, de);
+        setReg16(Reg16.HL, hl);
+    }
+    
+    //TODO remove before commit
+    protected void setSP(int sp) {
+        SP = sp;
+    }
+   
+    //TODO remove before commit
+    protected void setInterruptRegs(boolean ime, int ie, int If) {
+        IME = ime;
+        IE = ie;
+        IF = If;
+   }
+    
+    //TODO remove before commit
+    protected void setPC(int pc) {
+        Preconditions.checkBits16(pc); 
+        PC = pc;
+    }
+    
+    
 }
