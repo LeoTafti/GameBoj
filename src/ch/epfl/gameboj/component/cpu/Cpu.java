@@ -32,7 +32,9 @@ public final class Cpu implements Component, Clocked {
     private RegisterFile<Reg> registerFile = new RegisterFile<>(Reg.values());
     private int SP = 0, PC = 0;
     private boolean IME = false;
-    //use bytes? values are never used but could be given too large int...
+    //TODO : remove
+    // use bytes? values are never used but could be given too large int...
+    // -> makes no difference, since we used int for the other regs continue with int
     private int IE = 0, IF = 0;
     
     private static final Opcode[] DIRECT_OPCODE_TABLE =
@@ -65,11 +67,10 @@ public final class Cpu implements Component, Clocked {
     private void reallyCycle() {
         if(IME == true
                 && pendingInterrupt()) {
-            //TODO : handle interrupt cf. 1.7.3 project guidelines
-            //      Maybe create a interrupt handler function, and simply call it here
-            //      to make the code more readable
             //TODO : must handle ALL interrupts before going to next instruction ? (probably)
             //       ==== will be done by opcode "RETI"
+            //TODO : write a test case to check that it actually does handle all interrupts
+            //      before resuming
         
             handleInterrupt();
         }
@@ -79,16 +80,18 @@ public final class Cpu implements Component, Clocked {
         Opcode opcode = getOpcode();
         dispatch(opcode);
         
-        //TODO : PC overflow ???
         nextNonIdleCycle += opcode.cycles;
-        
         PC += opcode.totalBytes;
     }
     
     private void handleInterrupt() {
         IME = false;
-        //TODO IE &IF should never be bigger then 8bit but should we safe-clip?
+        //TODO : remove
+        //IE &IF should never be bigger then 8bit but should we safe-clip?
         //only used privately
+        // -> yes, we want to emulate an 8 bit register, that could overflow
+        // but since we only set/get one bit at a time, no real risk of overflow
+        // so no need to clip
         int interruptID = Integer.numberOfTrailingZeros(IE & IF);
         
         IF = Bits.set(IF, interruptID, false);
@@ -98,8 +101,7 @@ public final class Cpu implements Component, Clocked {
         
         PC = AddressMap.INTERRUPTS[interruptID];
         
-        nextNonIdleCycle += 5; // not shure it is supposed to be dealed with here
-        // but the interrupt opcdoes only have 1 cycle + 1 additional cycle
+        nextNonIdleCycle += 5;
         
     }
 
@@ -115,6 +117,8 @@ public final class Cpu implements Component, Clocked {
      */
     private void dispatch(Opcode opcode) {
         int nextPC = PC + opcode.totalBytes;
+        
+        //TODO : clip here (?)
         
         switch(opcode.family) {
             case NOP: {
@@ -458,8 +462,6 @@ public final class Cpu implements Component, Clocked {
                 nextPC = read16AfterOpcode();
             } break;
             case JP_CC_N16: {
-                //TODO : don't forget to add additionalCycles to nextNonIdleCycle
-                //      if condition is true 
                 if(evaluateCondition(opcode)) {
                     nextPC = read16AfterOpcode();
                     nextNonIdleCycle += opcode.additionalCycles;
@@ -469,8 +471,6 @@ public final class Cpu implements Component, Clocked {
                 nextPC += Bits.clip(16, Bits.signExtend8(read8AfterOpcode()));
             } break;
             case JR_CC_E8: {
-                //TODO : don't forget to add additionalCycles to nextNonIdleCycle
-                //      if condition is true 
                 if(evaluateCondition(opcode)) {
                     nextPC += Bits.clip(16, Bits.signExtend8(read8AfterOpcode()));
                     nextNonIdleCycle += opcode.additionalCycles;
@@ -479,43 +479,40 @@ public final class Cpu implements Component, Clocked {
 
             // Calls and returns
             case CALL_N16: {
-                //need to clip PC somewhere else... not supposed to be done here
-                //at bottom of dispatch seems ok to me
-                push16(Bits.clip(16, PC));
-                PC = read16AfterOpcode();
+                push16(nextPC);
+                nextPC = read16AfterOpcode();
             } break;
             case CALL_CC_N16: {
-              //TODO : condition applies to both operations (push and pc update)
-                //not clear because of ";" in instructions
                 if(evaluateCondition(opcode)) {
-                    push16(Bits.clip(16, PC));
-                    PC = read16AfterOpcode();
+                    push16(nextPC);
+                    nextPC = read16AfterOpcode();
                     nextNonIdleCycle += opcode.additionalCycles;
                 }
             } break;
             case RST_U3: {
-                push16(Bits.clip(16, PC));
-                PC = 8*Bits.extract(opcode.encoding, 3, 3);
+                push16(nextPC);
+                nextPC = 8*Bits.extract(opcode.encoding, 3, 3);
             } break;
             case RET: {
-                PC = pop16();
+                nextPC = pop16();
             } break;
             case RET_CC: {
                 if(evaluateCondition(opcode)) {
-                    PC = pop16();
+                    nextPC = pop16();
                     nextNonIdleCycle += opcode.additionalCycles;
                 }
             } break;
 
             // Interrupts
             case EDI: {
-                if(Bits.test(opcode.encoding, 4)) {
+                if(Bits.test(opcode.encoding, 3)) {
                     IME = true;
-                } else IME = false;
+                }
+                else IME = false;
             } break;
             case RETI: {
                 IME = true;
-                PC = pop16();
+                nextPC = pop16();
             } break;
 
             // Misc control
@@ -530,7 +527,6 @@ public final class Cpu implements Component, Clocked {
         }
         
         PC = nextPC;
-        //TODO : clip ???
     }
 
     
@@ -1095,6 +1091,9 @@ public final class Cpu implements Component, Clocked {
         }
         SP = 0;
         PC = 0;
+        IME = false;
+        IE = 0;
+        IF = 0;
         nextNonIdleCycle = 0;
     }
     // TODO remove before commit
