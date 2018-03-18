@@ -59,7 +59,9 @@ public final class Cpu implements Component, Clocked {
         if(cycle == Long.MAX_VALUE && pendingInterrupt()) {
             nextNonIdleCycle = cycle;
         }
-        else if(cycle != nextNonIdleCycle) return;
+        else if(cycle != nextNonIdleCycle) {
+            return;
+        }
         
         reallyCycle();
     };
@@ -81,7 +83,6 @@ public final class Cpu implements Component, Clocked {
         dispatch(opcode);
         
         nextNonIdleCycle += opcode.cycles;
-        PC += opcode.totalBytes;
     }
     
     private void handleInterrupt() {
@@ -1133,5 +1134,10 @@ public final class Cpu implements Component, Clocked {
         PC = pc;
     }
     
+    //TODO remove before commit
+    protected int[] get_IME_IE_IF() {
+        int ime_val = IME ? 1:0 ;
+        return new int[] {ime_val, IE, IF};
+    }
     
 }

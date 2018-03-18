@@ -6,13 +6,15 @@
 package ch.epfl.gameboj.component.cpu;
 
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import org.junit.Before;
 import org.junit.Test;
-import org.junit.jupiter.api.BeforeEach;
 
 import ch.epfl.gameboj.Bus;
 import ch.epfl.gameboj.Preconditions;
+import ch.epfl.gameboj.bits.Bits;
 import ch.epfl.gameboj.component.cpu.Cpu.Interrupt;
 import ch.epfl.gameboj.component.memory.Ram;
 import ch.epfl.gameboj.component.memory.RamController;
@@ -24,7 +26,7 @@ public class CpuTest5 {
     
     private final int RAM_SIZE = 0xFFFF ;
     
-    @BeforeEach
+    @Before
     public void initialize() {
         /*Create a new Cpu and a new Ram of 20 bytes
          * Creates a simple RamController for given Ram and attaches Cpu and
@@ -75,11 +77,22 @@ public class CpuTest5 {
         }
     }
     
+    private void writeAllBytesFromAddress(int startAddress, int ... bytes) {
+        Preconditions.checkBits16(startAddress);
+        if(bytes.length > RAM_SIZE)
+            throw new IllegalArgumentException("not enough ram for that");
+        for(int i = 0; i<bytes.length; i ++) {
+            int instr = bytes[i];
+            Preconditions.checkBits8(instr);
+            bus.write(i+startAddress, instr);
+        }
+    }
+    
     /**
      * writes all opcodes and cycles 
      * OPCODES ONLY
      * @param opcodes Opcode list
-     * @return number of cycles
+     * @return number of bytes read (new PC value)
      */
 //    private int execute(Opcode ... opcodes) {
 //        int cyclesum = 0;
@@ -516,128 +529,386 @@ public class CpuTest5 {
     public void CALL_N16_isCorrectlyExecuted() {
         
         initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        int initialPC = 0xABCD;
+        int PC_prime = initialPC + Opcode.CALL_N16.totalBytes;
+        int initialSP = 0xFFAB;
+        cpu.setPC(initialPC);
+        cpu.setSP(initialSP);
         
-        bus.write(address, data);
         
-        execute(Opcode);
+        writeAllBytesFromAddress(initialPC, Opcode.CALL_N16.encoding, 0x34, 0x12);
+        cycleCpu(Opcode.CALL_N16.cycles);
         
-        writeAllBytes();
-        cycleCpu(Opcode. cycles);
-        
-        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        assertArrayEquals(new int[] {0x1234, initialSP - 2, 0, 0, 0, 0, 0, 0, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());
-        assertEquals(value, bus.read(address));
         
+        int PC_prime_MSB = (PC_prime & 0xFF00) >> 8;
+        int PC_prime_LSB = PC_prime & 0x00FF;
+        assertEquals(PC_prime_LSB, bus.read(initialSP-2));
+        assertEquals(PC_prime_MSB, bus.read(initialSP-1));
     }
     
     @Test
-    public void CALL_CC_N16_isCorrectlyExecuted() {
+    public void CALL_C_N16_isCorrectlyExecuted() {
+        int regF = 0b0001_0000;
         
-        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        initiateRegs(0, regF, 0, 0, 0, 0, 0, 0);
         
-        bus.write(address, data);
+        int initialPC = 0xABCD;
+        int PC_prime = initialPC + Opcode.CALL_C_N16.totalBytes;
+        int initialSP = 0xFFAB;
+        cpu.setPC(initialPC);
+        cpu.setSP(initialSP);
         
-        execute(Opcode);
         
-        writeAllBytes();
-        cycleCpu(Opcode. cycles);
+        writeAllBytesFromAddress(initialPC, Opcode.CALL_C_N16.encoding, 0x34, 0x12);
+        cycleCpu(Opcode.CALL_C_N16.cycles);
         
-        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        assertArrayEquals(new int[] {0x1234, initialSP - 2, 0, regF, 0, 0, 0, 0, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());
-        assertEquals(value, bus.read(address));
         
+        int PC_prime_MSB = (PC_prime & 0xFF00) >> 8;
+        int PC_prime_LSB = PC_prime & 0x00FF;
+        assertEquals(PC_prime_LSB, bus.read(initialSP-2));
+        assertEquals(PC_prime_MSB, bus.read(initialSP-1));
+        
+        cpu.reset();
+        
+        //Tests that it does nothing if condition is not satisfied
+        regF = 0b0000_0000;
+        initiateRegs(0, regF, 0, 0, 0, 0, 0, 0);
+        
+        initialPC = 0xABCD;
+        initialSP = 0xFFAB;
+        cpu.setPC(initialPC);
+        cpu.setSP(initialSP);
+        
+        
+        writeAllBytesFromAddress(initialPC, Opcode.CALL_C_N16.encoding, 0x34, 0x12);
+        cycleCpu(Opcode.CALL_C_N16.cycles);
+        
+        assertArrayEquals(new int[] {initialPC + Opcode.CALL_C_N16.totalBytes, initialSP, 0, regF, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+        
+        PC_prime_MSB = (PC_prime & 0xFF00) >> 8;
+        PC_prime_LSB = PC_prime & 0x00FF;
+        assertEquals(PC_prime_LSB, bus.read(initialSP-2));
+        assertEquals(PC_prime_MSB, bus.read(initialSP-1));
+    }
+    
+    @Test
+    public void CALL_NC_N16_isCorrectlyExecuted() {
+        int regF = 0b0000_0000;
+        
+        initiateRegs(0, regF, 0, 0, 0, 0, 0, 0);
+        
+        int initialPC = 0xABCD;
+        int PC_prime = initialPC + Opcode.CALL_NC_N16.totalBytes;
+        int initialSP = 0xFFAB;
+        cpu.setPC(initialPC);
+        cpu.setSP(initialSP);
+        
+        
+        writeAllBytesFromAddress(initialPC, Opcode.CALL_NC_N16.encoding, 0x34, 0x12);
+        cycleCpu(Opcode.CALL_NC_N16.cycles);
+        
+        assertArrayEquals(new int[] {0x1234, initialSP - 2, 0, regF, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+        
+        int PC_prime_MSB = (PC_prime & 0xFF00) >> 8;
+        int PC_prime_LSB = PC_prime & 0x00FF;
+        assertEquals(PC_prime_LSB, bus.read(initialSP-2));
+        assertEquals(PC_prime_MSB, bus.read(initialSP-1));
+    }
+    
+    @Test
+    public void CALL_Z_N16_isCorrectlyExecuted() {
+        int regF = 0b1000_0000;
+        
+        initiateRegs(0, regF, 0, 0, 0, 0, 0, 0);
+        
+        int initialPC = 0xABCD;
+        int PC_prime = initialPC + Opcode.CALL_Z_N16.totalBytes;
+        int initialSP = 0xFFAB;
+        cpu.setPC(initialPC);
+        cpu.setSP(initialSP);
+        
+        
+        writeAllBytesFromAddress(initialPC, Opcode.CALL_Z_N16.encoding, 0x34, 0x12);
+        cycleCpu(Opcode.CALL_Z_N16.cycles);
+        
+        assertArrayEquals(new int[] {0x1234, initialSP - 2, 0, regF, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+        
+        int PC_prime_MSB = (PC_prime & 0xFF00) >> 8;
+        int PC_prime_LSB = PC_prime & 0x00FF;
+        assertEquals(PC_prime_LSB, bus.read(initialSP-2));
+        assertEquals(PC_prime_MSB, bus.read(initialSP-1));
+    }
+    
+    @Test
+    public void CALL_NZ_N16_isCorrectlyExecuted() {
+        int regF = 0b0000_0000;
+        
+        initiateRegs(0, regF, 0, 0, 0, 0, 0, 0);
+        
+        int initialPC = 0xABCD;
+        int PC_prime = initialPC + Opcode.CALL_NZ_N16.totalBytes;
+        int initialSP = 0xFFAB;
+        cpu.setPC(initialPC);
+        cpu.setSP(initialSP);
+        
+        
+        writeAllBytesFromAddress(initialPC, Opcode.CALL_NZ_N16.encoding, 0x34, 0x12);
+        cycleCpu(Opcode.CALL_NZ_N16.cycles);
+        
+        assertArrayEquals(new int[] {0x1234, initialSP - 2, 0, regF, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+        
+        int PC_prime_MSB = (PC_prime & 0xFF00) >> 8;
+        int PC_prime_LSB = PC_prime & 0x00FF;
+        assertEquals(PC_prime_LSB, bus.read(initialSP-2));
+        assertEquals(PC_prime_MSB, bus.read(initialSP-1));
     }
     
     @Test
     public void RST_U3_isCorrectlyExecuted() {
         
         initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        int initialPC = 0xABCD;
+        int PC_prime = initialPC + Opcode.RST_2.totalBytes;
+        int initialSP = 0xFFAB;
+        cpu.setPC(initialPC);
+        cpu.setSP(initialSP);
         
-        bus.write(address, data);
         
-        execute(Opcode);
+        bus.write(initialPC, Opcode.RST_2.encoding);
+        cycleCpu(Opcode.RST_2.cycles);
         
-        writeAllBytes();
-        cycleCpu(Opcode. cycles);
-        
-        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        assertArrayEquals(new int[] {8*2, initialSP - 2, 0, 0, 0, 0, 0, 0, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());
-        assertEquals(value, bus.read(address));
+        
+        int PC_prime_MSB = (PC_prime & 0xFF00) >> 8;
+        int PC_prime_LSB = PC_prime & 0x00FF;
+        assertEquals(PC_prime_LSB, bus.read(initialSP-2));
+        assertEquals(PC_prime_MSB, bus.read(initialSP-1));
         
     }
     
     @Test
     public void RET_isCorrectlyExecuted() {
-        
         initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        int initialPC = 0xABCD;
+        int initialSP = 0xFFAB;
+        cpu.setPC(initialPC);
+        cpu.setSP(initialSP);
         
-        bus.write(address, data);
+        int newPC = 0x12;
+        bus.write(initialPC, Opcode.RET.encoding);
+        bus.write(initialSP, newPC);
+        cycleCpu(Opcode.RET.cycles);
         
-        execute(Opcode);
-        
-        writeAllBytes();
-        cycleCpu(Opcode. cycles);
-        
-        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        assertArrayEquals(new int[] {newPC, initialSP + 2, 0, 0, 0, 0, 0, 0, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());
-        assertEquals(value, bus.read(address));
-        
     }
     
     @Test
-    public void RET_CC_isCorrectlyExecuted() {
+    public void RET_C_isCorrectlyExecuted() {
+        int regF = 0b0001_0000;
         
-        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        initiateRegs(0, regF, 0, 0, 0, 0, 0, 0);
+        int initialPC = 0xABCD;
+        int initialSP = 0xFFAB;
+        cpu.setPC(initialPC);
+        cpu.setSP(initialSP);
         
-        bus.write(address, data);
+        int newPC = 0x12;
+        bus.write(initialPC, Opcode.RET_C.encoding);
+        bus.write(initialSP, newPC);
+        cycleCpu(Opcode.RET_C.cycles);
         
-        execute(Opcode);
-        
-        writeAllBytes();
-        cycleCpu(Opcode. cycles);
-        
-        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        assertArrayEquals(new int[] {newPC, initialSP + 2, 0, regF, 0, 0, 0, 0, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());
-        assertEquals(value, bus.read(address));
         
+        cpu.reset();
+        // Tests that does nothing when condition isn't satisfied
+        
+        regF = 0b1110_0000;
+        
+        initiateRegs(0, regF, 0, 0, 0, 0, 0, 0);
+        initialPC = 0xABCD;
+        initialSP = 0xFFAB;
+        cpu.setPC(initialPC);
+        cpu.setSP(initialSP);
+        
+        newPC = 0x12;
+        bus.write(initialPC, Opcode.RET_C.encoding);
+        bus.write(initialSP, newPC);
+        cycleCpu(Opcode.RET_C.cycles);
+        
+        assertArrayEquals(new int[] {initialPC+Opcode.RET_C.totalBytes, initialSP, 0, regF, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
     }
     
+    @Test
+    public void RET_NC_isCorrectlyExecuted() {
+        int regF = 0b0000_0000;
+        
+        initiateRegs(0, regF, 0, 0, 0, 0, 0, 0);
+        int initialPC = 0xABCD;
+        int initialSP = 0xFFAB;
+        cpu.setPC(initialPC);
+        cpu.setSP(initialSP);
+        
+        int newPC = 0x12;
+        bus.write(initialPC, Opcode.RET_NC.encoding);
+        bus.write(initialSP, newPC);
+        cycleCpu(Opcode.RET_NC.cycles);
+        
+        assertArrayEquals(new int[] {newPC, initialSP + 2, 0, regF, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+        
+        cpu.reset();
+        // Tests that does nothing when condition isn't satisfied
+        
+        regF = 0b0001_0000;
+        
+        initiateRegs(0, regF, 0, 0, 0, 0, 0, 0);
+        initialPC = 0xABCD;
+        initialSP = 0xFFAB;
+        cpu.setPC(initialPC);
+        cpu.setSP(initialSP);
+        
+        newPC = 0x12;
+        bus.write(initialPC, Opcode.RET_NC.encoding);
+        bus.write(initialSP, newPC);
+        cycleCpu(Opcode.RET_NC.cycles);
+        
+        assertArrayEquals(new int[] {initialPC+Opcode.RET_NC.totalBytes, initialSP, 0, regF, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void RET_Z_isCorrectlyExecuted() {
+        int regF = 0b1000_0000;
+        
+        initiateRegs(0, regF, 0, 0, 0, 0, 0, 0);
+        int initialPC = 0xABCD;
+        int initialSP = 0xFFAB;
+        cpu.setPC(initialPC);
+        cpu.setSP(initialSP);
+        
+        int newPC = 0x12;
+        bus.write(initialPC, Opcode.RET_Z.encoding);
+        bus.write(initialSP, newPC);
+        cycleCpu(Opcode.RET_Z.cycles);
+        
+        assertArrayEquals(new int[] {newPC, initialSP + 2, 0, regF, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+        
+        cpu.reset();
+        // Tests that does nothing when condition isn't satisfied
+        
+        regF = 0b0000_0000;
+        
+        initiateRegs(0, regF, 0, 0, 0, 0, 0, 0);
+        initialPC = 0xABCD;
+        initialSP = 0xFFAB;
+        cpu.setPC(initialPC);
+        cpu.setSP(initialSP);
+        
+        newPC = 0x12;
+        bus.write(initialPC, Opcode.RET_Z.encoding);
+        bus.write(initialSP, newPC);
+        cycleCpu(Opcode.RET_Z.cycles);
+        
+        assertArrayEquals(new int[] {initialPC+Opcode.RET_Z.totalBytes, initialSP, 0, regF, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
+    
+    @Test
+    public void RET_NZ_isCorrectlyExecuted() {
+        int regF = 0b0000_0000;
+        
+        initiateRegs(0, regF, 0, 0, 0, 0, 0, 0);
+        int initialPC = 0xABCD;
+        int initialSP = 0xFFAB;
+        cpu.setPC(initialPC);
+        cpu.setSP(initialSP);
+        
+        int newPC = 0x12;
+        bus.write(initialPC, Opcode.RET_NZ.encoding);
+        bus.write(initialSP, newPC);
+        cycleCpu(Opcode.RET_NZ.cycles);
+        
+        assertArrayEquals(new int[] {newPC, initialSP + 2, 0, regF, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+        
+        cpu.reset();
+        // Tests that does nothing when condition isn't satisfied
+        
+        regF = 0b1000_0000;
+        
+        initiateRegs(0, regF, 0, 0, 0, 0, 0, 0);
+        initialPC = 0xABCD;
+        initialSP = 0xFFAB;
+        cpu.setPC(initialPC);
+        cpu.setSP(initialSP);
+        
+        newPC = 0x12;
+        bus.write(initialPC, Opcode.RET_NZ.encoding);
+        bus.write(initialSP, newPC);
+        cycleCpu(Opcode.RET_NZ.cycles);
+        
+        assertArrayEquals(new int[] {initialPC+Opcode.RET_NZ.totalBytes, initialSP, 0, regF, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+    }
     // ::::::::::::::::::::::: Interrupts Tests :::::::::::::::::::::::
     
     @Test
-    public void EDI_isCorrectlyExecuted() {
+    public void EI_isCorrectlyExecuted() {
         
         initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        initiateInterruptRegs(false, 0, 0);
         
-        bus.write(address, data);
+        int i = execute(Opcode.EI);
         
-        execute(Opcode);
-        
-        writeAllBytes();
-        cycleCpu(Opcode. cycles);
-        
-        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        assertArrayEquals(new int[] {i, 0, 0, 0, 0, 0, 0, 0, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());
-        assertEquals(value, bus.read(address));
         
+        assertArrayEquals(new int[] {1, 0, 0},
+                cpu.get_IME_IE_IF());
+    }
+    
+    @Test
+    public void DI_isCorrectlyExecuted() {
+        
+        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        initiateInterruptRegs(true, 0, 0);
+        
+        int i = execute(Opcode.DI);
+        
+        assertArrayEquals(new int[] {i, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+        
+        assertArrayEquals(new int[] {0, 0, 0},
+                cpu.get_IME_IE_IF());
     }
     
     @Test
     public void RETI_isCorrectlyExecuted() {
         
         initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        initiateInterruptRegs(false, 0, 0);
+        cpu.setSP(0xAB);
+        bus.write(0xAB, 0xCD);
         
-        bus.write(address, data);
+        execute(Opcode.RETI);
         
-        execute(Opcode);
-        
-        writeAllBytes();
-        cycleCpu(Opcode. cycles);
-        
-        assertArrayEquals(new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        assertArrayEquals(new int[] {0xCD, 0xAB + 2, 0, 0, 0, 0, 0, 0, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());
-        assertEquals(value, bus.read(address));
-        
+        assertArrayEquals(new int[] {1, 0, 0},
+                cpu.get_IME_IE_IF());
     }
     
     // ::::::::::::::::::::::: MiscControl Tests ::::::::::::::::::::::
