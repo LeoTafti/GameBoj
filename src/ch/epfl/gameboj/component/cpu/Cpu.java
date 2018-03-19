@@ -56,13 +56,13 @@ public final class Cpu implements Component, Clocked {
     
     @Override
     public void cycle(long cycle) {
-        if(cycle == Long.MAX_VALUE && pendingInterrupt()) {
+        if(nextNonIdleCycle == Long.MAX_VALUE && pendingInterrupt()) {
             nextNonIdleCycle = cycle;
         }
         else if(cycle != nextNonIdleCycle) {
             return;
         }
-        
+                
         reallyCycle();
     };
     
@@ -118,6 +118,8 @@ public final class Cpu implements Component, Clocked {
      */
     private void dispatch(Opcode opcode) {
         int nextPC = PC + opcode.totalBytes;
+        
+        System.out.println(SP);
         
         //TODO : clip here (?)
         
@@ -470,10 +472,12 @@ public final class Cpu implements Component, Clocked {
             } break;
             case JR_E8: {
                 nextPC += Bits.clip(16, Bits.signExtend8(read8AfterOpcode()));
+                nextPC = Bits.clip(16, nextPC);
             } break;
             case JR_CC_E8: {
                 if(evaluateCondition(opcode)) {
                     nextPC += Bits.clip(16, Bits.signExtend8(read8AfterOpcode()));
+                    nextPC = Bits.clip(16, nextPC);
                     nextNonIdleCycle += opcode.additionalCycles;
                 }
             } break;
@@ -491,6 +495,8 @@ public final class Cpu implements Component, Clocked {
                 }
             } break;
             case RST_U3: {
+                
+                //TODO : WTF
                 push16(nextPC);
                 nextPC = 8*Bits.extract(opcode.encoding, 3, 3);
             } break;
@@ -526,7 +532,7 @@ public final class Cpu implements Component, Clocked {
             default:
                 throw new NullPointerException();
         }
-        
+        System.out.println(SP);
         PC = nextPC;
     }
 

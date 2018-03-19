@@ -320,7 +320,7 @@ public class CpuTest5 {
     public void JR_E8_OverflowsCorrectly() {
                 
         bus.write(0xFFFC, Opcode.JR_E8.encoding);
-        bus.write(0xFFFE, 2);
+        bus.write(0xFFFD, 2);
         cpu.setPC(0xFFFC);
         cycleCpu(Opcode.JR_E8.cycles);
         
@@ -358,12 +358,12 @@ public class CpuTest5 {
     
     @Test
     public void JR_CC_E8_UnderflowsCorrectly() {
-        initiateRegs(0, 0, 0, 0, 0, 0, 0, 0);
+        initiateRegs(0, 0x80, 0, 0, 0, 0, 0, 0);
                 
         writeAllBytes(Opcode.JR_Z_E8.encoding, 0xFD);
         cycleCpu(Opcode.JR_Z_E8.cycles);
         
-        assertArrayEquals(new int[] {0xFFFF, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        assertArrayEquals(new int[] {0xFFFF, 0, 0, 0x80, 0, 0, 0, 0, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());        
     }
     
@@ -927,11 +927,28 @@ public class CpuTest5 {
     @Test //TODO is it supposed to not stop?
     public void HALT_doesNothingIfPendingInterrupt() {
         
+//        initiateInterruptRegs(false, 0, 0);
+//        initiateRegs(0, 0, 0xf, 0, 0, 0, 0, 0);
+//        
+//        writeAllBytes(Opcode.HALT.encoding, Opcode.LD_A_B.encoding);
+//        cpu.cycle(0);
+//        cpu.cycle(1);
+//        cpu.cycle(2);
+//        cpu.cycle(3);
+//        initiateInterruptRegs(false, 0x10, 0x10);
+//        cpu.cycle(4);
+//        
+//        assertArrayEquals(new int[] {2, 0, 0xf, 0, 0xf, 0, 0, 0, 0, 0},
+//                cpu._testGetPcSpAFBCDEHL());
+        
         initiateInterruptRegs(false, 0x10, 0x10);
         initiateRegs(0, 0, 0xf, 0, 0, 0, 0, 0);
-        int i = execute(Opcode.HALT, Opcode.LD_A_B);
-        
-        assertArrayEquals(new int[] {Opcode.HALT.totalBytes, 0, 0xf, 0, 0xf, 0, 0, 0, 0, 0},
+
+        writeAllBytes(Opcode.HALT.encoding, Opcode.LD_A_B.encoding);
+        cpu.cycle(0);
+        cpu.cycle(1);
+
+        assertArrayEquals(new int[] {2, 0, 0xf, 0, 0xf, 0, 0, 0, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());
     }
     
@@ -941,25 +958,32 @@ public class CpuTest5 {
         initiateInterruptRegs(false, 0, 0);
         initiateRegs(0, 0, 0xf, 0, 0, 0, 0, 0);
         
-        writeAllBytes(Opcode.HALT.encoding, Opcode.LD_A_B.encoding);
+//        writeAllBytes(Opcode.LD_A_B.encoding, Opcode.HALT.encoding, Opcode.LD_A_B.encoding);
+        execute(Opcode.LD_A_B, Opcode.HALT, Opcode.LD_C_A);
         
-        assertArrayEquals(new int[] {Opcode.HALT.totalBytes, 0, 0, 0, 0xf, 0, 0, 0, 0, 0},
+        assertArrayEquals(new int[] {Opcode.HALT.totalBytes + Opcode.LD_A_B.totalBytes, 0, 0xf, 0, 0xf, 0, 0, 0, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());
         
+        cpu.setInterruptRegs(false, Interrupt.VBLANK.mask(), 0);
         cpu.requestInterrupt(Interrupt.VBLANK);
         
-        cycleCpu(5); // uggly but whatever
+        cpu.cycle(2);
+        cpu.cycle(3);
+        cpu.cycle(4);
+        cpu.cycle(5);
         
-        assertArrayEquals(new int[] {Opcode.HALT.totalBytes + Opcode.LD_A_B.totalBytes,
-                0, 0xf, 0, 0xf, 0, 0, 0, 0, 0},
+        assertArrayEquals(new int[] {6, 0, 0xf, 0, 0xf, 0xf, 0, 0, 0, 0},
                 cpu._testGetPcSpAFBCDEHL());
     }
     
     @Test
     public void STOPThrowsError() {
-        
+        initiateInterruptRegs(false, 0, 0);
+        initiateRegs(0, 0, 0xf, 0, 0, 0, 0, 0);
+        bus.write(0, Opcode.STOP.encoding);
+
         assertThrows(Error.class,
-                () -> { int i = execute(Opcode.STOP);});
+                () -> { cpu.cycle(0); });
     
     }
     

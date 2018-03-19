@@ -54,9 +54,10 @@ public class GameBoy {
     /**
      * runs cycles up to given value
      * @param cycle
+     * @throws IllegalArgumentException if 
      */
     public void runUntil(long cycle) {
-        Preconditions.checkArgument(cycle < cycleCount);
+        Preconditions.checkArgument(cycleCount < cycle);
         
         while(cycleCount < cycle) {
             cpu.cycle(cycleCount);
