@@ -60,7 +60,7 @@ public final class RamController implements Component {
     public void write(int address, int data) {
         Preconditions.checkBits16(address);
         Preconditions.checkBits8(data);
-        
+        System.out.println("Ram isInBound: " + isInBound(address) + "address: " + address);
         if (isInBound(address)) {
             ram.write(address-startAddress, data);
         }

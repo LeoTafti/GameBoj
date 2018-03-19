@@ -33,11 +33,22 @@ public class GameBoyTest {
                 (byte)0x00, (byte)0x81, (byte)0xC1, (byte)0xC9,
               }; 
         
-        for(int i = 0; i < fibProg.length; ++i ) {
-            g.bus().write(i, Byte.toUnsignedInt(fibProg[i]));
-        }
+//        System.out.println(" ____________ FIB PROG IS WRITTEN _______");
+//        for(int i = 0; i < fibProg.length; ++i ) {
+//            System.out.println("From fibProg: " + i + " ; " + Byte.toUnsignedInt(fibProg[i]) );
+//            g.bus().write(i, Byte.toUnsignedInt(fibProg[i]));
+//        }
+//        
+//        System.out.println(" ___________ READING AT WORKRAM _________");
+//        for(int i = 0; i < fibProg.length; ++i ) {
+//            System.out.println(g.bus().read(AddressMap.WORK_RAM_START + i));
+//        }
         
-        g.runUntil(100);
+        
+        g.runUntil(20);
+        
+        g.bus().write(0, 0XAB);
+        System.out.println(g.bus().read(0));
         
         assertArrayEquals(new int[] {56, 65486, 89, 0, 0, 0, 0, 0, 0, 0},
                 g.cpu()._testGetPcSpAFBCDEHL());
@@ -60,7 +71,7 @@ public class GameBoyTest {
             g.bus().write(i, Byte.toUnsignedInt(prog[i]));
         }
         
-        g.runUntil(500);
+        g.runUntil(100);
         
         assertArrayEquals(new int[] {56, 65286, 100, 0x80, 100, 100, 0, 0, 0, 0},
                 g.cpu()._testGetPcSpAFBCDEHL());

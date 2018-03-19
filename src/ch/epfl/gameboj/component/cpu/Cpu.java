@@ -118,8 +118,9 @@ public final class Cpu implements Component, Clocked {
      */
     private void dispatch(Opcode opcode) {
         int nextPC = PC + opcode.totalBytes;
-        
-        System.out.println(SP);
+        System.out.println("opcode: " + opcode.name()
+        + ", PC :" + PC + ", SP : " + SP);
+//        System.out.println(SP);
         
         //TODO : clip here (?)
         
@@ -497,6 +498,7 @@ public final class Cpu implements Component, Clocked {
             case RST_U3: {
                 
                 //TODO : WTF
+                System.out.println("++++");
                 push16(nextPC);
                 nextPC = 8*Bits.extract(opcode.encoding, 3, 3);
             } break;
@@ -1144,6 +1146,11 @@ public final class Cpu implements Component, Clocked {
     protected int[] get_IME_IE_IF() {
         int ime_val = IME ? 1:0 ;
         return new int[] {ime_val, IE, IF};
+    }
+    
+    //TODO remove before commit
+    public int readAtBus(int address) {
+        return bus.read(address);
     }
     
 }

@@ -30,6 +30,7 @@ public final class Bus {
         
         for(Component c : attachedComponents) {
             value = c.read(address);
+            System.out.println("bus reads : " + " add : "  + address + " ; " + value);
             if(value != Component.NO_DATA)
                 return value;
         }
@@ -40,13 +41,15 @@ public final class Bus {
      * Writes given data at given address for all attached components
      * @param address write location
      * @param data value to be written
-     * @throws IllegalArgumentExcepetion if address isn't 16 bit value, or data isn't 8 bit value
+     * @throws IllegalArgumentException if address isn't 16 bit value, or data isn't 8 bit value
      */
     public void write(int address, int data) {
         Preconditions.checkBits16(address);
         Preconditions.checkBits8(data);
-        
         for(Component c : attachedComponents) {
+            System.out.println("Bus writes at: " + c.getClass() +
+                    " ; add: " + address +
+                    " ; data: " + data);
             c.write(address, data);
         }
     }
