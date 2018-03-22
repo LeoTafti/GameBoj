@@ -10,15 +10,24 @@ import static org.junit.Assert.assertArrayEquals;
 import org.junit.Before;
 import org.junit.Test;
 
+import ch.epfl.gameboj.component.cpu.Cpu;
 import ch.epfl.gameboj.component.cpu.Opcode;
+import ch.epfl.gameboj.component.memory.Ram;
+import ch.epfl.gameboj.component.memory.RamController;
 
 public class GameBoyTest {
 
-    GameBoy g;
+    Bus bus;
+    Cpu cpu;
     
     @Before
     public void init() {
-        g = new GameBoy(null);
+        cpu = new Cpu();
+        bus = new Bus();
+        Ram ram = new Ram(30);
+        RamController ramController = new RamController(ram, 0);
+        cpu.attachTo(bus);
+        ramController.attachTo(bus);
     }
     
     @Test
@@ -33,48 +42,49 @@ public class GameBoyTest {
                 (byte)0x00, (byte)0x81, (byte)0xC1, (byte)0xC9,
               }; 
         
-//        System.out.println(" ____________ FIB PROG IS WRITTEN _______");
-//        for(int i = 0; i < fibProg.length; ++i ) {
-//            System.out.println("From fibProg: " + i + " ; " + Byte.toUnsignedInt(fibProg[i]) );
-//            g.bus().write(i, Byte.toUnsignedInt(fibProg[i]));
-//        }
-//        
-//        System.out.println(" ___________ READING AT WORKRAM _________");
-//        for(int i = 0; i < fibProg.length; ++i ) {
-//            System.out.println(g.bus().read(AddressMap.WORK_RAM_START + i));
-//        }
+        for(int i = 0; i<fibProg.length; i++) {
+            bus.write(i, Byte.toUnsignedInt(fibProg[i]));
+        }
         
+        int i = 0;
+        while(cpu._testGetPcSpAFBCDEHL()[0] != 8) {
+            cpu.cycle(i);
+            i++;
+        }
         
-        g.runUntil(20);
-        
-        g.bus().write(0, 0XAB);
-        System.out.println(g.bus().read(0));
-        
-        assertArrayEquals(new int[] {56, 65486, 89, 0, 0, 0, 0, 0, 0, 0},
-                g.cpu()._testGetPcSpAFBCDEHL());
+        assertArrayEquals(new int[] {8, 0xFFFF, 89, 0, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
     }
     
     @Test
     public void hundredLoop() {
         byte[] prog = new byte[] {
+                (byte)Opcode.LD_SP_N16.encoding, (byte)0xFF, (byte)0xFF,
                 (byte)Opcode.LD_B_N8.encoding,
-                (byte)0x64,
+                (byte)100,
                 (byte)Opcode.ADD_A_N8.encoding,
-                (byte)0x01,
+                (byte)1,
                 (byte)Opcode.CP_A_B.encoding,
-                (byte)Opcode.JR_Z_E8.encoding,
-                (byte)0xFC,
+                (byte)Opcode.JR_NZ_E8.encoding,
+                (byte)0xFB,
                 (byte)Opcode.LD_C_B.encoding
         };
         
-        for(int i = 0; i < prog.length; ++i ) {
-            g.bus().write(i, Byte.toUnsignedInt(prog[i]));
+        
+        for(int i = 0; i<prog.length; i++) {
+            bus.write(i, Byte.toUnsignedInt(prog[i]));
         }
         
-        g.runUntil(100);
+        int i = 0;
+        while(cpu._testGetPcSpAFBCDEHL()[5] != 100) {
+            cpu.cycle(i);
+            System.out.println(cpu._testGetPcSpAFBCDEHL()[0]);
+            i++;
+        }
         
-        assertArrayEquals(new int[] {56, 65286, 100, 0x80, 100, 100, 0, 0, 0, 0},
-                g.cpu()._testGetPcSpAFBCDEHL());
+        assertArrayEquals(new int[] {11, 0xFFFF, 100, 0xC0, 100, 100, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());
+        
     }
     
 }

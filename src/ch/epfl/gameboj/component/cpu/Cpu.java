@@ -77,8 +77,6 @@ public final class Cpu implements Component, Clocked {
             handleInterrupt();
         }
         
-        //TODO : structure here may be wrong, be careful / think it through again
-        
         Opcode opcode = getOpcode();
         dispatch(opcode);
         
@@ -87,17 +85,11 @@ public final class Cpu implements Component, Clocked {
     
     private void handleInterrupt() {
         IME = false;
-        //TODO : remove
-        //IE &IF should never be bigger then 8bit but should we safe-clip?
-        //only used privately
-        // -> yes, we want to emulate an 8 bit register, that could overflow
-        // but since we only set/get one bit at a time, no real risk of overflow
-        // so no need to clip
+        
         int interruptID = Integer.numberOfTrailingZeros(IE & IF);
         
         IF = Bits.set(IF, interruptID, false);
-        
-        //TODO what if bigger the 16 bits? we never clip
+       
         push16(PC);
         
         PC = AddressMap.INTERRUPTS[interruptID];
@@ -117,7 +109,9 @@ public final class Cpu implements Component, Clocked {
      *      to any of the one's handled here
      */
     private void dispatch(Opcode opcode) {
-        int nextPC = PC + opcode.totalBytes;
+        //TODO : clip here ????
+        System.out.println(opcode.name());
+        int nextPC = Bits.clip(16, PC + opcode.totalBytes);
         
         switch(opcode.family) {
             case NOP: {
