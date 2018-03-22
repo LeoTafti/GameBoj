@@ -30,7 +30,6 @@ public final class Bus {
         
         for(Component c : attachedComponents) {
             value = c.read(address);
-            System.out.println("bus reads : " + " add : "  + address + " ; " + value);
             if(value != Component.NO_DATA)
                 return value;
         }
@@ -47,9 +46,6 @@ public final class Bus {
         Preconditions.checkBits16(address);
         Preconditions.checkBits8(data);
         for(Component c : attachedComponents) {
-            System.out.println("Bus writes at: " + c.getClass() +
-                    " ; add: " + address +
-                    " ; data: " + data);
             c.write(address, data);
         }
     }

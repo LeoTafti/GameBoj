@@ -118,11 +118,6 @@ public final class Cpu implements Component, Clocked {
      */
     private void dispatch(Opcode opcode) {
         int nextPC = PC + opcode.totalBytes;
-        System.out.println("opcode: " + opcode.name()
-        + ", PC :" + PC + ", SP : " + SP);
-//        System.out.println(SP);
-        
-        //TODO : clip here (?)
         
         switch(opcode.family) {
             case NOP: {
@@ -496,9 +491,6 @@ public final class Cpu implements Component, Clocked {
                 }
             } break;
             case RST_U3: {
-                
-                //TODO : WTF
-                System.out.println("++++");
                 push16(nextPC);
                 nextPC = 8*Bits.extract(opcode.encoding, 3, 3);
             } break;
@@ -534,7 +526,6 @@ public final class Cpu implements Component, Clocked {
             default:
                 throw new NullPointerException();
         }
-        System.out.println(SP);
         PC = nextPC;
     }
 
