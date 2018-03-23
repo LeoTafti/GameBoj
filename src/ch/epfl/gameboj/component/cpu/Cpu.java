@@ -32,9 +32,6 @@ public final class Cpu implements Component, Clocked {
     private RegisterFile<Reg> registerFile = new RegisterFile<>(Reg.values());
     private int SP = 0, PC = 0;
     private boolean IME = false;
-    //TODO : remove
-    // use bytes? values are never used but could be given too large int...
-    // -> makes no difference, since we used int for the other regs continue with int
     private int IE = 0, IF = 0;
     
     private static final Opcode[] DIRECT_OPCODE_TABLE =
@@ -67,13 +64,7 @@ public final class Cpu implements Component, Clocked {
     };
     
     private void reallyCycle() {
-        if(IME == true
-                && pendingInterrupt()) {
-            //TODO : must handle ALL interrupts before going to next instruction ? (probably)
-            //       ==== will be done by opcode "RETI"
-            //TODO : write a test case to check that it actually does handle all interrupts
-            //      before resuming
-        
+        if(IME == true && pendingInterrupt()) {
             handleInterrupt();
         }
         
@@ -109,7 +100,7 @@ public final class Cpu implements Component, Clocked {
      *      to any of the one's handled here
      */
     private void dispatch(Opcode opcode) {
-        //TODO : clip here ????
+        
         int nextPC = Bits.clip(16, PC + opcode.totalBytes);
         
         switch(opcode.family) {
