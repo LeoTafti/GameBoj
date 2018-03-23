@@ -69,10 +69,10 @@ public final class Cpu implements Component, Clocked {
             handleInterrupt();
         }
         else {
-        Opcode opcode = getOpcode();
-        dispatch(opcode);
-        
-        nextNonIdleCycle += opcode.cycles;
+            Opcode opcode = getOpcode();
+            dispatch(opcode);
+
+            nextNonIdleCycle += opcode.cycles;
         }
     }
     
@@ -500,7 +500,6 @@ public final class Cpu implements Component, Clocked {
             case RETI: {
                 IME = true;
                 nextPC = pop16();
-                System.out.println("coucou");
             } break;
 
             // Misc control

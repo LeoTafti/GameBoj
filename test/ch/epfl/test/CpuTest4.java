@@ -3,7 +3,7 @@
  *  @Author : Leo Tafti (285418)
 */
 
-package ch.epfl.gameboj.component.cpu;
+package ch.epfl.test;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;

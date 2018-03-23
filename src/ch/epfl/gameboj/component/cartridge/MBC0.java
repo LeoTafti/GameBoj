@@ -1,5 +1,7 @@
 package ch.epfl.gameboj.component.cartridge;
 
+import java.util.Objects;
+
 import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.component.Component;
 import ch.epfl.gameboj.component.memory.Rom;
@@ -10,21 +12,17 @@ public final class MBC0 implements Component {
     private static final int ROM_SIZE = 0x8000;
     
     public MBC0(Rom rom) {
-        if(rom == null) {
-            throw new NullPointerException();
-        }
-        else if (rom.size() != ROM_SIZE) {
+        if (rom.size() != ROM_SIZE) {
             throw new IllegalArgumentException();
         }
         
-        this.rom = rom;
+        this.rom = Objects.requireNonNull(rom);
     }
     
     //TODO : should we write javadoc when overriding ?
     @Override
     public int read(int address) {
         Preconditions.checkBits16(address);
-        Preconditions.checkArgument(address < ROM_SIZE);
         return rom.read(address);
     }
 
