@@ -17,7 +17,7 @@ public final class Rom {
      * Constructor
      * @param data final data
      */
-    public Rom( byte[] data) {
+    public Rom(byte[] data) {
         this.data = Arrays.copyOf(data, data.length);
     }
     
