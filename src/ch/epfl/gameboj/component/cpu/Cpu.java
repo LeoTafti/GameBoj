@@ -64,14 +64,16 @@ public final class Cpu implements Component, Clocked {
     };
     
     private void reallyCycle() {
+       
         if(IME == true && pendingInterrupt()) {
             handleInterrupt();
         }
-        
+        else {
         Opcode opcode = getOpcode();
         dispatch(opcode);
         
         nextNonIdleCycle += opcode.cycles;
+        }
     }
     
     private void handleInterrupt() {
@@ -498,6 +500,7 @@ public final class Cpu implements Component, Clocked {
             case RETI: {
                 IME = true;
                 nextPC = pop16();
+                System.out.println("coucou");
             } break;
 
             // Misc control
@@ -1066,8 +1069,8 @@ public final class Cpu implements Component, Clocked {
     }
     
     // :::::::::::::::::::::: TESTING UTILITARIES ::::::::::::::::
-//    
-//    
+    
+    
 //    // TODO remove before commit
 //    protected void reset() {
 //        for(Reg reg : Reg.values()) {
