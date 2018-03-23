@@ -5,7 +5,12 @@
 
 package ch.epfl.gameboj;
 
+import java.util.Objects;
+
+import ch.epfl.gameboj.component.Timer;
+import ch.epfl.gameboj.component.cartridge.Cartridge;
 import ch.epfl.gameboj.component.cpu.Cpu;
+import ch.epfl.gameboj.component.memory.BootRomController;
 import ch.epfl.gameboj.component.memory.Ram;
 import ch.epfl.gameboj.component.memory.RamController;
 
@@ -13,6 +18,7 @@ public class GameBoy {
     
     private Bus bus;
     private Cpu cpu;
+    private Timer timer;
     
     
     private long cycleCount = 0;
@@ -21,8 +27,10 @@ public class GameBoy {
     /**
      * Constructor
      * @param cartridge
+     * @throws NullPointException if cartridge is null
      */
-    public GameBoy(Object cartridge) {
+    public GameBoy(Cartridge cartridge) {
+
         this.bus = new Bus();
         
         Ram ram = new Ram(8192);
@@ -33,6 +41,13 @@ public class GameBoy {
         
         cpu = new Cpu();
         cpu.attachTo(bus);
+        
+        Objects.requireNonNull(cartridge);
+        BootRomController romController = new BootRomController(cartridge);
+        romController.attachTo(bus);
+        
+        Timer timer = new Timer(cpu);
+        timer.attachTo(bus);
     }
     
     /**
@@ -53,13 +68,14 @@ public class GameBoy {
     
     /**
      * runs cycles up to given value
-     * @param cycle
-     * @throws IllegalArgumentException if 
+     * @param cycle gameboy will stop cycling at given value
+     * @throws IllegalArgumentException if current cycle is bigger then requested finish cycle
      */
     public void runUntil(long cycle) {
         Preconditions.checkArgument(cycleCount < cycle);
         
         while(cycleCount < cycle) {
+            timer.cycle(cycleCount);
             cpu.cycle(cycleCount);
             ++cycleCount;
         }
@@ -68,9 +84,15 @@ public class GameBoy {
     
     /**
      * getter for cycle count
-     * @return
      */
     public long cycles() {
         return cycleCount;
+    }
+    
+    /**
+     * getter for timer
+     */
+    public Timer timer() {
+        return timer;
     }
 }
