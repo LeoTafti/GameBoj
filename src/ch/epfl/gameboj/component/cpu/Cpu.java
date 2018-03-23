@@ -110,7 +110,6 @@ public final class Cpu implements Component, Clocked {
      */
     private void dispatch(Opcode opcode) {
         //TODO : clip here ????
-        System.out.println(opcode.name());
         int nextPC = Bits.clip(16, PC + opcode.totalBytes);
         
         switch(opcode.family) {
@@ -1076,8 +1075,8 @@ public final class Cpu implements Component, Clocked {
     }
     
     // :::::::::::::::::::::: TESTING UTILITARIES ::::::::::::::::
-    
-    
+//    
+//    
 //    // TODO remove before commit
 //    protected void reset() {
 //        for(Reg reg : Reg.values()) {
@@ -1136,6 +1135,5 @@ public final class Cpu implements Component, Clocked {
 //    //TODO remove before commit
 //    public int readAtBus(int address) {
 //        return bus.read(address);
-//    }
-    
+//    }    
 }
