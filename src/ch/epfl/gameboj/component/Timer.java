@@ -118,7 +118,7 @@ public final class Timer implements Clocked, Component{
     
     /**
      * State of timer
-     * @return true if time is ON and (TIMA-setup)-th bit is 1
+     * @return true if timer is ON and (TIMA-setup)-th bit is 1
      */
     private boolean state() {
         return (timerIsOn() && Bits.test(DIV, TIMA_setup()));
