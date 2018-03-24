@@ -11,6 +11,10 @@ public final class MBC0 implements Component {
     private Rom rom;
     private static final int ROM_SIZE = 0x8000;
     
+    /**
+     * Constructs Memory Bank Controller (type 0) for given Rom
+     * @param rom rom for which an MBC0 is needed
+     */
     public MBC0(Rom rom) {
         if (rom.size() != ROM_SIZE) {
             throw new IllegalArgumentException();
@@ -19,7 +23,6 @@ public final class MBC0 implements Component {
         this.rom = Objects.requireNonNull(rom);
     }
     
-    //TODO : should we write javadoc when overriding ?
     @Override
     public int read(int address) {
         Preconditions.checkBits16(address);

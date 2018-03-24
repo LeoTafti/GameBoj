@@ -12,10 +12,21 @@ public final class Cartridge implements Component {
 
     private Component mbc;
     
+    /**
+     * Private constructor for Cartridge
+     * Contructs a cartridge with given Memory Bank Controller
+     * @param mbc associated Memory Bank Controller 
+     */
     private Cartridge(Component mbc) {
         this.mbc = mbc;
     }
     
+    /**
+     * Reads rom data from file, and constructs Rom, corresponding MBC, and Cartridge from it
+     * @param romFile file in which rom data is written
+     * @return Cartridge constructed from romFile data
+     * @throws IOException if any IO problem occurs, including if given romFile doesn't exist
+     */
     public static Cartridge ofFile(File romFile) throws IOException{
         try(FileInputStream s = new FileInputStream(romFile)){
             byte[] data = new byte[(int)romFile.length()];

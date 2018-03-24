@@ -12,6 +12,10 @@ public final class BootRomController implements Component {
     private Cartridge cartridge;
     private boolean bootRomActive = true;
     
+    /**
+     * Contructs a boot rom controller for given cartridge
+     * @param cartridge cartridge for which a boot rom controller is needed
+     */
     public BootRomController(Cartridge cartridge) {
         this.cartridge = Objects.requireNonNull(cartridge);
     }

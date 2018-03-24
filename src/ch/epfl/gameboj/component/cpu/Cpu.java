@@ -34,6 +34,8 @@ public final class Cpu implements Component, Clocked {
     private boolean IME = false;
     private int IE = 0, IF = 0;
     
+    private static final int INTERRUPT_HANDLING_CYCLES = 5;
+    
     private static final Opcode[] DIRECT_OPCODE_TABLE =
             buildOpcodeTable(Opcode.Kind.DIRECT);
     private static final Opcode[] PREFIXED_OPCODE_TABLE =
@@ -87,7 +89,7 @@ public final class Cpu implements Component, Clocked {
         
         PC = AddressMap.INTERRUPTS[interruptID];
         
-        nextNonIdleCycle += 5;
+        nextNonIdleCycle += INTERRUPT_HANDLING_CYCLES;
         
     }
 
