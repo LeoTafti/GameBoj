@@ -37,7 +37,7 @@ public final class Rom {
      */
     public int read(int index){
         if (index >= this.size() || index < 0)
-            throw new IndexOutOfBoundsException();
+            throw new IndexOutOfBoundsException(index);
         return Byte.toUnsignedInt(data[index]);
     }
 

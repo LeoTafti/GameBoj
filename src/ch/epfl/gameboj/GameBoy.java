@@ -46,7 +46,7 @@ public class GameBoy {
         BootRomController romController = new BootRomController(cartridge);
         romController.attachTo(bus);
         
-        Timer timer = new Timer(cpu);
+        timer = new Timer(cpu);
         timer.attachTo(bus);
     }
     
