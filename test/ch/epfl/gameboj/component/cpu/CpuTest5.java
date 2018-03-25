@@ -381,6 +381,18 @@ public class CpuTest5 {
     }
     
     @Test
+    public void JR_NZ_formBlaarg() {
+        initiateRegs(0, 0x00, 0, 0, 0, 0, 0, 0);
+        
+        bus.write(0, Opcode.JR_NZ_E8.encoding);
+        bus.write(1, 0xF6);
+        cycleCpu(Opcode.JR_NZ_E8.cycles);
+        
+        assertArrayEquals(new int[] {0xFFF8, 0, 0, 0x00, 0, 0, 0, 0, 0, 0},
+                cpu._testGetPcSpAFBCDEHL());  
+    }
+    
+    @Test
     public void JR_NZ_E8_isCorrectlyExecuted() {
         
         initiateRegs(0, 0x70, 0, 0, 0, 0, 0, 0);

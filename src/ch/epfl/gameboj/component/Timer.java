@@ -32,7 +32,7 @@ public final class Timer implements Clocked, Component{
     
     @Override
     public void cycle(long cycle) {
-        if(timerIsOn()) {
+//        if(timerIsOn()) { //doesnt change anything for blaargtest
         
             boolean ps = state();
         
@@ -40,7 +40,7 @@ public final class Timer implements Clocked, Component{
             //TODO : what does "4" stand for ? Define a static final attribute
         
             incIfChange(ps);
-        }
+//        }
     }
 
     @Override
@@ -66,18 +66,11 @@ public final class Timer implements Clocked, Component{
         Preconditions.checkBits16(address);
         Preconditions.checkBits8(data);
         
+        boolean s0 = state();
+        
         switch(address) {        
         case AddressMap.REG_DIV: {
-            boolean s0 = state();
-//            DIV = data << 8;
             DIV = 0;
-            //TODO : remove
-            // Project guidelines say :
-            // "Notez que l'écriture d'une valeur quelconque
-            // à l'adresse 0xFF04 (ie. AddressMap.REG_DIV)
-            // provoque la remise à zéro de la totalité
-            // des bits du compteur principal."
-            incIfChange(s0);
             }break;               
         case AddressMap.REG_TIMA:
             TIMA = data;
@@ -86,23 +79,17 @@ public final class Timer implements Clocked, Component{
             TMA = data;
             break;               
         case AddressMap.REG_TAC: {
-            boolean s0 = state();
             TAC = data;
-            incIfChange(s0);
             }break;               
         }            
+        
+        incIfChange(s0);
         
     }
     
     /**
-     * TODO : add description
      *      
-     *      + Can't we just say that this method
-     *      returns the index of bit of DIV to use, or smth like that ?
-     *      
-     *      "log2 of TIMA's increment rate" seems very unclear to me :)
-     *      
-     * @return log2 of TIMA's increment rate
+     * @return index of timer to increment
      */
     private int TIMA_setup() {
         return tacValues[Bits.extract(TAC, 0, 2)];
@@ -132,12 +119,8 @@ public final class Timer implements Clocked, Component{
      */
     private void incIfChange(boolean previousState) {
         
-//        if(previousState != state()) {
-        if((previousState == true) && (state() == false)) {
-            //TODO : remove
-            // Careful, previous if condition was true for
-            // previousState == false and state() == true
-            // (and it shouldn't be)
+        if(previousState && !state()) {
+            
             TIMA += 1;
             
             if(TIMA > 0xFF) {

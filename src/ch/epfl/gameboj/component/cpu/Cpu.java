@@ -455,13 +455,25 @@ public final class Cpu implements Component, Clocked {
                 }
             } break;
             case JR_E8: {
-                nextPC += Bits.clip(16, Bits.signExtend8(read8AfterOpcode()));
-                nextPC = Bits.clip(16, nextPC);
+                nextPC = add16_E8(nextPC);
+//                nextPC += Bits.clip(16, Bits.signExtend8(read8AfterOpcode()));
+//                nextPC = Bits.clip(16, nextPC);
             } break;
             case JR_CC_E8: {
                 if(evaluateCondition(opcode)) {
-                    nextPC += Bits.clip(16, Bits.signExtend8(read8AfterOpcode()));
-                    nextPC = Bits.clip(16, nextPC);
+                    
+//                    System.out.println("--------------------------------" +
+//                            "PC = " + nextPC + " ; e8 = " + Bits.signExtend8(read8AfterOpcode()) +
+//                            " ; condition = " + Bits.extract(opcode.encoding, 3, 2) + " ; flag z = " + getFlag(Flag.Z));
+                   
+                    
+                    nextPC = add16_E8(nextPC);
+                   
+//                    System.out.println("--------------------------------" + "next PC = " + nextPC);
+
+                    
+//                    nextPC += Bits.clip(16, Bits.signExtend8(read8AfterOpcode()));
+//                    nextPC = Bits.clip(16, nextPC);
                     nextNonIdleCycle += opcode.additionalCycles;
                 }
             } break;
@@ -515,6 +527,7 @@ public final class Cpu implements Component, Clocked {
                 throw new NullPointerException();
         }
         PC = nextPC;
+//        System.out.println("new PC ====== " + PC);
     }
 
     
@@ -1020,6 +1033,14 @@ public final class Cpu implements Component, Clocked {
     }
     
     /**
+     * Adds next byte as signed and clips
+     * @return value + (signed) byte *clipped*
+     */
+    private int add16_E8(int value) {
+        return Bits.clip(16, value + Bits.signExtend8(read8AfterOpcode()));
+    }
+
+    /**
      * Given an interrupt, sets IF corresponding bit to 1
      * @param i interrupt
      */
@@ -1072,63 +1093,63 @@ public final class Cpu implements Component, Clocked {
     // :::::::::::::::::::::: TESTING UTILITARIES ::::::::::::::::
     
     
-//    // TODO remove before commit
-//    protected void reset() {
-//        for(Reg reg : Reg.values()) {
-//            setReg(reg, 0);
-//        }
-//        SP = 0;
-//        PC = 0;
-//        IME = false;
-//        IE = 0;
-//        IF = 0;
-//        nextNonIdleCycle = 0;
-//    }
-//    // TODO remove before commit
-//    protected void setAllRegs(int a, int f, int b, int c, int d, int e, int h, int l) {
-//        setReg(Reg.A, a);
-//        setReg(Reg.F, f);
-//        setReg(Reg.B, b);
-//        setReg(Reg.C, c);
-//        setReg(Reg.D, d);
-//        setReg(Reg.E, e);
-//        setReg(Reg.H, h);
-//        setReg(Reg.L, l);
-//    }
-//    //TODO remove before commit
-//    protected void setAllRegs16(int af, int bc, int de, int hl) {
-//        setReg16(Reg16.AF, af);
-//        setReg16(Reg16.BC, bc);
-//        setReg16(Reg16.DE, de);
-//        setReg16(Reg16.HL, hl);
-//    }
-//    
-//    //TODO remove before commit
-//    protected void setSP(int sp) {
-//        SP = sp;
-//    }
-//   
-//    //TODO remove before commit
-//    protected void setInterruptRegs(boolean ime, int ie, int If) {
-//        IME = ime;
-//        IE = ie;
-//        IF = If;
-//   }
-//    
-//    //TODO remove before commit
-//    protected void setPC(int pc) {
-//        Preconditions.checkBits16(pc); 
-//        PC = pc;
-//    }
-//    
-//    //TODO remove before commit
-//    protected int[] get_IME_IE_IF() {
-//        int ime_val = IME ? 1:0 ;
-//        return new int[] {ime_val, IE, IF};
-//    }
-//    
-//    //TODO remove before commit
-//    public int readAtBus(int address) {
-//        return bus.read(address);
-//    }    
+    // TODO remove before commit
+    protected void reset() {
+        for(Reg reg : Reg.values()) {
+            setReg(reg, 0);
+        }
+        SP = 0;
+        PC = 0;
+        IME = false;
+        IE = 0;
+        IF = 0;
+        nextNonIdleCycle = 0;
+    }
+    // TODO remove before commit
+    protected void setAllRegs(int a, int f, int b, int c, int d, int e, int h, int l) {
+        setReg(Reg.A, a);
+        setReg(Reg.F, f);
+        setReg(Reg.B, b);
+        setReg(Reg.C, c);
+        setReg(Reg.D, d);
+        setReg(Reg.E, e);
+        setReg(Reg.H, h);
+        setReg(Reg.L, l);
+    }
+    //TODO remove before commit
+    protected void setAllRegs16(int af, int bc, int de, int hl) {
+        setReg16(Reg16.AF, af);
+        setReg16(Reg16.BC, bc);
+        setReg16(Reg16.DE, de);
+        setReg16(Reg16.HL, hl);
+    }
+    
+    //TODO remove before commit
+    protected void setSP(int sp) {
+        SP = sp;
+    }
+   
+    //TODO remove before commit
+    protected void setInterruptRegs(boolean ime, int ie, int If) {
+        IME = ime;
+        IE = ie;
+        IF = If;
+   }
+    
+    //TODO remove before commit
+    protected void setPC(int pc) {
+        Preconditions.checkBits16(pc); 
+        PC = pc;
+    }
+    
+    //TODO remove before commit
+    protected int[] get_IME_IE_IF() {
+        int ime_val = IME ? 1:0 ;
+        return new int[] {ime_val, IE, IF};
+    }
+    
+    //TODO remove before commit
+    public int readAtBus(int address) {
+        return bus.read(address);
+    }    
 }
