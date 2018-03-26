@@ -16,17 +16,16 @@ public final class MBC0 implements Component {
      * @param rom rom for which an MBC0 is needed
      */
     public MBC0(Rom rom) {
-        if (rom.size() != ROM_SIZE) {
-            throw new IllegalArgumentException();
-        }
+        Objects.requireNonNull(rom);
+        Preconditions.checkArgument(rom.size() == ROM_SIZE);
         
-        this.rom = Objects.requireNonNull(rom);
+        this.rom = rom; //TODO
     }
     
     @Override
     public int read(int address) {
         Preconditions.checkBits16(address);
-        if(address < 0x8000) {
+        if(address < ROM_SIZE) {
             return rom.read(address);
         }
         return NO_DATA;

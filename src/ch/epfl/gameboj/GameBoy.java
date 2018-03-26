@@ -33,17 +33,17 @@ public class GameBoy {
 
         this.bus = new Bus();
         
-        Ram ram = new Ram(8192);
+        Ram ram = new Ram(AddressMap.WORK_RAM_SIZE);
         RamController workRamController = new RamController(ram, AddressMap.WORK_RAM_START, AddressMap.WORK_RAM_END);
         RamController echoRamController = new RamController(ram, AddressMap.ECHO_RAM_START, AddressMap.ECHO_RAM_END);
-        bus.attach(workRamController);
-        bus.attach(echoRamController);
+        
+        workRamController.attachTo(bus);
+        echoRamController.attachTo(bus);
         
         cpu = new Cpu();
         cpu.attachTo(bus);
         
-        Objects.requireNonNull(cartridge);
-        BootRomController romController = new BootRomController(cartridge);
+        BootRomController romController = new BootRomController(Objects.requireNonNull(cartridge));
         romController.attachTo(bus);
         
         timer = new Timer(cpu);
@@ -67,6 +67,13 @@ public class GameBoy {
     }
     
     /**
+     * getter for timer
+     */
+    public Timer timer() {
+        return timer;
+    }
+    
+    /**
      * runs cycles up to given value
      * @param cycle gameboy will stop cycling at given value
      * @throws IllegalArgumentException if current cycle is bigger then requested finish cycle
@@ -74,11 +81,18 @@ public class GameBoy {
     public void runUntil(long cycle) {
         Preconditions.checkArgument(cycleCount < cycle);
         
-        while(cycleCount < cycle) {
-            timer.cycle(cycleCount);
-            cpu.cycle(cycleCount);
-            ++cycleCount;
+//        while(cycleCount < cycle) {
+//            timer.cycle(cycleCount);
+//            cpu.cycle(cycleCount);
+//            ++cycleCount; //TODO : ++ or = cycle ?
+//        }
+        
+        //TODO : remove
+        for(long i = cycles(); i < cycle; i++) {
+            timer.cycle(i);
+            cpu.cycle(i);
         }
+        cycleCount = cycle;
         
     }
     
@@ -89,10 +103,4 @@ public class GameBoy {
         return cycleCount;
     }
     
-    /**
-     * getter for timer
-     */
-    public Timer timer() {
-        return timer;
-    }
 }

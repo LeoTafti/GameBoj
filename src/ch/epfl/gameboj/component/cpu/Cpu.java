@@ -534,6 +534,7 @@ public final class Cpu implements Component, Clocked {
             default:
                 throw new NullPointerException();
         }
+//        PC = Bits.clip(16, nextPC);
         PC = nextPC;
     }
 

@@ -29,28 +29,37 @@ public final class Cartridge implements Component {
      */
     public static Cartridge ofFile(File romFile) throws IOException{
         try(FileInputStream s = new FileInputStream(romFile)){
-            byte[] data = new byte[(int)romFile.length()];
+//            byte[] data = new byte[(int)romFile.length()];
+//            
+//            data = s.readAllBytes();
             
-            data = s.readAllBytes();
-            if(data[0x146] != 0)
-                throw new IllegalArgumentException("This cartridge requires another MBC than MBC0 (not implemented/emulated)");
+//            if(data[0x146] != 0)
+//                throw new IllegalArgumentException("This cartridge requires another MBC than MBC0 (not implemented/emulated)");
+//            
+//            return new Cartridge(
+//                    new MBC0(new Rom(data)));
             
-            return new Cartridge(
-                    new MBC0(new Rom(data)));
+            //TODO remove
+            Rom rom = new Rom(s.readAllBytes());
+            Preconditions.checkArgument(rom.read(0x147) == 0); //TODO : figure out if 146 or 147
+            return new Cartridge(new MBC0(rom));
         }
     }
     
     @Override
     public int read(int address) {
         Preconditions.checkBits16(address);
-        return mbc.read(address);
+        if(address < 0x8000) //TODO : code duplication, checks twice
+            return mbc.read(address);
+        return NO_DATA;
     }
 
     @Override
     public void write(int address, int data) {
         Preconditions.checkBits16(address);
         Preconditions.checkBits8(data);
-        mbc.write(address, data);
+        if(address < 0x8000) //TODO : code duplication, checks twice
+            mbc.write(address, data);
     }
 
 }
