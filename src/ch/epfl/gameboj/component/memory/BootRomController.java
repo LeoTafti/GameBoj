@@ -42,6 +42,7 @@ public final class BootRomController implements Component {
         if(address == AddressMap.REG_BOOT_ROM_DISABLE) {
             bootRomActive = false;
         }
+        //TODO : else ?
         cartridge.write(address, data);
     }
 
