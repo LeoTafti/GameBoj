@@ -462,14 +462,14 @@ public final class Cpu implements Component, Clocked {
             case JR_CC_E8: {
                 if(evaluateCondition(opcode)) {
                     
-//                    System.out.println("--------------------------------" +
-//                            "PC = " + nextPC + " ; e8 = " + Bits.signExtend8(read8AfterOpcode()) +
-//                            " ; condition = " + Bits.extract(opcode.encoding, 3, 2) + " ; flag z = " + getFlag(Flag.Z));
+                    System.out.println("--------------------------------" +
+                            "PC = " + nextPC + " ; e8 = " + Bits.signExtend8(read8AfterOpcode()) +
+                            " ; condition = " + Bits.extract(opcode.encoding, 3, 2) + " ; flag z = " + getFlag(Flag.Z));
                    
                     
                     nextPC = add16_E8(nextPC);
                    
-//                    System.out.println("--------------------------------" + "next PC = " + nextPC);
+                    System.out.println("--------------------------------" + "next PC = " + nextPC);
 
                     
 //                    nextPC += Bits.clip(16, Bits.signExtend8(read8AfterOpcode()));
@@ -527,7 +527,7 @@ public final class Cpu implements Component, Clocked {
                 throw new NullPointerException();
         }
         PC = nextPC;
-//        System.out.println("new PC ====== " + PC);
+        System.out.println("new PC ====== " + PC);
     }
 
     
