@@ -47,7 +47,7 @@ public final class Cpu implements Component, Clocked {
     
     private Bus bus;
     
-    private Ram highRam = new Ram(127);
+    private Ram highRam = new Ram(AddressMap.HIGH_RAM_SIZE);
     
     @Override
     public void attachTo(Bus bus) {
