@@ -19,7 +19,7 @@ public final class Timer implements Clocked, Component{
     
     private int DIV = 0, TIMA = 0, TMA = 0, TAC = 0;
     
-    private final int[] tacValues = {9, 3, 5, 7};
+    private final int[] tacValues = {9, 3, 5, 7}; //TODO : make static ?
     
     
     /**
@@ -32,11 +32,11 @@ public final class Timer implements Clocked, Component{
     
     @Override
     public void cycle(long cycle) {
-        if(timerIsOn()) { //doesn't change anything for blaargtest
+        if(timerIsOn()) {   //TODO : must be here ?
         
             boolean s0 = state();
         
-            DIV = Bits.clip(16, DIV + 4);
+            DIV = Bits.clip(16, DIV + 4); //TODO : static variable ?
             //TODO : what does "4" stand for ? Define a static final attribute
         
             incIfChange(s0);
@@ -49,7 +49,7 @@ public final class Timer implements Clocked, Component{
 
         switch (address) {
         case AddressMap.REG_DIV:
-            return DIV >> 8;
+            return Bits.extract(DIV, 8, 8);
         case AddressMap.REG_TIMA:
             return TIMA;
         case AddressMap.REG_TMA:
@@ -69,7 +69,7 @@ public final class Timer implements Clocked, Component{
         boolean s0 = state();
         
         switch(address) {        
-        case AddressMap.REG_DIV: {
+        case AddressMap.REG_DIV: { //TODO : remove curly braces
             DIV = 0;
             }break;               
         case AddressMap.REG_TIMA:
@@ -92,7 +92,7 @@ public final class Timer implements Clocked, Component{
      * @return index of timer to increment
      */
     private int TIMA_setup() {
-        return tacValues[Bits.extract(TAC, 0, 2)];
+        return tacValues[Bits.clip(2, TAC)];
     }
     
     /**
@@ -119,15 +119,23 @@ public final class Timer implements Clocked, Component{
      */
     private void incIfChange(boolean previousState) {
         
-        if(previousState && !state()) {
-            
-            TIMA += 1;
-            
-            if(TIMA > 0xFF) {
-                TIMA = TMA;
-                cpu.requestInterrupt(Interrupt.TIMER);
-            }
+//        if(previousState && !state()) {
+//            
+//            TIMA += 1;
+//            
+//            if(TIMA > 0xFF) {
+//                TIMA = TMA;
+//                cpu.requestInterrupt(Interrupt.TIMER);
+//            }
+//        }
+        
+        //TODO : remove
+        if(!(!state() && previousState)) {return;}
+        if(TIMA == 0xFF) {
+            cpu.requestInterrupt(Interrupt.TIMER);
+            TIMA = TMA;
         }
+        else { TIMA++; }
     }
 
 }
