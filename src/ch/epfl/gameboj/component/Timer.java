@@ -32,7 +32,7 @@ public final class Timer implements Clocked, Component{
     
     @Override
     public void cycle(long cycle) {
-        if(timerIsOn()) { //doesnt change anything for blaargtest
+        if(timerIsOn()) { //doesn't change anything for blaargtest
         
             boolean s0 = state();
         
