@@ -7,6 +7,9 @@ package ch.epfl.gameboj.component.cpu;
 
 import java.util.Arrays;
 
+import Cpu.FlagSrc;
+import Cpu.Reg;
+import Cpu.Reg16;
 import ch.epfl.gameboj.AddressMap;
 import ch.epfl.gameboj.Bus;
 import ch.epfl.gameboj.Preconditions;
@@ -64,7 +67,6 @@ public final class Cpu implements Component, Clocked {
             return;
         }
 
-//        System.out.println("Calling really cycle with cycle : " + cycle);
         reallyCycle();
     };
     
@@ -108,12 +110,6 @@ public final class Cpu implements Component, Clocked {
     private void dispatch(Opcode opcode) {
         
         int nextPC = Bits.clip(16, PC + opcode.totalBytes);
-
-//        System.out.println("-----------Entering dispatch -----------");
-//        System.out.println("PC = " + PC);
-//        System.out.println("opcode name : " + opcode.name());
-//        System.out.println("Bus[HL] : " + read8AtHl());
-//        System.out.println(Arrays.toString(_testGetPcSpAFBCDEHL()));
         
         switch(opcode.family) {
             case NOP: {
@@ -251,7 +247,7 @@ public final class Cpu implements Component, Clocked {
                 }
             } break;
 
-            // Subtract
+//            // Subtract
             case SUB_A_R8: {
                 int vf = Alu.sub(
                         reg(Reg.A),
@@ -292,22 +288,19 @@ public final class Cpu implements Component, Clocked {
             case CP_A_R8: {
                 int vf = Alu.sub(
                         reg(Reg.A),
-                        reg(extractReg(opcode, 0)),
-                        getInitialBorrow(opcode));
+                        reg(extractReg(opcode, 0)));
                 combineAluFlags(vf, FlagSrc.ALU, FlagSrc.V1, FlagSrc.ALU, FlagSrc.ALU);
             } break;
             case CP_A_N8: {
                 int vf = Alu.sub(
                         reg(Reg.A),
-                        read8AfterOpcode(),
-                        getInitialBorrow(opcode));
+                        read8AfterOpcode());
                 combineAluFlags(vf, FlagSrc.ALU, FlagSrc.V1, FlagSrc.ALU, FlagSrc.ALU);
             } break;
             case CP_A_HLR: {
                 int vf = Alu.sub(
                         reg(Reg.A),
-                        read8AtHl(),
-                        getInitialBorrow(opcode));
+                        read8AtHl());
                 combineAluFlags(vf, FlagSrc.ALU, FlagSrc.V1, FlagSrc.ALU, FlagSrc.ALU);
             } break;
             case DEC_R16SP: {
@@ -464,24 +457,10 @@ public final class Cpu implements Component, Clocked {
             } break;
             case JR_E8: {
                 nextPC = add16_E8(nextPC);
-//                nextPC += Bits.clip(16, Bits.signExtend8(read8AfterOpcode()));
-//                nextPC = Bits.clip(16, nextPC);
             } break;
             case JR_CC_E8: {
-                if(evaluateCondition(opcode)) {
-                    
-//                    System.out.println("------" +
-//                            "PC = " + nextPC + " ; e8 = " + Bits.signExtend8(read8AfterOpcode()) +
-//                            " ; condition = " + Bits.extract(opcode.encoding, 3, 2) + " ; flag z = " + getFlag(Flag.Z));
-//                   
-//                    
+                if(evaluateCondition(opcode)) {             
                     nextPC = add16_E8(nextPC);
-//                   
-//                    System.out.println("------" + "next PC = " + nextPC);
-
-                    
-//                    nextPC += Bits.clip(16, Bits.signExtend8(read8AfterOpcode()));
-//                    nextPC = Bits.clip(16, nextPC);
                     nextNonIdleCycle += opcode.additionalCycles;
                 }
             } break;
@@ -501,6 +480,7 @@ public final class Cpu implements Component, Clocked {
             case RST_U3: {
                 push16(nextPC);
                 nextPC = 8*Bits.extract(opcode.encoding, 3, 3);
+                nextPC = AddressMap.RESETS[extractBitIndex(opcode)];
             } break;
             case RET: {
                 nextPC = pop16();
@@ -514,10 +494,7 @@ public final class Cpu implements Component, Clocked {
 
             // Interrupts
             case EDI: {
-                if(Bits.test(opcode.encoding, 3)) {
-                    IME = true;
-                }
-                else IME = false;
+                IME = Bits.test(opcode.encoding, 3);
             } break;
             case RETI: {
                 IME = true;
@@ -534,8 +511,7 @@ public final class Cpu implements Component, Clocked {
             default:
                 throw new NullPointerException();
         }
-//        PC = Bits.clip(16, nextPC);
-        PC = nextPC;
+        PC = Bits.clip(16, nextPC);
     }
 
     
@@ -892,7 +868,7 @@ public final class Cpu implements Component, Clocked {
     * @return flag value as boolean (true for 1, false for 0)
     */
    private boolean getFlag(Flag f) {
-       return flagValue(0, FlagSrc.CPU, f);
+       return Bits.test(reg(Reg.F), f.index());
    }
     
     /**
@@ -1076,7 +1052,7 @@ public final class Cpu implements Component, Clocked {
         case 0b11:
             //c
             return getFlag(Flag.C);
-            default :
+        default :
                 throw new IllegalArgumentException();
         }
     }
