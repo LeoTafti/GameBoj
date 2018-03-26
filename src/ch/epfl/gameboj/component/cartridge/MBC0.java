@@ -26,7 +26,10 @@ public final class MBC0 implements Component {
     @Override
     public int read(int address) {
         Preconditions.checkBits16(address);
-        return rom.read(address);
+        if(address < 0x8000) {
+            return rom.read(address);
+        }
+        return NO_DATA;
     }
 
     @Override

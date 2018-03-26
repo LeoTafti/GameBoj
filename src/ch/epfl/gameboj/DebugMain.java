@@ -15,7 +15,7 @@ import ch.epfl.gameboj.component.cpu.Cpu;
 
 public final class DebugMain {
     public static void main(String[] args) throws IOException {
-        File romFile = new File(args[0]);
+        File romFile = new File("/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/01-special.gb");
         long cycles = Long.parseLong(args[1]);
 
         GameBoy gb = new GameBoy(Cartridge.ofFile(romFile));

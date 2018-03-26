@@ -32,15 +32,15 @@ public final class Timer implements Clocked, Component{
     
     @Override
     public void cycle(long cycle) {
-//        if(timerIsOn()) { //doesnt change anything for blaargtest
+        if(timerIsOn()) { //doesnt change anything for blaargtest
         
-            boolean ps = state();
+            boolean s0 = state();
         
             DIV = Bits.clip(16, DIV + 4);
             //TODO : what does "4" stand for ? Define a static final attribute
         
-            incIfChange(ps);
-//        }
+            incIfChange(s0);
+        }
     }
 
     @Override

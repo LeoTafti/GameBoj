@@ -26,12 +26,7 @@ public final class BootRomController implements Component {
         if(bootRomActive && (address >= 0 && address <= 0xFF)) {
             return Byte.toUnsignedInt(BootRom.DATA[address]);
         }
-        else if(address < 0x8000) {
-            return cartridge.read(address);
-        }
-        else {
-            return NO_DATA;
-            }
+        return cartridge.read(address);
     }
 
     @Override
@@ -42,10 +37,7 @@ public final class BootRomController implements Component {
         if(address == AddressMap.REG_BOOT_ROM_DISABLE) {
             bootRomActive = false;
         }
-        else if(address < 0x8000){ // ROM_END not in addressmap, could be added, or use VIDEO_RAM_START
-            cartridge.write(address, data);
-        }
-            
+        cartridge.write(address, data);
     }
 
 }

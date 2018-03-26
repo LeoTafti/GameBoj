@@ -112,6 +112,7 @@ public final class Cpu implements Component, Clocked {
 //        System.out.println("-----------Entering dispatch -----------");
 //        System.out.println("PC = " + PC);
 //        System.out.println("opcode name : " + opcode.name());
+//        System.out.println("Bus[HL] : " + read8AtHl());
 //        System.out.println(Arrays.toString(_testGetPcSpAFBCDEHL()));
         
         switch(opcode.family) {
@@ -474,7 +475,7 @@ public final class Cpu implements Component, Clocked {
 //                            " ; condition = " + Bits.extract(opcode.encoding, 3, 2) + " ; flag z = " + getFlag(Flag.Z));
 //                   
 //                    
-//                    nextPC = add16_E8(nextPC);
+                    nextPC = add16_E8(nextPC);
 //                   
 //                    System.out.println("------" + "next PC = " + nextPC);
 
