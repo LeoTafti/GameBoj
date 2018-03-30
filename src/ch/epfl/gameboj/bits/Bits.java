@@ -6,7 +6,6 @@
 package ch.epfl.gameboj.bits;
 
 import java.util.Objects;
-
 import ch.epfl.gameboj.Preconditions;
 
 public final class Bits {

@@ -8,13 +8,14 @@ package ch.epfl.gameboj.component.memory;
 import ch.epfl.gameboj.Preconditions;
 
 public final class Ram {
-    
+
     private byte[] data;
 
-    
     /**
      * Constructor
-     * @param size of Ram in byte      
+     * 
+     * @param size
+     *            of Ram in byte
      * @throws IllegalArgumentException
      */
     public Ram(int size) {
@@ -24,6 +25,7 @@ public final class Ram {
 
     /**
      * Size of Ram
+     * 
      * @return size of Ram
      */
     public int size() {
@@ -32,7 +34,9 @@ public final class Ram {
 
     /**
      * Read byte at given index
-     * @param index address of required byte
+     * 
+     * @param index
+     *            address of required byte
      * @return required byte
      * @throws IndexOutOfBoundsException
      */
@@ -41,9 +45,10 @@ public final class Ram {
             throw new IndexOutOfBoundsException();
         return Byte.toUnsignedInt(data[index]);
     }
-    
+
     /**
      * Writes given value at given index
+     * 
      * @param index
      * @param value
      * @throws IndexOutOfBoundsException

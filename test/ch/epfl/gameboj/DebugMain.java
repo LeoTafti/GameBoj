@@ -9,7 +9,6 @@ import java.io.File;
 import java.io.IOException;
 
 import ch.epfl.gameboj.component.Component;
-import ch.epfl.gameboj.component.DebugPrintComponent;
 import ch.epfl.gameboj.component.cartridge.Cartridge;
 import ch.epfl.gameboj.component.cpu.Cpu;
 
@@ -27,12 +26,11 @@ public final class DebugMain {
                 "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/09-op r,r.gb",
                 "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/10-bit ops.gb",
                 "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/11-op a,(hl).gb",
-                "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/instr_timing.gb"
-        };
-        for(int i = 0; i < paths.length; i++) {
+                "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/instr_timing.gb" };
+        for (int i = 0; i < paths.length; i++) {
             File romFile = new File(paths[i]);
             long cycles = Long.parseLong(args[1]);
-    
+
             GameBoy gb = new GameBoy(Cartridge.ofFile(romFile));
             Component printer = new DebugPrintComponent();
             printer.attachTo(gb.bus());
@@ -40,7 +38,7 @@ public final class DebugMain {
                 long nextCycles = Math.min(gb.cycles() + 17556, cycles);
                 gb.runUntil(nextCycles);
                 gb.cpu().requestInterrupt(Cpu.Interrupt.VBLANK);
-                }
+            }
         }
     }
 }

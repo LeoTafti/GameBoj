@@ -1,10 +1,9 @@
 package ch.epfl.gameboj;
 
 public interface Register {
-    
+
     /*
-     * will automatically be given a definition when
-     * implemented by an enum
+     * will automatically be given a definition when implemented by an enum
      */
     abstract int ordinal();
 
