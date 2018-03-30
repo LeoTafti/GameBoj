@@ -15,11 +15,11 @@ import ch.epfl.gameboj.component.memory.Rom;
 
 public final class Cartridge implements Component {
 
-    private Component mbc;
+    private final Component mbc;
 
     /**
-     * Private constructor for Cartridge Contructs a cartridge with given Memory
-     * Bank Controller
+     * Private constructor for Cartridge
+     * Contructs a cartridge with given Memory Bank Controller
      * 
      * @param mbc
      *            associated Memory Bank Controller
@@ -41,40 +41,30 @@ public final class Cartridge implements Component {
      */
     public static Cartridge ofFile(File romFile) throws IOException {
         try (FileInputStream s = new FileInputStream(romFile)) {
-            // byte[] data = new byte[(int)romFile.length()];
-            //
-            // data = s.readAllBytes();
+            byte[] data = s.readAllBytes();
 
-            // if(data[0x146] != 0)
-            // throw new IllegalArgumentException("This cartridge requires
-            // another MBC than MBC0 (not implemented/emulated)");
-            //
-            // return new Cartridge(
-            // new MBC0(new Rom(data)));
+            if (data[0x146] != 0) // TODO : figure out if 0x146 or 0x147
+                throw new IllegalArgumentException(
+                        "This cartridge requires another MBC than MBC0 (not implemented/emulated)");
+            
+            //TODO : more concise ? but less informative
+//            Preconditions.checkArgument(data[0x146] == 0);
 
-            // TODO remove
-            Rom rom = new Rom(s.readAllBytes());
-            Preconditions.checkArgument(rom.read(0x147) == 0); // TODO : figure
-                                                               // out if 146 or
-                                                               // 147
-            return new Cartridge(new MBC0(rom));
+            return new Cartridge(new MBC0(new Rom(data)));
         }
     }
 
     @Override
     public int read(int address) {
         Preconditions.checkBits16(address);
-        if (address < 0x8000) // TODO : code duplication, checks twice
-            return mbc.read(address);
-        return NO_DATA;
+        return mbc.read(address);
     }
 
     @Override
     public void write(int address, int data) {
         Preconditions.checkBits16(address);
         Preconditions.checkBits8(data);
-        if (address < 0x8000) // TODO : code duplication, checks twice
-            mbc.write(address, data);
+        mbc.write(address, data);
     }
 
 }

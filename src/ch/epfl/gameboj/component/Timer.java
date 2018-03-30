@@ -15,14 +15,16 @@ import ch.epfl.gameboj.component.cpu.Cpu.Interrupt;
 
 public final class Timer implements Clocked, Component {
 
-    private Cpu cpu;
+    private final Cpu cpu;
 
     private int DIV = 0, TIMA = 0, TMA = 0, TAC = 0;
 
-    private final int[] tacValues = { 9, 3, 5, 7 }; // TODO : make static ?
+    private final int[] tacValues = { 9, 3, 5, 7 }; // TODO : should it be static ?
+    
+    private static final int MAIN_TIMER_INCREMENT = 4; // TODO : should be public or private ?
 
     /**
-     * Constructs Timer to associated cpu
+     * Constructs Timer for given cpu
      * 
      * @throws NullPointerException
      *             if cpu is null
@@ -33,12 +35,11 @@ public final class Timer implements Clocked, Component {
 
     @Override
     public void cycle(long cycle) {
-        if (timerIsOn()) { // TODO : must be here ?
+        if (timerIsOn()) {
 
             boolean s0 = state();
 
-            DIV = Bits.clip(16, DIV + 4); // TODO : static variable ?
-            // TODO : what does "4" stand for ? Define a static final attribute
+            DIV = Bits.clip(16, DIV + MAIN_TIMER_INCREMENT);
 
             incIfChange(s0);
         }
@@ -70,9 +71,8 @@ public final class Timer implements Clocked, Component {
         boolean s0 = state();
 
         switch (address) {
-        case AddressMap.REG_DIV: { // TODO : remove curly braces
+        case AddressMap.REG_DIV:
             DIV = 0;
-        }
             break;
         case AddressMap.REG_TIMA:
             TIMA = data;
@@ -80,18 +80,15 @@ public final class Timer implements Clocked, Component {
         case AddressMap.REG_TMA:
             TMA = data;
             break;
-        case AddressMap.REG_TAC: {
+        case AddressMap.REG_TAC:
             TAC = data;
-        }
             break;
         }
-
         incIfChange(s0);
-
     }
 
     /**
-     * 
+     * TODO : give a better description ?
      * @return index of timer to increment
      */
     private int TIMA_setup() {
@@ -126,25 +123,13 @@ public final class Timer implements Clocked, Component {
      */
     private void incIfChange(boolean previousState) {
 
-        // if(previousState && !state()) {
-        //
-        // TIMA += 1;
-        //
-        // if(TIMA > 0xFF) {
-        // TIMA = TMA;
-        // cpu.requestInterrupt(Interrupt.TIMER);
-        // }
-        // }
-
-        // TODO : remove
-        if (!(!state() && previousState)) {
-            return;
-        }
-        if (TIMA == 0xFF) {
-            cpu.requestInterrupt(Interrupt.TIMER);
-            TIMA = TMA;
-        } else {
-            TIMA++;
+        if (previousState && !state()) {
+            if (TIMA == 0xFF) {
+                TIMA = TMA;
+                cpu.requestInterrupt(Interrupt.TIMER);
+            } else {
+                TIMA += 1;
+            }
         }
     }
 

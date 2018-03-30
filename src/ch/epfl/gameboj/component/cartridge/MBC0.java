@@ -13,7 +13,7 @@ import ch.epfl.gameboj.component.memory.Rom;
 
 public final class MBC0 implements Component {
 
-    private Rom rom;
+    private final Rom rom;
     private static final int ROM_SIZE = 0x8000;
 
     /**
@@ -40,6 +40,8 @@ public final class MBC0 implements Component {
 
     @Override
     public void write(int address, int data) {
+        Preconditions.checkBits16(address);
+        Preconditions.checkBits8(data);
         // Does nothing
     }
 

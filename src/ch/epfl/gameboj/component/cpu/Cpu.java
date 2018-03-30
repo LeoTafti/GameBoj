@@ -36,7 +36,7 @@ public final class Cpu implements Component, Clocked {
         VBLANK, LCD_STAT, TIMER, SERIAL, JOYPAD
     }
 
-    private RegisterFile<Reg> registerFile = new RegisterFile<>(Reg.values());
+    private final RegisterFile<Reg> registerFile = new RegisterFile<>(Reg.values());
     private int SP = 0, PC = 0;
     private boolean IME = false;
     private int IE = 0, IF = 0;
@@ -52,7 +52,7 @@ public final class Cpu implements Component, Clocked {
 
     private Bus bus;
 
-    private Ram highRam = new Ram(AddressMap.HIGH_RAM_SIZE);
+    private final Ram highRam = new Ram(AddressMap.HIGH_RAM_SIZE);
 
     @Override
     public void attachTo(Bus bus) {

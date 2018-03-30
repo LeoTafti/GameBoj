@@ -7,7 +7,7 @@ public final class RegisterFile<E extends Register> {
     private byte[] regs;
 
     /**
-     * Constructs a RegisterFile of 8-bits registers (1 byte each)
+     * Constructs a RegisterFile of 8-bit registers (1 byte each)
      * 
      * @param allRegs
      *            all the elements of the enum type E (E.values())
@@ -17,7 +17,7 @@ public final class RegisterFile<E extends Register> {
     }
 
     /**
-     * Gets the 8-bits value stored in given register
+     * Gets the 8-bit value stored in given register
      * 
      * @param reg
      *            the register in which to look
@@ -36,7 +36,7 @@ public final class RegisterFile<E extends Register> {
      * @param newValue
      *            the new value to store
      * @throws IllegalArgumentException
-     *             if given value isn't an 8-bits value
+     *             if given value isn't an 8-bit value
      */
     public void set(E reg, int newValue) {
         Preconditions.checkBits8(newValue);

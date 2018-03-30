@@ -11,8 +11,16 @@ import java.util.Objects;
 import ch.epfl.gameboj.component.Component;
 
 public final class Bus {
-    private ArrayList<Component> attachedComponents = new ArrayList<>();
+    private final ArrayList<Component> attachedComponents = new ArrayList<>();
+    
+    private static final int DEFAULT_READ_VALUE = 0xFF;
 
+    /**
+     * Connects given component to list of components attached to bus
+     * 
+     * @param component
+     *            component to connect to bus
+     */
     public void attach(Component component) {
         attachedComponents.add(Objects.requireNonNull(component));
     }
@@ -25,7 +33,7 @@ public final class Bus {
      *            read location
      * @return value at given address
      * @throws IllegalArgumentException
-     *             if address isn't a 16 bits value
+     *             if address isn't a 16 bit value
      */
     public int read(int address) {
         Preconditions.checkBits16(address);
@@ -37,7 +45,7 @@ public final class Bus {
             if (value != Component.NO_DATA)
                 return value;
         }
-        return 0xFF;
+        return DEFAULT_READ_VALUE;
     }
 
     /**

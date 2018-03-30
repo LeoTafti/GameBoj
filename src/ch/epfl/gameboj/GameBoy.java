@@ -16,18 +16,18 @@ import ch.epfl.gameboj.component.memory.RamController;
 
 public class GameBoy {
 
-    private Bus bus;
-    private Cpu cpu;
-    private Timer timer;
+    private final Bus bus;
+    private final Cpu cpu;
+    private final Timer timer;
 
     private long cycleCount = 0;
 
     /**
-     * Constructor
+     * GameBoy constructor
      * 
-     * @param cartridge
+     * @param cartridge the cartridge of the game
      * @throws NullPointException
-     *             if cartridge is null
+     *             if given cartridge is null
      */
     public GameBoy(Cartridge cartridge) {
 
@@ -54,7 +54,7 @@ public class GameBoy {
     }
 
     /**
-     * getter for Bus
+     * Getter for bus
      * 
      * @return GameBoy's bus
      */
@@ -63,39 +63,32 @@ public class GameBoy {
     }
 
     /**
-     * getter for Cpu
+     * Getter for cpu
      * 
-     * @return GameBoy's Cpu
+     * @return GameBoy's cpu
      */
     public Cpu cpu() {
         return cpu;
     }
 
     /**
-     * getter for timer
+     * Getter for timer
      */
     public Timer timer() {
         return timer;
     }
 
     /**
-     * runs cycles up to given value
+     * Runs gameboy up to given cycle value - 1
      * 
      * @param cycle
-     *            gameboy will stop cycling at given value
+     *            number of cycles to run
      * @throws IllegalArgumentException
-     *             if current cycle is bigger then requested finish cycle
+     *             if current gameboy cycle is greater or equal given cycle value
      */
     public void runUntil(long cycle) {
         Preconditions.checkArgument(cycleCount < cycle);
 
-        // while(cycleCount < cycle) {
-        // timer.cycle(cycleCount);
-        // cpu.cycle(cycleCount);
-        // ++cycleCount;
-        // }
-
-        // TODO : remove
         for (long i = cycles(); i < cycle; i++) {
             timer.cycle(i);
             cpu.cycle(i);
@@ -105,7 +98,7 @@ public class GameBoy {
     }
 
     /**
-     * getter for cycle count
+     * Getter for number of cycles the gameboy has already run for
      */
     public long cycles() {
         return cycleCount;

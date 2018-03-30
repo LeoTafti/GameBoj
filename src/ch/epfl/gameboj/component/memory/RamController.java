@@ -12,8 +12,8 @@ import ch.epfl.gameboj.component.Component;
 
 public final class RamController implements Component {
 
-    private int startAddress, endAddress;
-    private Ram ram;
+    private final int startAddress, endAddress;
+    private final Ram ram;
 
     /**
      * Constructs controller for given ram, giving access between startAddress

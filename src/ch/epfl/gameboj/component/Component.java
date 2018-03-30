@@ -15,10 +15,10 @@ public interface Component {
      * value at given address
      * 
      * @param address
-     *            read location
-     * @return byte or NO_DATA
+     *            address to read from
+     * @return stored byte or NO_DATA
      * @throws IllegalArgumentException
-     *             if address isn't a 16 bits value
+     *             if address isn't a 16-bit value
      */
     abstract int read(int address);
 
@@ -27,9 +27,11 @@ public interface Component {
      * doesn't allow to write at this address
      * 
      * @param address
+     *            address to write at
      * @param data
+     *            value to store
      * @throws IllegalArgumentException
-     *             if address isn't a 16 bits value or data isn't a 8 bit value
+     *             if address isn't a 16-bit value or data isn't an 8-bit value
      */
     abstract void write(int address, int data);
 
@@ -37,6 +39,7 @@ public interface Component {
      * Attaches component to given bus
      * 
      * @param bus
+     *            bus to connect component to
      */
     default void attachTo(Bus bus) {
         bus.attach(this);

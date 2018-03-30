@@ -14,30 +14,31 @@ import ch.epfl.gameboj.bits.Bits;
 public final class Alu {
 
     /**
-     * non-instantiable class
+     * Non-instantiable class
      */
     private Alu() {
-        // nothing here
     }
 
     /**
-     * Flags gives additional informations on results Z : result is 0 N :
-     * operation was a substraction H : half-carry C : carry
+     * Flags gives additional informations on results
+     * Z : result is 0
+     * N : operation was a subtraction
+     * H : operation produced a half-carry
+     * C : operation produced a carry
      */
     public enum Flag implements Bit {
         UNUSED_0, UNUSED_1, UNUSED_2, UNUSED_3, C, H, N, Z;
     }
 
     /**
-     * Defines RotDir Used to specify rotate methods the direction in which to
-     * rotate
+     * Used to specify rotate methods the direction in which to rotate
      */
     public enum RotDir {
         LEFT, RIGHT;
     }
 
     /**
-     * returns an int in which flags are packed, with 1 if param is true, 0
+     * Returns an int in which flags are packed, with 1 if flag is true, 0
      * otherwise
      * 
      * @param z
@@ -56,14 +57,14 @@ public final class Alu {
     }
 
     /**
-     * unpacks value form given int
+     * Unpacks value form given int
      * 
      * @param valueFlags
      *            int in which value is packed
      * @return unpacked value
      * @throws IllegalArgumentException
-     *             if given value has any active bits at index [0, 3] or [24,
-     *             31] (all boundaries inclusive)
+     *             if given value has any active bits at indices [0, 3] or
+     *             [24, 31] (all boundaries inclusive)
      */
     public static int unpackValue(int valueFlags) {
         checkIntValue(valueFlags);
@@ -71,14 +72,14 @@ public final class Alu {
     }
 
     /**
-     * unpacks flags from given int
+     * Unpacks flags from given int
      * 
      * @param valueFlags
      *            int in which flags are packed
      * @return unpacked flags
      * @throws IllegalArgumentException
-     *             if given value has any active bits at index [0, 3] or [24,
-     *             31] (all boundaries inclusive)
+     *             if given value has any active bits at indices [0, 3] or
+     *             [24, 31] (all boundaries inclusive)
      */
     public static int unpackFlags(int valueFlags) {
         checkIntValue(valueFlags);
@@ -86,34 +87,28 @@ public final class Alu {
     }
 
     /**
-     * Adds to 8 bits value, and an eventual carry
+     * Adds two 8-bit values, and an eventual carry
      * 
      * @param l
-     *            the first 8 bits value
+     *            the first 8-bit value
      * @param r
-     *            the second 8 bits value
+     *            the second 8-bit value
      * @param c0
      *            the carry
      * @return packed int of sum and flags Z0HC (sum may have been cropped)
      * @throws IllegalArgumentException
-     *             if l or r isn't an 8 bits value
+     *             if l or r isn't an 8-bit value
      */
     public static int add(int l, int r, boolean c0) {
         Preconditions.checkBits8(l);
         Preconditions.checkBits8(r);
 
         int carry = c0 ? 1 : 0;
-        int sum = l + r + carry;
+        int sum = Bits.clip(8, l + r + carry);
 
         boolean h = getHFlag(l, r, c0);
         boolean c = getCFlag(l, r, c0);
         // TODO : not optimal, getCFlag() calculates sum again...
-
-        // TODO : ask if needed (but probably yes);
-        if (c) {
-            sum = Bits.set(sum, 8, false); // crops the result (to simulate
-                                           // overflow)
-        }
 
         boolean z = getZFlag(sum);
 
@@ -124,12 +119,12 @@ public final class Alu {
      * Adds two 8 bits value, no carry
      * 
      * @param l
-     *            the first 8 bits value
+     *            the first 8-bit value
      * @param r
-     *            the second 8 bits value
+     *            the second 8-bit value
      * @return packed int of sum and flags Z0HC (sum may have been cropped)
      * @throws IllegalArgumentException
-     *             if l or r isn't an 8 bits value
+     *             if l or r isn't an 8-bit value
      * @see Alu#add(int l, int r, boolean c0)
      */
     public static int add(int l, int r) {
@@ -137,33 +132,28 @@ public final class Alu {
     }
 
     /**
-     * Adds two 16 bits value
+     * Adds two 16-bit value
      * 
      * @param l
-     *            the first 16 bits value
+     *            the first 16-bit value
      * @param r
-     *            the second 16 bits value
+     *            the second 16-bit value
      * @return packed int of sum and flags 00HC H, C determined by the addition
      *         of the 8 LSB of l and r (sum may have been cropped)
      * @throws IllegalArgumentException
-     *             if l or r aren't 16 bits values
+     *             if l or r aren't 16-bit values
      */
     public static int add16L(int l, int r) {
         Preconditions.checkBits16(l);
         Preconditions.checkBits16(r);
 
-        int sum = l + r;
+        int sum = Bits.clip(16, l + r);
 
         int l8L = Bits.clip(8, l);
         int r8L = Bits.clip(8, r);
 
         boolean h = getHFlag(l8L, r8L, false);
         boolean c = getCFlag(l8L, r8L, false);
-
-        if (sum > 0xFFFF) {
-            sum = Bits.set(sum, 16, false); // crops the result (to simulate
-                                            // overflow)
-        }
 
         return packValueZNHC(sum, false, false, h, c);
     }
@@ -481,7 +471,7 @@ public final class Alu {
     }
 
     /**
-     * returns O and flags Z010 where Z is 1 if bit at index is 1
+     * returns 0 and flags Z010 where Z is 1 if bit at given index is 0
      * 
      * @param v
      *            byte to be tested

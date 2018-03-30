@@ -7,10 +7,16 @@ package ch.epfl.gameboj.bits;
 
 public interface Bit {
 
+    /**
+     * Will automatically be given a definition when implemented by an enum
+     * 
+     * @returns the ordinal of this enumeration constant
+     * @see java.lang.Enum#ordinal()
+     */
     abstract int ordinal();
 
     /**
-     * @return index as defined in enumerated type
+     * @return index as defined by ordinal()
      */
     default int index() {
         return ordinal();

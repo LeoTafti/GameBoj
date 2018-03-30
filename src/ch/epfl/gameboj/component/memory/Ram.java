@@ -9,7 +9,7 @@ import ch.epfl.gameboj.Preconditions;
 
 public final class Ram {
 
-    private byte[] data;
+    private final byte[] data;
 
     /**
      * Constructor
