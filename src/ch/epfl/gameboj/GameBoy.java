@@ -89,12 +89,11 @@ public class GameBoy {
     public void runUntil(long cycle) {
         Preconditions.checkArgument(cycleCount < cycle);
 
-        for (long i = cycles(); i < cycle; i++) {
-            timer.cycle(i);
-            cpu.cycle(i);
+        while (cycleCount < cycle) {
+            timer.cycle(cycleCount);
+            cpu.cycle(cycleCount);
+            ++cycleCount;
         }
-        cycleCount = cycle;
-
     }
 
     /**
