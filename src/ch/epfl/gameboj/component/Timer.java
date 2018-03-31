@@ -13,6 +13,10 @@ import ch.epfl.gameboj.bits.Bits;
 import ch.epfl.gameboj.component.cpu.Cpu;
 import ch.epfl.gameboj.component.cpu.Cpu.Interrupt;
 
+/**
+ * @author Leo
+ *
+ */
 public final class Timer implements Clocked, Component {
 
     private final Cpu cpu;
@@ -45,6 +49,7 @@ public final class Timer implements Clocked, Component {
         }
     }
 
+    
     @Override
     public int read(int address) {
         Preconditions.checkBits16(address);
