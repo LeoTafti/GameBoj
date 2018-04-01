@@ -15,28 +15,30 @@ public final class Rom {
      * Constructor
      * 
      * @param data
-     *            final data
+     *            rom's data
      */
     public Rom(byte[] data) {
         this.data = Arrays.copyOf(data, data.length);
     }
 
     /**
-     * Rom's size
+     * Getter for rom's size
      * 
-     * @return rom's size in byte
+     * @return rom's size in bytes
      */
     public int size() {
         return data.length;
     }
 
     /**
-     * Read byte at given index
+     * Reads byte at given index
      * 
      * @param index
      *            address of required byte
-     * @return required byte
+     * @return byte read
      * @throws IndexOutOfBoundsException
+     *             if given index is not in range from 0 (inclusive) to size
+     *             (exclusive)
      */
     public int read(int index) {
         if (index >= this.size() || index < 0)

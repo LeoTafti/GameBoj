@@ -25,7 +25,6 @@ public final class Cpu implements Component, Clocked {
             Opcode.Kind.PREFIXED);
 
     private static final int INTERRUPT_HANDLING_CYCLES = 5;
-    
 
     private enum Reg implements Register {
         A, F, B, C, D, E, H, L

@@ -15,8 +15,9 @@ public final class Ram {
      * Constructor
      * 
      * @param size
-     *            of Ram in byte
+     *            size of Ram in bytes
      * @throws IllegalArgumentException
+     *             if given size value is negative
      */
     public Ram(int size) {
         Preconditions.checkArgument(size >= 0);
@@ -24,21 +25,23 @@ public final class Ram {
     }
 
     /**
-     * Size of Ram
+     * Getter for ram's size
      * 
-     * @return size of Ram
+     * @return size of Ram in bytes
      */
     public int size() {
         return data.length;
     }
 
     /**
-     * Read byte at given index
+     * Reads byte at given index
      * 
      * @param index
      *            address of required byte
-     * @return required byte
+     * @return byte read
      * @throws IndexOutOfBoundsException
+     *             if given index is not in range from 0 (inclusive) to size
+     *             (exclusive)
      */
     public int read(int index) {
         if (index >= this.size() || index < 0)
@@ -50,8 +53,15 @@ public final class Ram {
      * Writes given value at given index
      * 
      * @param index
+     *            index at which to write in ram
      * @param value
+     *            value to store
      * @throws IndexOutOfBoundsException
+     *             if given index is not in range from 0 (inclusive) to size
+     *             (exclusive)
+     *             
+     * @throws IllegalArgumentException
+     *             if given value isn't an 8-bit value
      */
     public void write(int index, int value) {
         if (index >= this.size() || index < 0)

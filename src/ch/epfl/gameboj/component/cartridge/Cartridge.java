@@ -18,8 +18,8 @@ public final class Cartridge implements Component {
     private final Component mbc;
 
     /**
-     * Private constructor for Cartridge
-     * Contructs a cartridge with given Memory Bank Controller
+     * Private constructor for Cartridge Contructs a cartridge with given Memory
+     * Bank Controller
      * 
      * @param mbc
      *            associated Memory Bank Controller
@@ -38,17 +38,15 @@ public final class Cartridge implements Component {
      * @throws IOException
      *             if any IO problem occurs, including if given romFile doesn't
      *             exist
+     * @throws IllegalArgumentException
+     *             if given romFile 147th's bit (used to identify MBC type)
+     *             isn't 0
      */
     public static Cartridge ofFile(File romFile) throws IOException {
         try (FileInputStream s = new FileInputStream(romFile)) {
             byte[] data = s.readAllBytes();
-
-            if (data[0x146] != 0) // TODO : figure out if 0x146 or 0x147
-                throw new IllegalArgumentException(
-                        "This cartridge requires another MBC than MBC0 (not implemented/emulated)");
-            
-            //TODO : more concise ? but less informative
-//            Preconditions.checkArgument(data[0x146] == 0);
+            Preconditions.checkArgument(data[0x146] == 0);
+            //TODO : 147th's bit is at index 146 in data array (?)
 
             return new Cartridge(new MBC0(new Rom(data)));
         }

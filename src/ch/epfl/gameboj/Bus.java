@@ -6,12 +6,13 @@
 package ch.epfl.gameboj;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import ch.epfl.gameboj.component.Component;
 
 public final class Bus {
-    private final ArrayList<Component> attachedComponents = new ArrayList<>();
+    private final List<Component> attachedComponents = new ArrayList<>();
     
     private static final int DEFAULT_READ_VALUE = 0xFF;
 

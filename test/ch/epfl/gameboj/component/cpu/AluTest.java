@@ -291,7 +291,7 @@ class AluTest {
         assertEquals(0xD0, Alu.bcdAdjust(0x60, true, false, true)); // 60 and NC -> 0 and ZNC
         assertEquals(0x6610, Alu.bcdAdjust(0, false, true, true)); // 0 and HC -> 66 and C
         assertEquals(0x1000, Alu.bcdAdjust(0xA, false, false, false)); //10 and 4LSB > 9 -> 16
-       //TODO assertEquals(0x0, Alu.bcdAdjust(0xA, true, false, false)); //10 and 4LSB > 9 but N -> 10
+       // assertEquals(0x0, Alu.bcdAdjust(0xA, true, false, false)); //10 and 4LSB > 9 but N -> 10
        // assertEquals(0x6000, Alu.bcdAdjust(0xA0, false, false, false)); //100 and 4MSB > 99 -> 160
        // assertEquals(0x6400, Alu.bcdAdjust(0xA0, true, false, false)); //100 and 4MSB > 99 but N -> 100
         assertEquals(0x7300, Alu.bcdAdjust(0x6D, false, false, false)); //given test

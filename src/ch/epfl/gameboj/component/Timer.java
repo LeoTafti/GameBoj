@@ -13,25 +13,21 @@ import ch.epfl.gameboj.bits.Bits;
 import ch.epfl.gameboj.component.cpu.Cpu;
 import ch.epfl.gameboj.component.cpu.Cpu.Interrupt;
 
-/**
- * @author Leo
- *
- */
 public final class Timer implements Clocked, Component {
 
     private final Cpu cpu;
 
     private int DIV = 0, TIMA = 0, TMA = 0, TAC = 0;
 
-    private final int[] tacValues = { 9, 3, 5, 7 }; // TODO : should it be static ?
+    private static final int[] tacValues = { 9, 3, 5, 7 };
     
-    private static final int MAIN_TIMER_INCREMENT = 4; // TODO : should be public or private ?
+    private static final int MAIN_TIMER_INCREMENT = 4;
 
     /**
      * Constructs Timer for given cpu
      * 
      * @throws NullPointerException
-     *             if cpu is null
+     *             if given cpu is null
      */
     public Timer(Cpu cpu) {
         this.cpu = Objects.requireNonNull(cpu);

@@ -27,6 +27,7 @@ public final class BootRomController implements Component {
         this.cartridge = Objects.requireNonNull(cartridge);
     }
 
+    
     @Override
     public int read(int address) {
         Preconditions.checkBits16(address);
@@ -44,9 +45,8 @@ public final class BootRomController implements Component {
 
         if (address == AddressMap.REG_BOOT_ROM_DISABLE) {
             bootRomActive = false;
-        }
-        // TODO : else ?
-        cartridge.write(address, data);
+        } else
+            cartridge.write(address, data);
     }
 
 }

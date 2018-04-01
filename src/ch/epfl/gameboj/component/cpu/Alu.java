@@ -16,8 +16,7 @@ public final class Alu {
     /**
      * Non-instantiable class
      */
-    private Alu() {
-    }
+    private Alu() {}
 
     /**
      * Flags gives additional informations on results

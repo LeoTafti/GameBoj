@@ -26,7 +26,7 @@ public final class MBC0 implements Component {
         Objects.requireNonNull(rom);
         Preconditions.checkArgument(rom.size() == ROM_SIZE);
 
-        this.rom = rom; // TODO
+        this.rom = rom;
     }
 
     @Override

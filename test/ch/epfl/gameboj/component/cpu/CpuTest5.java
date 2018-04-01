@@ -174,8 +174,6 @@ public class CpuTest5 {
     
     @Test
     public void JP_N16_isCorrectlyExecuted() {
-        
-        // TODO verify bus reads/writes big-endian
         writeAllBytes(Opcode.JP_N16.encoding, 0xF0, 1);
         cycleCpu(Opcode.JP_N16.cycles);
         
@@ -367,7 +365,7 @@ public class CpuTest5 {
                 cpu._testGetPcSpAFBCDEHL());        
     }
     
-    @Test //TODO PC NOT CLIPPED
+    @Test
     public void JR_CC_E8_OverflowsCorrectly() {
         initiateRegs(0, 0x80, 0, 0, 0, 0, 0, 0);
                 
@@ -936,7 +934,7 @@ public class CpuTest5 {
                 cpu._testGetPcSpAFBCDEHL());
     }
     
-    @Test //TODO is it supposed to not stop?
+    @Test
     public void HALT_doesNothingIfPendingInterrupt() {
         
 //        initiateInterruptRegs(false, 0, 0);

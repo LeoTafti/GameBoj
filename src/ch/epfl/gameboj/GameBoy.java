@@ -53,30 +53,6 @@ public class GameBoy {
         timer.attachTo(bus);
     }
 
-    /**
-     * Getter for bus
-     * 
-     * @return GameBoy's bus
-     */
-    public Bus bus() {
-        return bus;
-    }
-
-    /**
-     * Getter for cpu
-     * 
-     * @return GameBoy's cpu
-     */
-    public Cpu cpu() {
-        return cpu;
-    }
-
-    /**
-     * Getter for timer
-     */
-    public Timer timer() {
-        return timer;
-    }
 
     /**
      * Runs gameboy up to given cycle value - 1
@@ -94,6 +70,31 @@ public class GameBoy {
             cpu.cycle(cycleCount);
             ++cycleCount;
         }
+    }
+    
+    /**
+     * Getter for bus
+     * 
+     * @return GameBoy's bus
+     */
+    public Bus bus() {
+        return bus;
+    }
+    
+    /**
+     * Getter for cpu
+     * 
+     * @return GameBoy's cpu
+     */
+    public Cpu cpu() {
+        return cpu;
+    }
+    
+    /**
+     * Getter for timer
+     */
+    public Timer timer() {
+        return timer;
     }
 
     /**

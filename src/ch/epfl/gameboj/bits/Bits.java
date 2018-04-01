@@ -13,8 +13,7 @@ public final class Bits {
     /**
      * Non-instantiable class
      */
-    private Bits() {
-    };
+    private Bits() {}
 
     /**
      * Creates bit-string with single one at given index
@@ -144,8 +143,10 @@ public final class Bits {
      */
     public static int rotate(int size, int bits, int distance) {
         Preconditions.checkArgument(size > 0 && size <= Integer.SIZE);
-        //TODO : must check that bits is a size-bit value (but how ?! :O) 
-
+        //TODO : is there a better way of checking if bits is a size-bit value ?
+        if(size < Integer.SIZE)
+            Preconditions.checkArgument(bits < (1<<size));
+        
         int clipped = clip(size, bits);
 
         int originalClipped = bits - clipped;

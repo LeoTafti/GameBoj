@@ -27,7 +27,7 @@ public final class RamController implements Component {
      *            (exclusive)
      * @throws IllegalArgumentExcepetion
      *             if both addresses aren't 16 bits or if address interval is
-     *             negative, or if address interval bigger than ram's size
+     *             negative, or if address interval is bigger than ram's size
      */
     public RamController(Ram ram, int startAddress, int endAddress) {
         Preconditions.checkBits16(startAddress);
@@ -81,7 +81,7 @@ public final class RamController implements Component {
      * 
      * @param address
      *            given address
-     * @return valid(true) or invalid(false)
+     * @return true for valid or false for invalid
      */
     private boolean isInBound(int address) {
         if (address < startAddress || address >= endAddress) {
