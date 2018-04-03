@@ -1,6 +1,7 @@
 package ch.epfl.gameboj.component;
 
 public interface Clocked {
+    
     /**
      * Asks component to execute operations it has to do during given cycle
      * 

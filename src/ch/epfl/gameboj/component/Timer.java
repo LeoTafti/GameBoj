@@ -35,6 +35,7 @@ public final class Timer implements Clocked, Component {
 
     @Override
     public void cycle(long cycle) {
+        //TODO timer is on correct? doesnt change anything for running but...
         if (timerIsOn()) {
 
             boolean s0 = state();
@@ -89,15 +90,16 @@ public final class Timer implements Clocked, Component {
     }
 
     /**
-     * TODO : give a better description ?
-     * @return index of timer to increment
+     * Getter for secondary timer's increase rate amongst (3, 5, 7 or 9)
+     * 
+     * @return secondary timer increase-rate setup
      */
     private int TIMA_setup() {
         return tacValues[Bits.clip(2, TAC)];
     }
 
     /**
-     * Tests value of bit of index 2 of TAC
+     * Verifies timer in turned on (2cd bit of TAC)
      * 
      * @return true if ON
      */

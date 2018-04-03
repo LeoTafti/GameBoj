@@ -6,6 +6,7 @@
 package ch.epfl.gameboj.component.memory;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 public final class Rom {
 
@@ -41,8 +42,8 @@ public final class Rom {
      *             (exclusive)
      */
     public int read(int index) {
-        if (index >= this.size() || index < 0)
-            throw new IndexOutOfBoundsException(index);
+        Objects.checkIndex(index, size());
+        
         return Byte.toUnsignedInt(data[index]);
     }
 

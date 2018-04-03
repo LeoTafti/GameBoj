@@ -5,6 +5,8 @@
 
 package ch.epfl.gameboj.component.memory;
 
+import java.util.Objects;
+
 import ch.epfl.gameboj.Preconditions;
 
 public final class Ram {
@@ -44,8 +46,8 @@ public final class Ram {
      *             (exclusive)
      */
     public int read(int index) {
-        if (index >= this.size() || index < 0)
-            throw new IndexOutOfBoundsException();
+        Objects.checkIndex(index, size());
+        
         return Byte.toUnsignedInt(data[index]);
     }
 
@@ -58,15 +60,14 @@ public final class Ram {
      *            value to store
      * @throws IndexOutOfBoundsException
      *             if given index is not in range from 0 (inclusive) to size
-     *             (exclusive)
-     *             
+     *             (exclusive)      
      * @throws IllegalArgumentException
      *             if given value isn't an 8-bit value
      */
     public void write(int index, int value) {
-        if (index >= this.size() || index < 0)
-            throw new IndexOutOfBoundsException();
+        Objects.checkIndex(index, size());
         Preconditions.checkBits8(value);
+        
         data[index] = (byte) value;
     }
 }

@@ -32,11 +32,8 @@ public final class RamController implements Component {
     public RamController(Ram ram, int startAddress, int endAddress) {
         Preconditions.checkBits16(startAddress);
         Preconditions.checkBits16(endAddress);
-
-        if (endAddress - startAddress < 0
-                || endAddress - startAddress > ram.size()) {
-            throw new IllegalArgumentException();
-        }
+        Preconditions.checkArgument(endAddress - startAddress < 0
+                || endAddress - startAddress > ram.size());
 
         this.startAddress = startAddress;
         this.endAddress = endAddress;
@@ -59,6 +56,7 @@ public final class RamController implements Component {
     @Override
     public int read(int address) {
         Preconditions.checkBits16(address);
+        
         if (isInBound(address)) {
             return (ram.read(address - startAddress));
         } else {
@@ -70,6 +68,7 @@ public final class RamController implements Component {
     public void write(int address, int data) {
         Preconditions.checkBits16(address);
         Preconditions.checkBits8(data);
+        
         if (isInBound(address)) {
             ram.write(address - startAddress, data);
         }

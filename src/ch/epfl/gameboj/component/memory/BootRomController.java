@@ -31,6 +31,7 @@ public final class BootRomController implements Component {
     @Override
     public int read(int address) {
         Preconditions.checkBits16(address);
+        
         if (bootRomActive && (address >= AddressMap.BOOT_ROM_START
                 && address < AddressMap.BOOT_ROM_END)) {
             return Byte.toUnsignedInt(BootRom.DATA[address]);
