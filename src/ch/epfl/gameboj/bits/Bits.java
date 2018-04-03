@@ -20,7 +20,7 @@ public final class Bits {
      * 
      * @param index
      *            required position of the 1 bit (starts at 0)
-     * @return bit-string
+     * @return bit-string containing a single 1
      * @throws IndexOutOfBoundsException
      *             if index is out-of-bound
      */
@@ -38,7 +38,7 @@ public final class Bits {
      *            position of tested bit
      * @return True if given bit is 1, False if 0
      * @throws IndexOutOfBoundsException
-     *             if index is out-of-bound
+     *             if index is greater then 31
      */
     public static boolean test(int bits, int index) {
         Objects.checkIndex(index, Integer.SIZE);
@@ -69,10 +69,10 @@ public final class Bits {
      * @param index
      *            position of change (starts at 0)
      * @param newValue
-     *            True for 1 False for 0
+     *            true for 1, false for 0
      * @return modified bit-string
      * @throws IndexOutOfBoundsException
-     *             if index is out-of-bound
+     *             if index is greater then 31
      */
     public static int set(int bits, int index, boolean newValue) {
         Objects.checkIndex(index, Integer.SIZE);
@@ -126,7 +126,7 @@ public final class Bits {
     }
 
     /**
-     * Rotates given bit-string (size)-least significant bits by given distance
+     * Rotates given bit-string's size-least significant bits by given distance
      * 
      * @param size
      *            number of bits to rotate
@@ -144,8 +144,9 @@ public final class Bits {
     public static int rotate(int size, int bits, int distance) {
         Preconditions.checkArgument(size > 0 && size <= Integer.SIZE);
         //TODO : is there a better way of checking if bits is a size-bit value ?
+        //TODO TODO: this doesnt pass tests
         if(size < Integer.SIZE)
-            Preconditions.checkArgument(bits < (1<<size));
+            Preconditions.checkArgument(bits < (1<<size)); 
         
         int clipped = clip(size, bits);
 
@@ -163,7 +164,7 @@ public final class Bits {
     }
 
     /**
-     * Extends sign (0 for + ; 1 for - ) of byte to remaining most significant
+     * Extends sign (0 for positive ; 1 for negative ) of byte to remaining most significant
      * (32-8) bits
      * 
      * @param bits
@@ -175,13 +176,11 @@ public final class Bits {
      */
     public static int signExtend8(int bits) {
         Preconditions.checkBits8(bits);
-        int x = bits;
-        byte y = (byte) x;
-        return (int) y;
+        return (int) (byte) bits;
     }
 
     /**
-     * Reverses 8 least significant bits (0 -> 7 , 1 -> 6 ...)
+     * Reverses 8 least significant bits (0 -> 7 , 1 -> 6 , ...)
      * 
      * @param bits
      *            original byte
@@ -248,7 +247,11 @@ public final class Bits {
     public static int make16(int highB, int lowB) {
         Preconditions.checkBits8(highB);
         Preconditions.checkBits8(lowB);
-        return (int) Math.round(highB * Math.pow(2, 8)) + lowB;
+        return (highB << 8) + lowB;
+        
+        //TODO : bit-string must be considered either as binary vector 
+        //or as value but we are not supposed to mix
+        //return (int) Math.round(highB * Math.pow(2, 8)) + lowB;
     }
 
 }

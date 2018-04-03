@@ -21,6 +21,10 @@ public final class MBC0 implements Component {
      * 
      * @param rom
      *            rom for which an MBC0 is needed
+     * @throws IllegalArgumentException
+     *             if size of rom is different then expected ROM_SIZE
+     * @throws NullPointerException
+     *             if given rom doesn't exist
      */
     public MBC0(Rom rom) {
         Objects.requireNonNull(rom);

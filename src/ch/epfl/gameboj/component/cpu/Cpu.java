@@ -19,6 +19,10 @@ import ch.epfl.gameboj.component.cpu.Alu.RotDir;
 import ch.epfl.gameboj.component.memory.Ram;
 
 public final class Cpu implements Component, Clocked {
+    
+    private Bus bus;
+    private final Ram highRam = new Ram(AddressMap.HIGH_RAM_SIZE);
+    
     private static final Opcode[] DIRECT_OPCODE_TABLE = buildOpcodeTable(
             Opcode.Kind.DIRECT);
     private static final Opcode[] PREFIXED_OPCODE_TABLE = buildOpcodeTable(
@@ -29,11 +33,12 @@ public final class Cpu implements Component, Clocked {
     private enum Reg implements Register {
         A, F, B, C, D, E, H, L
     }
-
     private enum Reg16 implements Register {
         AF, BC, DE, HL
     }
-
+    private final RegisterFile<Reg> registerFile = new RegisterFile<>(Reg.values());
+    private int SP = 0, PC = 0;
+    
     private enum FlagSrc {
         V0, V1, ALU, CPU
     }
@@ -41,16 +46,11 @@ public final class Cpu implements Component, Clocked {
     public enum Interrupt implements Bit {
         VBLANK, LCD_STAT, TIMER, SERIAL, JOYPAD
     }
-
-    private final RegisterFile<Reg> registerFile = new RegisterFile<>(Reg.values());
-    private int SP = 0, PC = 0;
     private boolean IME = false;
     private int IE = 0, IF = 0;
 
-    private Bus bus;
-    private final Ram highRam = new Ram(AddressMap.HIGH_RAM_SIZE);
-
     private long nextNonIdleCycle;
+    
 
     @Override
     public void attachTo(Bus bus) {
@@ -86,6 +86,17 @@ public final class Cpu implements Component, Clocked {
             highRam.write(address - AddressMap.HIGH_RAM_START, data);
     }
     
+    /**
+     * Given an interrupt, sets IF corresponding bit to 1
+     * 
+     * @param i
+     *            interrupt
+     */
+    public void requestInterrupt(Interrupt i) {
+        IF = Bits.set(IF, i.index(), true);
+    }
+
+    //TODO is override enough javadoc?
     @Override
     public void cycle(long cycle) {
         if (nextNonIdleCycle == Long.MAX_VALUE && pendingInterrupt()) {
@@ -96,9 +107,8 @@ public final class Cpu implements Component, Clocked {
         reallyCycle();
     };
     
-
     private void reallyCycle() {
-        if (IME == true && pendingInterrupt()) {
+        if (IME && pendingInterrupt()) {
             handleInterrupt();
         } else {
             Opcode opcode = getOpcode();
@@ -124,16 +134,6 @@ public final class Cpu implements Component, Clocked {
         PC = AddressMap.INTERRUPTS[interruptID];
 
         nextNonIdleCycle += INTERRUPT_HANDLING_CYCLES;
-    }
-
-    /**
-     * Given an interrupt, sets IF corresponding bit to 1
-     * 
-     * @param i
-     *            interrupt
-     */
-    public void requestInterrupt(Interrupt i) {
-        IF = Bits.set(IF, i.index(), true);
     }
 
     /**
@@ -254,22 +254,25 @@ public final class Cpu implements Component, Clocked {
         case ADD_A_R8: {
             int vf = Alu.add(reg(Reg.A), reg(extractReg(opcode, 0)),
                     getInitialCarry(opcode));
-            combineAluFlags(vf, FlagSrc.ALU, FlagSrc.V0, FlagSrc.ALU, FlagSrc.ALU);
-            setRegFromAlu(Reg.A, vf);
+            //TODO ALU already gives correct flags, combine is un-necessary
+//            combineAluFlags(vf, FlagSrc.ALU, FlagSrc.V0, FlagSrc.ALU, FlagSrc.ALU);
+            setRegFlags(Reg.A, vf);
 
         }
             break;
         case ADD_A_N8: {
             int vf = Alu.add(reg(Reg.A), read8AfterOpcode(),
                     getInitialCarry(opcode));
-            combineAluFlags(vf, FlagSrc.ALU, FlagSrc.V0, FlagSrc.ALU, FlagSrc.ALU);
-            setRegFromAlu(Reg.A, vf);
+          //TODO ALU already gives correct flags, combine is un-necessary
+//            combineAluFlags(vf, FlagSrc.ALU, FlagSrc.V0, FlagSrc.ALU, FlagSrc.ALU);
+            setRegFlags(Reg.A, vf);
         }
             break;
         case ADD_A_HLR: {
             int vf = Alu.add(reg(Reg.A), read8AtHl(), getInitialCarry(opcode));
-            combineAluFlags(vf, FlagSrc.ALU, FlagSrc.V0, FlagSrc.ALU, FlagSrc.ALU);
-            setRegFromAlu(Reg.A, vf);
+          //TODO ALU already gives correct flags, combine is un-necessary
+//            combineAluFlags(vf, FlagSrc.ALU, FlagSrc.V0, FlagSrc.ALU, FlagSrc.ALU);
+            setRegFlags(Reg.A, vf);
         }
             break;
         case INC_R8: {
@@ -288,7 +291,8 @@ public final class Cpu implements Component, Clocked {
         case INC_R16SP: {
             Reg16 r16 = extractReg16(opcode);
             int vf = Alu.add16H(reg16SP(r16), 1);
-            combineAluFlags(vf, FlagSrc.CPU, FlagSrc.CPU, FlagSrc.CPU, FlagSrc.CPU);
+          //TODO un-necessary
+//            combineAluFlags(vf, FlagSrc.CPU, FlagSrc.CPU, FlagSrc.CPU, FlagSrc.CPU);
             setReg16SP(r16, Alu.unpackValue(vf));
         }
             break;
@@ -308,25 +312,28 @@ public final class Cpu implements Component, Clocked {
         }
             break;
 
-        // Subtract
+        // sub
         case SUB_A_R8: {
             int vf = Alu.sub(reg(Reg.A), reg(extractReg(opcode, 0)),
                     getInitialBorrow(opcode));
-            combineAluFlags(vf, FlagSrc.ALU, FlagSrc.V1, FlagSrc.ALU, FlagSrc.ALU);
-            setRegFromAlu(Reg.A, vf);
+          //TODO ALU already gives correct flags, combine is un-necessary
+//            combineAluFlags(vf, FlagSrc.ALU, FlagSrc.V1, FlagSrc.ALU, FlagSrc.ALU);
+            setRegFlags(Reg.A, vf);
         }
             break;
         case SUB_A_N8: {
             int vf = Alu.sub(reg(Reg.A), read8AfterOpcode(),
                     getInitialBorrow(opcode));
-            combineAluFlags(vf, FlagSrc.ALU, FlagSrc.V1, FlagSrc.ALU, FlagSrc.ALU);
-            setRegFromAlu(Reg.A, vf);
+          //TODO ALU already gives correct flags, combine is un-necessary
+//            combineAluFlags(vf, FlagSrc.ALU, FlagSrc.V1, FlagSrc.ALU, FlagSrc.ALU);
+            setRegFlags(Reg.A, vf);
         }
             break;
         case SUB_A_HLR: {
             int vf = Alu.sub(reg(Reg.A), read8AtHl(), getInitialBorrow(opcode));
-            combineAluFlags(vf, FlagSrc.ALU, FlagSrc.V1, FlagSrc.ALU, FlagSrc.ALU);
-            setRegFromAlu(Reg.A, vf);
+          //TODO ALU already gives correct flags, combine is un-necessary
+//            combineAluFlags(vf, FlagSrc.ALU, FlagSrc.V1, FlagSrc.ALU, FlagSrc.ALU);
+            setRegFlags(Reg.A, vf);
         }
             break;
         case DEC_R8: {
@@ -345,17 +352,23 @@ public final class Cpu implements Component, Clocked {
         // CP are similar to SUB, but ignore the result and don't take borrow
         case CP_A_R8: {
             int vf = Alu.sub(reg(Reg.A), reg(extractReg(opcode, 0)));
-            combineAluFlags(vf, FlagSrc.ALU, FlagSrc.V1, FlagSrc.ALU, FlagSrc.ALU);
+          //TODO ALU already gives correct flags, combine is un-necessary
+//            combineAluFlags(vf, FlagSrc.ALU, FlagSrc.V1, FlagSrc.ALU, FlagSrc.ALU);
+            setFlags(vf);
         }
             break;
         case CP_A_N8: {
             int vf = Alu.sub(reg(Reg.A), read8AfterOpcode());
-            combineAluFlags(vf, FlagSrc.ALU, FlagSrc.V1, FlagSrc.ALU, FlagSrc.ALU);
+          //TODO ALU already gives correct flags, combine is un-necessary
+//            combineAluFlags(vf, FlagSrc.ALU, FlagSrc.V1, FlagSrc.ALU, FlagSrc.ALU);
+            setFlags(vf);
         }
             break;
         case CP_A_HLR: {
             int vf = Alu.sub(reg(Reg.A), read8AtHl());
-            combineAluFlags(vf, FlagSrc.ALU, FlagSrc.V1, FlagSrc.ALU, FlagSrc.ALU);
+          //TODO ALU already gives correct flags, combine is un-necessary
+//            combineAluFlags(vf, FlagSrc.ALU, FlagSrc.V1, FlagSrc.ALU, FlagSrc.ALU);
+        setFlags(vf);
         }
             break;
         case DEC_R16SP: {
@@ -494,7 +507,7 @@ public final class Cpu implements Component, Clocked {
         // Bit test and set
         case BIT_U3_R8: {
             combineAluFlags(
-                    Alu.testBit(reg(extractReg(opcode, 0)), extractBitIndex(opcode)),
+                    Alu.testBit(reg(extractReg(opcode, 0)),extractBitIndex(opcode)),
                     FlagSrc.ALU, FlagSrc.V0, FlagSrc.V1, FlagSrc.CPU);
         }
             break;
@@ -621,7 +634,7 @@ public final class Cpu implements Component, Clocked {
     
     /**
      * Given an Opcode.Kind, creates table of corresponding opcodes indexed by
-     * opcodes encodings (0 to 0xFF, thus array of lenght 0x100 = 256)
+     * opcodes encodings (0 to 0xFF, thus array of length 0x100 = 256)
      * 
      * @param kind
      *            DIRECT or PREFIXED
@@ -638,7 +651,7 @@ public final class Cpu implements Component, Clocked {
     }
     
     /**
-     * Gets opcode of next op, for direct and prefixed operations
+     * Gets opcode of next operation, for direct and prefixed operations
      * 
      * @return opcode of next operation
      */
@@ -677,6 +690,7 @@ public final class Cpu implements Component, Clocked {
      * @return value at BUS[PC+1]
      */
     private int read8AfterOpcode() {
+        //TODO necessary?
         assert PC != 0xFFFF;
 
         return read8(PC + 1);
@@ -979,8 +993,6 @@ public final class Cpu implements Component, Clocked {
         setFlags(vf);
     }
 
-
-
     /**
      * Gets flag value stored in reg F
      * 
@@ -1018,7 +1030,6 @@ public final class Cpu implements Component, Clocked {
             throw new IllegalArgumentException("Unknown FlagSrc");
         }
     }
-
 
     /**
      * Allows to set Cpu flags (so reg F) by combining old Cpu flags value (by
@@ -1147,7 +1158,6 @@ public final class Cpu implements Component, Clocked {
         return Bits.test(opcode.encoding, 6);
     }
 
-    
     /**
      * Gets (eventual) initial carry from opcode encoding and C Flag
      * 
@@ -1231,68 +1241,68 @@ public final class Cpu implements Component, Clocked {
         return array;
     }
 
-    // :::::::::::::::::::::: TESTING UTILITARIES ::::::::::::::::
-
-    // TODO remove before commit
-    protected void reset() {
-        for (Reg reg : Reg.values()) {
-            setReg(reg, 0);
-        }
-        SP = 0;
-        PC = 0;
-        IME = false;
-        IE = 0;
-        IF = 0;
-        nextNonIdleCycle = 0;
-    }
-
-    // TODO remove before commit
-    protected void setAllRegs(int a, int f, int b, int c, int d, int e, int h,
-            int l) {
-        setReg(Reg.A, a);
-        setReg(Reg.F, f);
-        setReg(Reg.B, b);
-        setReg(Reg.C, c);
-        setReg(Reg.D, d);
-        setReg(Reg.E, e);
-        setReg(Reg.H, h);
-        setReg(Reg.L, l);
-    }
-
-    // TODO remove before commit
-    protected void setAllRegs16(int af, int bc, int de, int hl) {
-        setReg16(Reg16.AF, af);
-        setReg16(Reg16.BC, bc);
-        setReg16(Reg16.DE, de);
-        setReg16(Reg16.HL, hl);
-    }
-
-    // TODO remove before commit
-    protected void setSP(int sp) {
-        SP = sp;
-    }
-
-    // TODO remove before commit
-    protected void setInterruptRegs(boolean ime, int ie, int If) {
-        IME = ime;
-        IE = ie;
-        IF = If;
-    }
-
-    // TODO remove before commit
-    protected void setPC(int pc) {
-        Preconditions.checkBits16(pc);
-        PC = pc;
-    }
-
-    // TODO remove before commit
-    protected int[] get_IME_IE_IF() {
-        int ime_val = IME ? 1 : 0;
-        return new int[] { ime_val, IE, IF };
-    }
-
-    // TODO remove before commit
-    public int readAtBus(int address) {
-        return bus.read(address);
-    }
+//    // :::::::::::::::::::::: TESTING UTILITARIES ::::::::::::::::
+//
+//    // TODO remove before commit
+//    protected void reset() {
+//        for (Reg reg : Reg.values()) {
+//            setReg(reg, 0);
+//        }
+//        SP = 0;
+//        PC = 0;
+//        IME = false;
+//        IE = 0;
+//        IF = 0;
+//        nextNonIdleCycle = 0;
+//    }
+//
+//    // TODO remove before commit
+//    protected void setAllRegs(int a, int f, int b, int c, int d, int e, int h,
+//            int l) {
+//        setReg(Reg.A, a);
+//        setReg(Reg.F, f);
+//        setReg(Reg.B, b);
+//        setReg(Reg.C, c);
+//        setReg(Reg.D, d);
+//        setReg(Reg.E, e);
+//        setReg(Reg.H, h);
+//        setReg(Reg.L, l);
+//    }
+//
+//    // TODO remove before commit
+//    protected void setAllRegs16(int af, int bc, int de, int hl) {
+//        setReg16(Reg16.AF, af);
+//        setReg16(Reg16.BC, bc);
+//        setReg16(Reg16.DE, de);
+//        setReg16(Reg16.HL, hl);
+//    }
+//
+//    // TODO remove before commit
+//    protected void setSP(int sp) {
+//        SP = sp;
+//    }
+//
+//    // TODO remove before commit
+//    protected void setInterruptRegs(boolean ime, int ie, int If) {
+//        IME = ime;
+//        IE = ie;
+//        IF = If;
+//    }
+//
+//    // TODO remove before commit
+//    protected void setPC(int pc) {
+//        Preconditions.checkBits16(pc);
+//        PC = pc;
+//    }
+//
+//    // TODO remove before commit
+//    protected int[] get_IME_IE_IF() {
+//        int ime_val = IME ? 1 : 0;
+//        return new int[] { ime_val, IE, IF };
+//    }
+//
+//    // TODO remove before commit
+//    public int readAtBus(int address) {
+//        return bus.read(address);
+//    }
 }

@@ -58,8 +58,8 @@ public final class Alu {
      * Unpacks value form given int
      * 
      * @param valueFlags
-     *            int in which value is packed
-     * @return unpacked value
+     *            int in which value is packed (= with flags)
+     * @return unpacked value (without flags)
      * @throws IllegalArgumentException
      *             if given value has any active bits at indices [0, 3] or
      *             [24, 31] (all boundaries inclusive)
@@ -73,7 +73,7 @@ public final class Alu {
      * Unpacks flags from given int
      * 
      * @param valueFlags
-     *            int in which flags are packed
+     *            int in which flags are packed (=with value)
      * @return unpacked flags
      * @throws IllegalArgumentException
      *             if given value has any active bits at indices [0, 3] or
@@ -107,6 +107,7 @@ public final class Alu {
         boolean h = getHFlag(l, r, c0);
         boolean c = getCFlag(l, r, c0);
         // TODO : not optimal, getCFlag() calculates sum again...
+        // choose between optimisation and clean, using the designated method is clean
 
         boolean z = getZFlag(sum);
 
@@ -128,6 +129,9 @@ public final class Alu {
     public static int add(int l, int r) {
         return add(l, r, false);
     }
+    
+    
+    //TODO what does 'cropped' mean
 
     /**
      * Adds two 16-bit values
@@ -170,20 +174,27 @@ public final class Alu {
      * @see Alu#add16L(int l, int r)
      */
     public static int add16H(int l, int r) {
+        // TODO clean vs optim again: not optimized at all here, better ducplicate code
         // Reuses add16L, changes flag-related portion
-        int valueFlags = add16L(l, r);
-
+        //in my opinion not worth for a single line of code
+        //TODO choose, not that much of a difference
+        
+        //int valueFlags = add16L(l, r);
+        int sum = Bits.clip(16, l + r);
+        
         int l8H = Bits.extract(l, 8, 8);
         int r8H = Bits.extract(r, 8, 8);
 
-        boolean lsbCFlag = Bits.test(valueFlags, 4);
+//        boolean lsbCFlag = Bits.test(valueFlags, 4);
+        boolean lsbCFlag = getCFlag(Bits.clip(8, l) , Bits.clip(8, r), false);
         boolean h = getHFlag(l8H, r8H, lsbCFlag);
         boolean c = getCFlag(l8H, r8H, lsbCFlag);
 
-        valueFlags = Bits.set(valueFlags, Flag.H.index(), h);
-        valueFlags = Bits.set(valueFlags, Flag.C.index(), c);
+//        valueFlags = Bits.set(valueFlags, Flag.H.index(), h);
+//        valueFlags = Bits.set(valueFlags, Flag.C.index(), c);
 
-        return valueFlags;
+//        return valueFlags;
+        return packValueZNHC(sum, false, false, h, c);
     }
 
     /**
@@ -485,7 +496,7 @@ public final class Alu {
     /**
      * Packs value and flags in a single int.
      * Flags are stored on bits [4:7] –
-     * Value are stored on bits [8:23] –
+     * Value is stored on bits [8:23] –
      * Bits at indices [0 : 3] and [24 : 31] are unused (0 by default)
      * 
      * @param v

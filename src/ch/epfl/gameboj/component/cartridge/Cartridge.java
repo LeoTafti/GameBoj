@@ -18,8 +18,8 @@ public final class Cartridge implements Component {
     private final Component mbc;
 
     /**
-     * Private constructor for Cartridge Contructs a cartridge with given Memory
-     * Bank Controller
+     * Private constructor for Cartridge 
+     * Contructs a cartridge with given Memory Bank Controller
      * 
      * @param mbc
      *            associated Memory Bank Controller
@@ -33,7 +33,7 @@ public final class Cartridge implements Component {
      * Cartridge from it
      * 
      * @param romFile
-     *            file in which rom data is written
+     *            file containing the ROM data
      * @return Cartridge constructed from romFile data
      * @throws IOException
      *             if any IO problem occurs, including if given romFile doesn't
@@ -47,6 +47,7 @@ public final class Cartridge implements Component {
             byte[] data = s.readAllBytes();
             Preconditions.checkArgument(data[0x146] == 0);
             //TODO : 147th's bit is at index 146 in data array (?)
+            //seems reasonable
 
             return new Cartridge(new MBC0(new Rom(data)));
         }
