@@ -32,8 +32,8 @@ public final class RamController implements Component {
     public RamController(Ram ram, int startAddress, int endAddress) {
         Preconditions.checkBits16(startAddress);
         Preconditions.checkBits16(endAddress);
-        Preconditions.checkArgument(endAddress - startAddress < 0
-                || endAddress - startAddress > ram.size());
+        Preconditions.checkArgument(endAddress - startAddress >= 0
+                || endAddress - startAddress <= ram.size());
 
         this.startAddress = startAddress;
         this.endAddress = endAddress;
