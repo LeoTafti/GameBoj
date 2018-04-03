@@ -690,10 +690,10 @@ public final class Cpu implements Component, Clocked {
      * @return value at BUS[PC+1]
      */
     private int read8AfterOpcode() {
-        //TODO necessary?
-        assert PC != 0xFFFF;
-
-        return read8(PC + 1);
+        //TODO necessary? better to clip?
+//        assert PC != 0xFFFF;
+//        return read8(PC + 1);
+        return Bits.clip(16, read8(PC+1));
     }
 
     /**
@@ -719,10 +719,11 @@ public final class Cpu implements Component, Clocked {
      * @see Cpu#read16(int address)
      */
     private int read16AfterOpcode() {
-        assert PC != 0xFFFE;
-        assert PC != 0xFFFF;
-
-        return read16(PC + 1);
+        //TODO same here, isnt it better to clip?
+//        assert PC != 0xFFFE;
+//        assert PC != 0xFFFF;
+//        return read16(PC + 1);
+        return Bits.clip(16,  read16(PC + 1));
     }
 
     /**
@@ -732,6 +733,7 @@ public final class Cpu implements Component, Clocked {
      *            write location
      * @param v
      *            value to write
+     * @see Bus#write(int, int)
      */
     private void write8(int address, int v) {
         bus.write(address, v);
@@ -742,6 +744,7 @@ public final class Cpu implements Component, Clocked {
      * 
      * @param v
      *            value to write
+     * @see Bus#write(int, int)
      */
     private void write8AtHl(int v) {
         write8(reg16(Reg16.HL), v);
@@ -749,7 +752,10 @@ public final class Cpu implements Component, Clocked {
     
     /**
      * Writes given 8-bit value on bus at address stored in regs HL and sets corresponding flags
+     * 
      * @param vf packed value and flags
+     * 
+     * @see Bus#write(int, int)
      */
     private void write8AtHlAndSetFlags(int vf) {
         write8AtHl(Alu.unpackValue(vf));
@@ -916,7 +922,7 @@ public final class Cpu implements Component, Clocked {
         switch (r) {
         case AF:
             setReg(Reg.A, highB);
-            int mask_4to7 = ((1 << 4) - 1) << 4; // 1111_0000
+            int mask_4to7 = 0b11110000;
             setReg(Reg.F, lowB & mask_4to7);
             // takes only 4 msb of lowB (ie. the flags, rest is 0)
             break;
@@ -970,7 +976,7 @@ public final class Cpu implements Component, Clocked {
     }
     
     /**
-     * Extracts flags from given int and puts them in reg F
+     * Extracts flags from Alu-int and puts them in reg F
      * 
      * @param valueFlags
      *            packed value and flags
@@ -1005,16 +1011,16 @@ public final class Cpu implements Component, Clocked {
     }
 
     /**
-     * Computes new flag value given a flag source (CPU, ALU, V0, V1), the
-     * actual flag and packed value and flags from ALU
+     * Computes new flag value given: a ALU-packed value, a flag source (V0,
+     * V1, ALU, CPU), and chosen flag to set
      * 
      * @param vf
      *            packed value and flags
      * @param flagSrc
-     *            source of flag to pick
+     *            source of flag amongst V0, V1, ALU, CPU
      * @param flag
-     *            flag for which a new value needs to be asserted
-     * @return flag value as boolean (true for 1, false for 0)
+     *            flag for which a new value needs to be computed
+     * @return new flag value as boolean (true for 1, false for 0)
      */
     private boolean flagValue(int vf, FlagSrc flagSrc, Flag flag) {
         switch (flagSrc) {
@@ -1032,20 +1038,20 @@ public final class Cpu implements Component, Clocked {
     }
 
     /**
-     * Allows to set Cpu flags (so reg F) by combining old Cpu flags value (by
-     * using FlagSrc.CPU) , flags returned by Alu (by using FlagSrc.ALU) or
+     * Sets CPU's flags (reg F) from respectively chosen source amongst: old Cpu flags value (FlagSrc.CPU),
+     * flags returned by Alu (FlagSrc.ALU) or
      * arbitrary values (FlagSrc.V0 for 0, FlagSrc.V1 for 1)
      * 
      * @param vf
      *            packed value and flags form Alu
      * @param z
-     *            flag z source
+     *            flag Z source
      * @param n
-     *            flag n source
+     *            flag N source
      * @param h
-     *            flag h source
+     *            flag H source
      * @param c
-     *            flag c source
+     *            flag C source
      */
     private void combineAluFlags(int vf, FlagSrc z, FlagSrc n, FlagSrc h,
             FlagSrc c) {
@@ -1060,7 +1066,7 @@ public final class Cpu implements Component, Clocked {
     }
 
     /**
-     * Extracts 8-bit reg identity form opcode encoding, from given bit index
+     * Extracts 8-bit reg identity from opcode encoding, from given bit index
      * 
      * @param opcode
      *            opcode in which reg is encoded
@@ -1087,7 +1093,7 @@ public final class Cpu implements Component, Clocked {
             return Reg.A;
 
         default:
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("unused reg encoding");
         }
     }
 
@@ -1137,7 +1143,7 @@ public final class Cpu implements Component, Clocked {
     }
 
     /**
-     * Extracts from given opcode encoding index of bit to test/modify
+     * Extracts index of bit to test/modify from given opcode encoding
      * 
      * @param opcode
      *            opcode in which bit index is encoded
@@ -1148,7 +1154,7 @@ public final class Cpu implements Component, Clocked {
     }
 
     /**
-     * Extracts from given opcode encoding value of bit to set
+     * Extracts value of bit to set from given opcode encoding 
      * 
      * @param opcode
      *            opcode in which new bit value is encoded
@@ -1182,7 +1188,7 @@ public final class Cpu implements Component, Clocked {
     
     /**
      * Computes new C flag value from bit 3 of given opcode encoding and actual
-     * C flag value
+     * C flag value for SCCF operations
      * 
      * @param opcode
      *            opcode of SCF or CFF operation
@@ -1241,68 +1247,68 @@ public final class Cpu implements Component, Clocked {
         return array;
     }
 
-//    // :::::::::::::::::::::: TESTING UTILITARIES ::::::::::::::::
-//
-//    // TODO remove before commit
-//    protected void reset() {
-//        for (Reg reg : Reg.values()) {
-//            setReg(reg, 0);
-//        }
-//        SP = 0;
-//        PC = 0;
-//        IME = false;
-//        IE = 0;
-//        IF = 0;
-//        nextNonIdleCycle = 0;
-//    }
-//
-//    // TODO remove before commit
-//    protected void setAllRegs(int a, int f, int b, int c, int d, int e, int h,
-//            int l) {
-//        setReg(Reg.A, a);
-//        setReg(Reg.F, f);
-//        setReg(Reg.B, b);
-//        setReg(Reg.C, c);
-//        setReg(Reg.D, d);
-//        setReg(Reg.E, e);
-//        setReg(Reg.H, h);
-//        setReg(Reg.L, l);
-//    }
-//
-//    // TODO remove before commit
-//    protected void setAllRegs16(int af, int bc, int de, int hl) {
-//        setReg16(Reg16.AF, af);
-//        setReg16(Reg16.BC, bc);
-//        setReg16(Reg16.DE, de);
-//        setReg16(Reg16.HL, hl);
-//    }
-//
-//    // TODO remove before commit
-//    protected void setSP(int sp) {
-//        SP = sp;
-//    }
-//
-//    // TODO remove before commit
-//    protected void setInterruptRegs(boolean ime, int ie, int If) {
-//        IME = ime;
-//        IE = ie;
-//        IF = If;
-//    }
-//
-//    // TODO remove before commit
-//    protected void setPC(int pc) {
-//        Preconditions.checkBits16(pc);
-//        PC = pc;
-//    }
-//
-//    // TODO remove before commit
-//    protected int[] get_IME_IE_IF() {
-//        int ime_val = IME ? 1 : 0;
-//        return new int[] { ime_val, IE, IF };
-//    }
-//
-//    // TODO remove before commit
-//    public int readAtBus(int address) {
-//        return bus.read(address);
-//    }
+    // :::::::::::::::::::::: TESTING UTILITARIES ::::::::::::::::
+
+    // TODO remove before commit
+    protected void reset() {
+        for (Reg reg : Reg.values()) {
+            setReg(reg, 0);
+        }
+        SP = 0;
+        PC = 0;
+        IME = false;
+        IE = 0;
+        IF = 0;
+        nextNonIdleCycle = 0;
+    }
+
+    // TODO remove before commit
+    protected void setAllRegs(int a, int f, int b, int c, int d, int e, int h,
+            int l) {
+        setReg(Reg.A, a);
+        setReg(Reg.F, f);
+        setReg(Reg.B, b);
+        setReg(Reg.C, c);
+        setReg(Reg.D, d);
+        setReg(Reg.E, e);
+        setReg(Reg.H, h);
+        setReg(Reg.L, l);
+    }
+
+    // TODO remove before commit
+    protected void setAllRegs16(int af, int bc, int de, int hl) {
+        setReg16(Reg16.AF, af);
+        setReg16(Reg16.BC, bc);
+        setReg16(Reg16.DE, de);
+        setReg16(Reg16.HL, hl);
+    }
+
+    // TODO remove before commit
+    protected void setSP(int sp) {
+        SP = sp;
+    }
+
+    // TODO remove before commit
+    protected void setInterruptRegs(boolean ime, int ie, int If) {
+        IME = ime;
+        IE = ie;
+        IF = If;
+    }
+
+    // TODO remove before commit
+    protected void setPC(int pc) {
+        Preconditions.checkBits16(pc);
+        PC = pc;
+    }
+
+    // TODO remove before commit
+    protected int[] get_IME_IE_IF() {
+        int ime_val = IME ? 1 : 0;
+        return new int[] { ime_val, IE, IF };
+    }
+
+    // TODO remove before commit
+    public int readAtBus(int address) {
+        return bus.read(address);
+    }
 }
