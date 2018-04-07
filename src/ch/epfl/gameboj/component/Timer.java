@@ -33,9 +33,11 @@ public final class Timer implements Clocked, Component {
         this.cpu = Objects.requireNonNull(cpu);
     }
 
+    /* (non-Javadoc)
+     * @see ch.epfl.gameboj.component.Clocked#cycle(long)
+     */
     @Override
     public void cycle(long cycle) {
-        //TODO timer is on correct? doesnt change anything for running but...
         if (timerIsOn()) {
 
             boolean s0 = state();
@@ -47,6 +49,9 @@ public final class Timer implements Clocked, Component {
     }
 
     
+    /* (non-Javadoc)
+     * @see ch.epfl.gameboj.component.Component#read(int)
+     */
     @Override
     public int read(int address) {
         Preconditions.checkBits16(address);
@@ -65,6 +70,9 @@ public final class Timer implements Clocked, Component {
         }
     }
 
+    /* (non-Javadoc)
+     * @see ch.epfl.gameboj.component.Component#write(int, int)
+     */
     @Override
     public void write(int address, int data) {
         Preconditions.checkBits16(address);
@@ -99,7 +107,7 @@ public final class Timer implements Clocked, Component {
     }
 
     /**
-     * Verifies timer in turned on (2cd bit of TAC)
+     * Checks if timer in turned on (2nd bit of TAC)
      * 
      * @return true if ON
      */

@@ -46,19 +46,23 @@ public final class Cartridge implements Component {
         try (FileInputStream s = new FileInputStream(romFile)) {
             byte[] data = s.readAllBytes();
             Preconditions.checkArgument(data[0x146] == 0);
-            //TODO : 147th's bit is at index 146 in data array (?)
-            //seems reasonable
 
             return new Cartridge(new MBC0(new Rom(data)));
         }
     }
 
+    /* (non-Javadoc)
+     * @see ch.epfl.gameboj.component.Component#read(int)
+     */
     @Override
     public int read(int address) {
         Preconditions.checkBits16(address);
         return mbc.read(address);
     }
 
+    /* (non-Javadoc)
+     * @see ch.epfl.gameboj.component.Component#write(int, int)
+     */
     @Override
     public void write(int address, int data) {
         Preconditions.checkBits16(address);

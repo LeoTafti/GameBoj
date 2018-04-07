@@ -27,6 +27,6 @@ public interface Bit {
      *         defined in enumerated type
      */
     default int mask() {
-        return (int) Math.round(Math.pow(2, ordinal()));
+        return 1<<ordinal();
     }
 }

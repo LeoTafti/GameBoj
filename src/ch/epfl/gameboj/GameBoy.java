@@ -20,7 +20,7 @@ public class GameBoy {
     private final Cpu cpu;
     private final Timer timer;
 
-    private long cycleCount = 0;
+    private long cycleCount;
 
     /**
      * GameBoy constructor
@@ -30,8 +30,15 @@ public class GameBoy {
      *             if given cartridge is null
      */
     public GameBoy(Cartridge cartridge) {
-
         bus = new Bus();
+        
+        cpu = new Cpu();
+        cpu.attachTo(bus);
+        
+        timer = new Timer(cpu);
+        timer.attachTo(bus);
+        
+        cycleCount = 0;
 
         Ram ram = new Ram(AddressMap.WORK_RAM_SIZE);
         RamController workRamController = new RamController(ram,
@@ -46,11 +53,6 @@ public class GameBoy {
                 Objects.requireNonNull(cartridge));
         romController.attachTo(bus);
         
-        cpu = new Cpu();
-        cpu.attachTo(bus);
-        
-        timer = new Timer(cpu);
-        timer.attachTo(bus);
     }
 
 
@@ -98,7 +100,7 @@ public class GameBoy {
     }
 
     /**
-     * Getter for number of cycles the gameboy has already run
+     * Getter for number of cycles the gameboy has already run for
      */
     public long cycles() {
         return cycleCount;

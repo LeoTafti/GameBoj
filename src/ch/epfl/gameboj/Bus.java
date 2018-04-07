@@ -12,10 +12,11 @@ import java.util.Objects;
 import ch.epfl.gameboj.component.Component;
 
 public final class Bus {
+ 
+    private static final int DEFAULT_READ_VALUE = 0xFF;
+    
     private final List<Component> attachedComponents = new ArrayList<>();
     
-    private static final int DEFAULT_READ_VALUE = 0xFF;
-
     /**
      * Connects given component to list of components attached to bus
      * 

@@ -28,6 +28,9 @@ public final class BootRomController implements Component {
     }
 
     
+    /* (non-Javadoc)
+     * @see ch.epfl.gameboj.component.Component#read(int)
+     */
     @Override
     public int read(int address) {
         Preconditions.checkBits16(address);
@@ -39,6 +42,9 @@ public final class BootRomController implements Component {
         return cartridge.read(address);
     }
 
+    /* (non-Javadoc)
+     * @see ch.epfl.gameboj.component.Component#write(int, int)
+     */
     @Override
     public void write(int address, int data) {
         Preconditions.checkBits16(address);

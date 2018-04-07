@@ -38,7 +38,7 @@ public final class Bits {
      *            position of tested bit
      * @return True if given bit is 1, False if 0
      * @throws IndexOutOfBoundsException
-     *             if index is greater then 31
+     *             if index is greater than 31
      */
     public static boolean test(int bits, int index) {
         Objects.checkIndex(index, Integer.SIZE);
@@ -72,7 +72,7 @@ public final class Bits {
      *            true for 1, false for 0
      * @return modified bit-string
      * @throws IndexOutOfBoundsException
-     *             if index is greater then 31
+     *             if index is greater than 31
      */
     public static int set(int bits, int index, boolean newValue) {
         Objects.checkIndex(index, Integer.SIZE);
@@ -143,8 +143,7 @@ public final class Bits {
      */
     public static int rotate(int size, int bits, int distance) {
         Preconditions.checkArgument(size > 0 && size <= Integer.SIZE);
-        //TODO : is there a better way of checking if bits is a size-bit value ?
-        //TODO TODO: this doesnt pass tests
+        //TODO : fails a test in BitsTest...
         if(size < Integer.SIZE)
             Preconditions.checkArgument(bits < (1<<size)); 
         
@@ -248,10 +247,6 @@ public final class Bits {
         Preconditions.checkBits8(highB);
         Preconditions.checkBits8(lowB);
         return (highB << 8) + lowB;
-        
-        //TODO : bit-string must be considered either as binary vector 
-        //or as value but we are not supposed to mix
-        //return (int) Math.round(highB * Math.pow(2, 8)) + lowB;
     }
 
 }

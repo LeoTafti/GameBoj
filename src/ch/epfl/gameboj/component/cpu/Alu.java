@@ -1,5 +1,5 @@
 /*
-z *  @Author : Paul Juillard (288519)
+ *  @Author : Paul Juillard (288519)
  *  @Author : Leo Tafti (285418)
 */
 
@@ -58,7 +58,7 @@ public final class Alu {
      * Unpacks value form given int
      * 
      * @param valueFlags
-     *            int in which value is packed (= with flags)
+     *            int in which value is packed (ie. with flags)
      * @return unpacked value (without flags)
      * @throws IllegalArgumentException
      *             if given value has any active bits at indices [0, 3] or
@@ -73,7 +73,7 @@ public final class Alu {
      * Unpacks flags from given int
      * 
      * @param valueFlags
-     *            int in which flags are packed (=with value)
+     *            int in which flags are packed (ie. with value)
      * @return unpacked flags
      * @throws IllegalArgumentException
      *             if given value has any active bits at indices [0, 3] or
@@ -93,7 +93,7 @@ public final class Alu {
      *            the second 8-bit value
      * @param c0
      *            the carry
-     * @return packed int of sum and flags Z0HC (sum may have been cropped)
+     * @return packed int of sum and flags Z0HC (sum may have been truncated)
      * @throws IllegalArgumentException
      *             if l or r isn't an 8-bit value
      */
@@ -107,7 +107,7 @@ public final class Alu {
         boolean h = getHFlag(l, r, c0);
         boolean c = getCFlag(l, r, c0);
         // TODO : not optimal, getCFlag() calculates sum again...
-        // choose between optimisation and clean, using the designated method is clean
+        // choose between optimization and clean, using the designated method is clean
 
         boolean z = getZFlag(sum);
 
@@ -121,7 +121,7 @@ public final class Alu {
      *            the first 8-bit value
      * @param r
      *            the second 8-bit value
-     * @return packed int of sum and flags Z0HC (sum may have been cropped)
+     * @return packed int of sum and flags Z0HC (sum may have been truncated)
      * @throws IllegalArgumentException
      *             if l or r isn't an 8-bit value
      * @see Alu#add(int l, int r, boolean c0)
@@ -129,9 +129,7 @@ public final class Alu {
     public static int add(int l, int r) {
         return add(l, r, false);
     }
-    
-    
-    //TODO what does 'cropped' mean
+
 
     /**
      * Adds two 16-bit values
@@ -141,7 +139,7 @@ public final class Alu {
      * @param r
      *            the second 16-bit value
      * @return packed int of sum and flags 00HC – H, C determined by the
-     *         addition of the 8 LSB of l and r (sum may have been cropped)
+     *         addition of the 8 LSB of l and r (sum may have been truncated)
      * @throws IllegalArgumentException
      *             if l or r aren't 16-bit values
      */
@@ -168,32 +166,21 @@ public final class Alu {
      * @param r
      *            the second 16-bit value
      * @return packed int of sum and flags 00HC – H, C determined by the
-     *         addition of the 8 MSB of l and r (sum may have been cropped)
+     *         addition of the 8 MSB of l and r (sum may have been truncated)
      * @throws IllegalArgumentException
      *             if l or r aren't 16-bit values
      * @see Alu#add16L(int l, int r)
      */
     public static int add16H(int l, int r) {
-        // TODO clean vs optim again: not optimized at all here, better ducplicate code
-        // Reuses add16L, changes flag-related portion
-        //in my opinion not worth for a single line of code
-        //TODO choose, not that much of a difference
-        
-        //int valueFlags = add16L(l, r);
         int sum = Bits.clip(16, l + r);
         
         int l8H = Bits.extract(l, 8, 8);
         int r8H = Bits.extract(r, 8, 8);
 
-//        boolean lsbCFlag = Bits.test(valueFlags, 4);
-        boolean lsbCFlag = getCFlag(Bits.clip(8, l) , Bits.clip(8, r), false);
+        boolean lsbCFlag = getCFlag(Bits.clip(8, l), Bits.clip(8, r), false);
         boolean h = getHFlag(l8H, r8H, lsbCFlag);
         boolean c = getCFlag(l8H, r8H, lsbCFlag);
 
-//        valueFlags = Bits.set(valueFlags, Flag.H.index(), h);
-//        valueFlags = Bits.set(valueFlags, Flag.C.index(), c);
-
-//        return valueFlags;
         return packValueZNHC(sum, false, false, h, c);
     }
 
@@ -545,9 +532,6 @@ public final class Alu {
      * @return H-flag value (true if addition produced a half-carry, false otherwise)
      */
     private static boolean getHFlag(int l, int r, boolean c0) {
-        // TODO : ask TA's if better/more efficient method than clipping and
-        // adding "again"
-        // to get H-Flag
         int carry = c0 ? 1 : 0;
         int l4 = Bits.clip(4, l);
         int r4 = Bits.clip(4, r);

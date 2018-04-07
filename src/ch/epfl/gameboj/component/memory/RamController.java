@@ -25,7 +25,7 @@ public final class RamController implements Component {
      *            (inclusive)
      * @param endAddress
      *            (exclusive)
-     * @throws IllegalArgumentExcepetion
+     * @throws IllegalArgumentException
      *             if both addresses aren't 16 bits or if address interval is
      *             negative, or if address interval is bigger than ram's size
      */
@@ -33,7 +33,7 @@ public final class RamController implements Component {
         Preconditions.checkBits16(startAddress);
         Preconditions.checkBits16(endAddress);
         Preconditions.checkArgument(endAddress - startAddress >= 0
-                || endAddress - startAddress <= ram.size());
+                && endAddress - startAddress <= ram.size());
 
         this.startAddress = startAddress;
         this.endAddress = endAddress;
@@ -53,6 +53,9 @@ public final class RamController implements Component {
         this(ram, startAddress, startAddress + ram.size());
     }
 
+    /* (non-Javadoc)
+     * @see ch.epfl.gameboj.component.Component#read(int)
+     */
     @Override
     public int read(int address) {
         Preconditions.checkBits16(address);
@@ -64,6 +67,9 @@ public final class RamController implements Component {
         }
     }
 
+    /* (non-Javadoc)
+     * @see ch.epfl.gameboj.component.Component#write(int, int)
+     */
     @Override
     public void write(int address, int data) {
         Preconditions.checkBits16(address);
