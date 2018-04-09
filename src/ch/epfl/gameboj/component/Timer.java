@@ -38,7 +38,7 @@ public final class Timer implements Clocked, Component {
      */
     @Override
     public void cycle(long cycle) {
-        if (timerIsOn()) {
+        if (timerIsOn()) { //TODO : fuuuuuuucccccccckkkkkkkkk
 
             boolean s0 = state();
 
