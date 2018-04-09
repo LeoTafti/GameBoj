@@ -38,14 +38,14 @@ public final class Timer implements Clocked, Component {
      */
     @Override
     public void cycle(long cycle) {
-        if (timerIsOn()) { //TODO : fuuuuuuucccccccckkkkkkkkk
+//        if (timerIsOn()) { 
 
             boolean s0 = state();
 
             DIV = Bits.clip(16, DIV + MAIN_TIMER_INCREMENT);
 
             incIfChange(s0);
-        }
+//        }
     }
 
     

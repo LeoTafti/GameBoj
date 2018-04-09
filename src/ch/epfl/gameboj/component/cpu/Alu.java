@@ -104,10 +104,8 @@ public final class Alu {
         int carry = c0 ? 1 : 0;
         int sum = Bits.clip(8, l + r + carry);
 
-        boolean h = getHFlag(l, r, c0);
-        boolean c = getCFlag(l, r, c0);
-        // TODO : not optimal, getCFlag() calculates sum again...
-        // choose between optimization and clean, using the designated method is clean
+        boolean h = Bits.clip(4, l) + Bits.clip(4, r) + carry > 0xF;
+        boolean c = l + r + carry > 0xFF;
 
         boolean z = getZFlag(sum);
 
@@ -152,8 +150,8 @@ public final class Alu {
         int l8L = Bits.clip(8, l);
         int r8L = Bits.clip(8, r);
 
-        boolean h = getHFlag(l8L, r8L, false);
-        boolean c = getCFlag(l8L, r8L, false);
+        boolean h = Bits.clip(4, l8L) + Bits.clip(4, r8L) > 0xF;
+        boolean c = l8L + r8L > 0xFF;
 
         return packValueZNHC(sum, false, false, h, c);
     }
@@ -172,14 +170,17 @@ public final class Alu {
      * @see Alu#add16L(int l, int r)
      */
     public static int add16H(int l, int r) {
+        Preconditions.checkBits16(l);
+        Preconditions.checkBits16(r);
+        
         int sum = Bits.clip(16, l + r);
         
         int l8H = Bits.extract(l, 8, 8);
         int r8H = Bits.extract(r, 8, 8);
 
-        boolean lsbCFlag = getCFlag(Bits.clip(8, l), Bits.clip(8, r), false);
-        boolean h = getHFlag(l8H, r8H, lsbCFlag);
-        boolean c = getCFlag(l8H, r8H, lsbCFlag);
+        int lsbCout = Bits.clip(8, l) + Bits.clip(8, r) > 0xFF ? 1 : 0;
+        boolean h = Bits.clip(4, l8H) + Bits.clip(4, r8H) + lsbCout > 0xF;
+        boolean c = l8H + r8H + lsbCout > 0xFF;
 
         return packValueZNHC(sum, false, false, h, c);
     }
@@ -500,8 +501,7 @@ public final class Alu {
      * @throws IllegalArgumentException
      *             if v isn't a 16 bit value
      */
-    private static int packValueZNHC(int v, boolean z, boolean n, boolean h,
-            boolean c) {
+    private static int packValueZNHC(int v, boolean z, boolean n, boolean h, boolean c) {
         Preconditions.checkBits16(v);
         int packed = v << 8;
         packed = Bits.set(packed, Flag.Z.index(), z);
@@ -521,35 +521,6 @@ public final class Alu {
      */
     private static boolean getZFlag(int v) {
         return (v == 0);
-    }
-
-    /**
-     * Computes H-flag value for addition
-     * 
-     * @param l first value
-     * @param r second value
-     * @param c0 eventual carry
-     * @return H-flag value (true if addition produced a half-carry, false otherwise)
-     */
-    private static boolean getHFlag(int l, int r, boolean c0) {
-        int carry = c0 ? 1 : 0;
-        int l4 = Bits.clip(4, l);
-        int r4 = Bits.clip(4, r);
-
-        return (l4 + r4 + carry > 0xF);
-    }
-
-    /**
-     * Computes C-flag value for addition
-     * 
-     * @param l first value
-     * @param r second value
-     * @param c0 eventual carry
-     * @return C-flag value (true if addition produced a carry, false otherwise)
-     */
-    private static boolean getCFlag(int l, int r, boolean c0) {
-        int carry = c0 ? 1 : 0;
-        return (l + r + carry > 0xFF);
     }
 
     /**

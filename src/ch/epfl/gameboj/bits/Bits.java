@@ -143,11 +143,10 @@ public final class Bits {
      */
     public static int rotate(int size, int bits, int distance) {
         Preconditions.checkArgument(size > 0 && size <= Integer.SIZE);
-        //TODO : fails a test in BitsTest...
-        if(size < Integer.SIZE)
-            Preconditions.checkArgument(bits < (1<<size)); 
         
         int clipped = clip(size, bits);
+        
+        Preconditions.checkArgument(clipped == bits); //size-bit value
 
         int originalClipped = bits - clipped;
         // 0 in size least-significant bits

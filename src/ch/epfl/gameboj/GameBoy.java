@@ -62,10 +62,10 @@ public class GameBoy {
      * @param cycle
      *            number of cycles to run
      * @throws IllegalArgumentException
-     *             if current gameboy cycle is greater or equal given cycle value
+     *             if current gameboy cycle is greater than given cycle value
      */
     public void runUntil(long cycle) {
-        Preconditions.checkArgument(cycleCount < cycle);
+        Preconditions.checkArgument(cycleCount <= cycle);
 
         while (cycleCount < cycle) {
             timer.cycle(cycleCount);
