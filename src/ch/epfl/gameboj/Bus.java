@@ -40,10 +40,8 @@ public final class Bus {
     public int read(int address) {
         Preconditions.checkBits16(address);
 
-        int value = Component.NO_DATA;
-
         for (Component c : attachedComponents) {
-            value = c.read(address);
+            int value = c.read(address);
             if (value != Component.NO_DATA)
                 return value;
         }
