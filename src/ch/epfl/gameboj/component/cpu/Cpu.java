@@ -25,6 +25,7 @@ public final class Cpu implements Component, Clocked {
     private static final Opcode[] PREFIXED_OPCODE_TABLE = buildOpcodeTable(
             Opcode.Kind.PREFIXED);
     private static final int INTERRUPT_HANDLING_CYCLES = 5;
+    private static final int OPCODE_PREFIX = 0xCB;
 
     
     public enum Interrupt implements Bit {
@@ -651,7 +652,7 @@ public final class Cpu implements Component, Clocked {
      */
     private Opcode getOpcode() {
         int op = read8(PC);
-        if (op == 0xCB) {
+        if (op == OPCODE_PREFIX) {
             op = read8(PC + 1);
             return PREFIXED_OPCODE_TABLE[op];
         }
