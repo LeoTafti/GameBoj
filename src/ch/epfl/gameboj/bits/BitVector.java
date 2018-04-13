@@ -236,7 +236,53 @@ public final class BitVector {
     }
 
     private BitVector extract(int fromIndex, int size, ExtractType type) {
+        Preconditions.checkArgument((size%Integer.SIZE) == 0);
+        int[] ex = new int[size];
+        
+        for(int i = 0; i < size/Integer.SIZE; i++) { //iterates on each 32-bit chunk
+            ex[i] = combinedExtended32bits(fromIndex+Integer.SIZE*i, 
+                        type);
+        }
+        
+        return new BitVector(ex);
+    }
+    
+    private int combinedExtended32bits(int i, ExtractType type) {
 
+        int chunk = Math.floorMod(Math.floorDiv(i,Integer.SIZE),size()); //chunk of 'elements' designated by index
+        int part = Math.floorMod(i,Integer.SIZE); //size of chunk designated by index
+
+        if(type == ExtractType.WRAPPED) {
+        return  Bits.extract(elements[chunk], part, 32-part) + //msb of chunk starting from 'part' as new32 lsb
+            (Bits.clip(elements[Math.floorMod((chunk + 1), size())], part) << 32-part); //lsb of next chunk as new32 msb
+        }
+        
+        else { //ExtractType == ZERO_EXT
+// chunk not defined
+            if( chunk < 0 || chunk > elements.length) { 
+   // and chunk+1 not defined 
+      //returns 32 0s, default case
+                if(chunk+1 >= 0 && chunk+1 < elements.length) 
+   // and chunk+1 defined
+                return (Bits.clip(elements[chunk + 1], part) << 32-part); 
+      //lsb of chunk+1 as new32 msb
+            }
+//chunk defined
+            else {
+   //chunk+1 not defined
+                if( chunk+1 < 0 || chunk+1 >= elements.length)
+      //msd of chunk starting from part as new32 lsb
+                    return  Bits.extract(elements[chunk], part, 32-part);
+   //chunk+1 defined
+            else {
+     //msb of chunk starting from part as new32 lsb
+                return  Bits.extract(elements[chunk], part, 32-part) +
+     //lsb of chunk+1 up to 32-part as new32 msb
+                (Bits.clip(elements[chunk + 1], part) << 32-part);
+                }
+            }
+        }
+        return 0; //default case
     }
 
     /**
