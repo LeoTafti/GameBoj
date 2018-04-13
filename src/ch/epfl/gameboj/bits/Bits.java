@@ -76,11 +76,7 @@ public final class Bits {
      */
     public static int set(int bits, int index, boolean newValue) {
         Objects.checkIndex(index, Integer.SIZE);
-        if (newValue) {
-            return (bits | mask(index));
-        } else {
-            return (bits & ~mask(index));
-        }
+        return newValue ? bits | mask(index) : bits & ~mask(index);
     }
 
     /**
@@ -245,7 +241,7 @@ public final class Bits {
     public static int make16(int highB, int lowB) {
         Preconditions.checkBits8(highB);
         Preconditions.checkBits8(lowB);
-        return (highB << 8) + lowB;
+        return (highB << 8) | lowB;
     }
 
 }
