@@ -26,7 +26,7 @@ public final class Bits {
      */
     public static int mask(int index) {
         Objects.checkIndex(index, Integer.SIZE);
-        return (int) Math.round(Math.pow(2, index));
+        return 1<<index;
     }
 
     /**
