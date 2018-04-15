@@ -52,33 +52,59 @@ public class BitVectorTest {
             0b10000000000000000000000000000000,
     };
     
-    private static BitVector[] REF_VECTORS = {
-        new BitVector(32, false),  new BitVector(32, true),
+    @Test
+    public void ExtractTest0() {
+        int[] chunks = { 0b1010_1010, 0b0000_0000,  0b1111_1111, 0b00000000};
         
-    };
-    
-    private static enum REF_VECTOR { empty32, full32, msb32, lsb32 };
+        BitVector.Builder b = new Builder(Integer.SIZE);
+        for(int i = 0; i < Integer.BYTES; i++) {
+            b.setByte(i, chunks[i]);
+        }
+        
+        BitVector v = b.build();        
+        assertEquals("00000000111111110000000010101010", v.extractWrapped(0, 32).toString());
+    }
     
     @Test
-    public void ExtractTest() {
-        byte[] chunks = {(byte) 0b1111_1111,(byte) 0b1111_1111, (byte) 0b1111_1111, (byte) 0b1111_1111,
-                            (byte) 0x01, 0, 0 , 0,
-                            0, 0, 0, (byte)0x80 };
+    public void ExtractWrappedTest() {
+        int[] chunks = {0b1111_1111, 0b1111_1111, 0b1111_1111, 0b1111_1111,
+                            0x01, 0, 0 , 0,
+                            0, 0, 0, 0x80 };
         
         BitVector.Builder b = new Builder(Integer.SIZE*3);
         for(int i = 0; i < Integer.BYTES*3; i++) {
-            b.setByte(Byte.SIZE*i, chunks[i]);
+            b.setByte(i, chunks[i]);
+        }
+        BitVector v = b.build();        
+        
+        assertEquals(ONE_32, v.extractWrapped(0, 32).toString());
+        assertEquals("00000000000000000000000000000001", v.extractWrapped(32, 32).toString());
+        assertEquals(ONE_32, v.extractWrapped(-1, 32).toString());
+        assertEquals(ONE_32, v.extractWrapped(95, 32).toString());
+        assertEquals("00000000000000000000000000000011", v.extractWrapped(31, 32).toString());
+    }
+    
+    @Test
+    public void ExtractZEROTest() {
+        int[] chunks = {0b1111_1111, 0b1111_1111, 0b1111_1111, 0b1111_1111,
+                            0x01, 0, 0 , 0,
+                            0, 0, 0, 0x80 };
+        
+        BitVector.Builder b = new Builder(Integer.SIZE*3);
+        for(int i = 0; i < Integer.BYTES*3; i++) {
+            b.setByte(i, chunks[i]);
         }
         BitVector v = b.build();
         System.out.println(v.toString());
-        System.out.println(v.extractWrapped(0, 32));
         
-        assertEquals(REF_VECTORS[REF_VECTOR.full32.ordinal()], v.extractWrapped(0, 32));
-        assertEquals(0x1, v.extractWrapped(32, 32));
-        assertEquals(0xffffffff, v.extractWrapped(-1, 32));
-        assertEquals(0xffffffff, v.extractWrapped(95, 32));
-        assertEquals(0x3, v.extractWrapped(31, 32));
+        assertEquals(ONE_32, v.extractZeroExtended(0, 32).toString());
+        assertEquals("00000000000000000000000000000001", v.extractZeroExtended(32, 32).toString());
+        assertEquals("11111111111111111111111111111110", v.extractZeroExtended(-1, 32).toString());
+        assertEquals("00000000000000000000000000000001", v.extractZeroExtended(95, 32).toString());
+        assertEquals(ZERO_32, v.extractZeroExtended(97, 32).toString());
     }
+    
+    
     
     /*------------Constructor Tests------------*/
     @Test
@@ -210,15 +236,38 @@ public class BitVectorTest {
     }
     
     /*------------Builder Tests--------------*/
-//    @Test
-//    public void builderWorksCorrectly() {
-//        BitVector v = new BitVector.Builder(32)
-//                .setByte(0, 0b1111_0000)
-//                .setByte(1, 0b1010_1010)
-//                .setByte(3, 0b1100_1100)
-//                .build();
-//        assertEquals("11001100000000001010101011110000", v.toString());
-//    }
+    @Test
+    public void builderWorksCorrectly() {
+        BitVector v = new BitVector.Builder(32)
+                .setByte(0, 0b1111_0000)
+                .setByte(1, 0b1010_1010)
+                .setByte(3, 0b1100_1100)
+                .build();
+        assertEquals("11001100000000001010101011110000", v.toString());
+    }
+    
+    @Test
+    public void builderWorksCorrectly2() {
+        BitVector v = new BitVector.Builder(32)
+                .setByte(0, 0b0000_0000)
+                .setByte(1, 0b0000_1010)
+                .setByte(3, 0b0000_0000)
+                .build();
+        assertEquals("00000000000000000000101000000000", v.toString());
+    }
+    
+    @Test
+    public void builderWorksCorrectlyForMultipleIntSize() {
+        BitVector v = new BitVector.Builder(Integer.SIZE*3)
+                .setByte(0, 0)
+                .setByte(4, 0b1010_1010)
+                .setByte(8, 0b1100_1100)
+                .build();
+        
+        assertEquals("00000000000000000000000011001100"
+                +"00000000000000000000000010101010"
+                +"00000000000000000000000000000000", v.toString());
+    }
     
 //    @Test
 //    public void builderThrowsExceptionOnceBuilt() {
@@ -230,15 +279,15 @@ public class BitVectorTest {
 //                () -> bvb.setByte(0, 0));
 //    }
     
-    @Test
-    public void builderFailsOnInvalidSize() {
-        assertThrows(IllegalArgumentException.class,
-                () -> new BitVector.Builder(16));
-        assertThrows(IllegalArgumentException.class,
-                () -> new BitVector.Builder(0));
-        assertThrows(IllegalArgumentException.class,
-                () -> new BitVector.Builder(65));
-    }
+//    @Test
+//    public void builderFailsOnInvalidSize() {
+//        assertThrows(IllegalArgumentException.class,
+//                () -> new BitVector.Builder(16));
+//        assertThrows(IllegalArgumentException.class,
+//                () -> new BitVector.Builder(0));
+//        assertThrows(IllegalArgumentException.class,
+//                () -> new BitVector.Builder(65));
+//    }
     
 //    @Test
 //    public void builderSetByteFailsOnInvalidIndex() {

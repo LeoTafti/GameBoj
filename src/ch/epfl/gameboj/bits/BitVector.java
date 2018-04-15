@@ -99,18 +99,18 @@ public final class BitVector {
          * Sets byte at given index of pending BitVector
          * 
          * @param index
-         *            byte's LSB will be written at BitVetor's index
+         *            bitVector's Index in BYTES (i.e 8-th bit is index 1)
          * @param b
          *            byte value
          * @return
          */
-        public Builder setByte(int index, byte b) {
-            //TODO : from example code snippet °2.2.1 it looks like b type should be int, not byte (TODO : modifiy)
-            Objects.checkIndex(0, elements.length);
+        public Builder setByte(int index, int b) {
+            Objects.checkIndex(index, elements.length*Integer.BYTES);
+            Preconditions.checkBits8(b);
             if (elements == null)
                 throw new IllegalStateException("already built");
             else 
-                elements[index / Integer.SIZE] += Byte.toUnsignedInt(b) << index;
+                elements[index / Integer.BYTES] += b << index*Byte.SIZE;
             return this;
         }
     }
@@ -143,6 +143,9 @@ public final class BitVector {
      */
     @Override
     public String toString() {
+        //TODO doesnt print correctly for bitvectors bigger then Integer.SIZE
+        // cf builderWorksCorrectlyForMultipleIntSize test
+        //need to append from MSB to LSB
         final String ZERO_32 = "00000000000000000000000000000000";
         
         StringBuilder sb = new StringBuilder();
@@ -207,7 +210,7 @@ public final class BitVector {
 
         int[] res = new int[length];
         for (int i = 0; i < length; i++) {
-            System.out.println(Integer.toBinaryString(elements[i]) + " , " + Integer.toBinaryString(that.elements[i]));
+//            System.out.println(Integer.toBinaryString(elements[i]) + " , " + Integer.toBinaryString(that.elements[i]));
             res[i] = elements[i] | that.elements[i];
         }
         return new BitVector(res);
@@ -242,9 +245,8 @@ public final class BitVector {
     }
 
     private BitVector extract(int fromIndex, int size, ExtractType type) {
-        //TODO : fails completly (throws exception) on negative fromIndex (but should be ok...)
-        //      + returns a different size vector ?? (see test easyShiftWorksProperly...)
-        Preconditions.checkArgument((size%Integer.SIZE) == 0);
+        //TODO : returns a different size vector ?? (see test easyShiftWorksProperly...)
+        Preconditions.checkArgument(Math.floorMod(size,Integer.SIZE) == 0);
         int[] ex = new int[size/Integer.SIZE];
         
         for(int i = 0; i < size/Integer.SIZE; i++) { //iterates on each 32-bit chunk
@@ -256,41 +258,23 @@ public final class BitVector {
     }
     
     private int combinedExtended32bits(int i, ExtractType type) {
-
-        int chunk = Math.floorMod(Math.floorDiv(i,Integer.SIZE),size()); //chunk of 'elements' designated by index
+        //TODO implement optimal case!
+        int chunk = Math.floorDiv(i,Integer.SIZE); //chunk (32bits) of 'elements' designated by index
         int part = Math.floorMod(i,Integer.SIZE); //size of chunk designated by index
-
+        int bits = 0;
+        
         if(type == ExtractType.WRAPPED) {
-        return  Bits.extract(elements[chunk], part, 32-part) + //msb of chunk starting from 'part' as new32 lsb
-            (Bits.clip(part, elements[Math.floorMod((chunk + 1), size())]) << 32-part); //lsb of next chunk as new32 msb
+        bits += Bits.extract(elements[Math.floorMod(chunk,elements.length)], part, Integer.SIZE-part) + //msb of chunk starting from 'part' as new32 lsb
+            (Bits.clip(part, elements[Math.floorMod((chunk + 1), elements.length)]) << 32-part); //lsb of next chunk as new32 msb
         }
         
-        else { //ExtractType == ZERO_EXT
-// chunk not defined
-            if( chunk < 0 || chunk > elements.length) { 
-   // and chunk+1 not defined 
-      //returns 32 0s, default case
-                if(chunk+1 >= 0 && chunk+1 < elements.length) 
-   // and chunk+1 defined
-                return (Bits.clip(elements[chunk + 1], part) << 32-part); 
-      //lsb of chunk+1 as new32 msb
-            }
-//chunk defined
-            else {
-   //chunk+1 not defined
-                if( chunk+1 < 0 || chunk+1 >= elements.length)
-      //msd of chunk starting from part as new32 lsb
-                    return  Bits.extract(elements[chunk], part, 32-part);
-   //chunk+1 defined
-            else {
-     //msb of chunk starting from part as new32 lsb
-                return  Bits.extract(elements[chunk], part, 32-part) +
-     //lsb of chunk+1 up to 32-part as new32 msb
-                (Bits.clip(elements[chunk + 1], part) << 32-part);
-                }
-            }
+        else { //ExtractType = ZERO_EXT
+            if(chunk >= 0 && chunk < elements.length)
+                bits += Bits.extract(elements[chunk], part, Integer.SIZE-part);
+            if(chunk+1 >= 0 && chunk+1 < elements.length)
+                bits += Bits.clip(part, elements[chunk+1]) << (Integer.SIZE-part);
         }
-        return 0; //default case
+        return bits;
     }
 
     /**
