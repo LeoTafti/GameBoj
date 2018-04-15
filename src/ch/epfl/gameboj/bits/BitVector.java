@@ -26,14 +26,14 @@ public final class BitVector {
      *             (32)
      */
     public BitVector(int size, boolean defaultValue) {
-        Preconditions.checkArgument(size >= 0 && size % Integer.SIZE == 0);
+        Preconditions.checkArgument(size > 0 && size % Integer.SIZE == 0);
 
         // TODO : should we absolutely call the private constructor ?
         // means we have define a method like "initializeArray" or something of
         // the sort
-        elements = new int[size];
+        elements = new int[size/Integer.SIZE];
 
-        Arrays.fill(elements, defaultValue ? 1 : 0);
+        Arrays.fill(elements, defaultValue ? -1 : 0); //since int -1 in two's complement representation is 32 bits to 1
     }
 
     /**
@@ -77,7 +77,7 @@ public final class BitVector {
          *            number of bits, must be 0mod32
          */
         public Builder(int size) {
-            Preconditions.checkArgument(size >= 0 && size % Integer.SIZE == 0);
+            Preconditions.checkArgument(size > 0 && size % Integer.SIZE == 0);
             elements = new int[size / Integer.SIZE];
         }
 
@@ -105,6 +105,7 @@ public final class BitVector {
          * @return
          */
         public Builder setByte(int index, byte b) {
+            //TODO : from example code snippet °2.2.1 it looks like b type should be int, not byte (TODO : modifiy)
             Objects.checkIndex(0, elements.length);
             if (elements == null)
                 throw new IllegalStateException("already built");
@@ -142,9 +143,12 @@ public final class BitVector {
      */
     @Override
     public String toString() {
+        final String ZERO_32 = "00000000000000000000000000000000";
+        
         StringBuilder sb = new StringBuilder();
         for (int i : elements) {
-            sb.append(Integer.toBinaryString(i));
+            String binaryRep = Integer.toBinaryString(i);
+            sb.append((ZERO_32 + binaryRep).substring(binaryRep.length()));
         }
         return sb.toString();
     }
@@ -202,8 +206,10 @@ public final class BitVector {
         Preconditions.checkArgument(length == that.elements.length);
 
         int[] res = new int[length];
-        for (int i = 0; i < length; i++)
+        for (int i = 0; i < length; i++) {
+            System.out.println(Integer.toBinaryString(elements[i]) + " , " + Integer.toBinaryString(that.elements[i]));
             res[i] = elements[i] | that.elements[i];
+        }
         return new BitVector(res);
     }
 
@@ -236,6 +242,8 @@ public final class BitVector {
     }
 
     private BitVector extract(int fromIndex, int size, ExtractType type) {
+        //TODO : fails completly (throws exception) on negative fromIndex (but should be ok...)
+        //      + returns a different size vector ?? (see test easyShiftWorksProperly...)
         Preconditions.checkArgument((size%Integer.SIZE) == 0);
         int[] ex = new int[size/Integer.SIZE];
         
