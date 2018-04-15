@@ -108,8 +108,8 @@ public final class BitVector {
             Objects.checkIndex(0, elements.length);
             if (elements == null)
                 throw new IllegalStateException("already built");
-            else
-                elements[index / Integer.BYTES] += b << index * Byte.SIZE;
+            else 
+                elements[index / Integer.SIZE] += Byte.toUnsignedInt(b) << index;
             return this;
         }
     }
@@ -237,7 +237,7 @@ public final class BitVector {
 
     private BitVector extract(int fromIndex, int size, ExtractType type) {
         Preconditions.checkArgument((size%Integer.SIZE) == 0);
-        int[] ex = new int[size];
+        int[] ex = new int[size/Integer.SIZE];
         
         for(int i = 0; i < size/Integer.SIZE; i++) { //iterates on each 32-bit chunk
             ex[i] = combinedExtended32bits(fromIndex+Integer.SIZE*i, 
@@ -254,7 +254,7 @@ public final class BitVector {
 
         if(type == ExtractType.WRAPPED) {
         return  Bits.extract(elements[chunk], part, 32-part) + //msb of chunk starting from 'part' as new32 lsb
-            (Bits.clip(elements[Math.floorMod((chunk + 1), size())], part) << 32-part); //lsb of next chunk as new32 msb
+            (Bits.clip(part, elements[Math.floorMod((chunk + 1), size())]) << 32-part); //lsb of next chunk as new32 msb
         }
         
         else { //ExtractType == ZERO_EXT
