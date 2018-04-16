@@ -22,8 +22,8 @@ public final class BitVector {
      * @param defaultValue
      *            initial value of all bits
      * @throws IllegalArgumentException
-     *             if size is negative or size isn't a multiple of Integer.SIZE
-     *             (32)
+     *             if size is smaller or equals zero or size isn't a multiple of
+     *             Integer.SIZE (32)
      */
     public BitVector(int size, boolean defaultValue) {
         Preconditions.checkArgument(size > 0 && size % Integer.SIZE == 0);
@@ -45,16 +45,16 @@ public final class BitVector {
      * @param defaultValue
      *            initial value of all bits
      * @throws IllegalArgumentException
-     *             if size is negative or size isn't a multiple of Integer.SIZE
-     *             (32)
+     *             if size is smaller or equals zero or size isn't a multiple of
+     *             Integer.SIZE (32)
      */
     public BitVector(int size) {
         this(size, false);
     }
 
     /**
-     * Private constructor Constructs a BitVector from given bits array (no
-     * copy)
+     * Private constructor
+     * Constructs a BitVector from given bits array (no copy)
      * 
      * @param elements
      *            bits of BitVector
@@ -88,7 +88,7 @@ public final class BitVector {
          */
         public BitVector build() {
             if (elements == null)
-                throw new IllegalStateException("already built");
+                throw new IllegalStateException("Already built");
             BitVector r = new BitVector(elements);
             elements = null;
             return r;
@@ -105,12 +105,13 @@ public final class BitVector {
          * @return
          */
         public Builder setByte(int index, int b) {
+            if (elements == null)
+                throw new IllegalStateException("Already built");
+            
             Objects.checkIndex(index, elements.length*Integer.BYTES);
             Preconditions.checkBits8(b);
-            if (elements == null)
-                throw new IllegalStateException("already built");
-            else 
-                elements[index / Integer.BYTES] += b << index*Byte.SIZE;
+            
+            elements[index / Integer.BYTES] += b << index*Byte.SIZE;
             return this;
         }
     }
@@ -143,15 +144,14 @@ public final class BitVector {
      */
     @Override
     public String toString() {
-        //TODO doesnt print correctly for bitvectors bigger then Integer.SIZE
-        // cf builderWorksCorrectlyForMultipleIntSize test
-        //need to append from MSB to LSB
+        //TODO : move it somewhere else ?
         final String ZERO_32 = "00000000000000000000000000000000";
         
         StringBuilder sb = new StringBuilder();
-        for (int i : elements) {
-            String binaryRep = Integer.toBinaryString(i);
+        for (int i = elements.length-1 ; i >= 0 ; i--) {
+            String binaryRep = Integer.toBinaryString(elements[i]);
             sb.append((ZERO_32 + binaryRep).substring(binaryRep.length()));
+            //TODO : do it with numberOfLeadingZeros instead ?
         }
         return sb.toString();
     }
@@ -210,7 +210,6 @@ public final class BitVector {
 
         int[] res = new int[length];
         for (int i = 0; i < length; i++) {
-//            System.out.println(Integer.toBinaryString(elements[i]) + " , " + Integer.toBinaryString(that.elements[i]));
             res[i] = elements[i] | that.elements[i];
         }
         return new BitVector(res);
@@ -239,41 +238,56 @@ public final class BitVector {
      * @param size
      *            number of bits to extract
      * @return new BitVector of extracted bits
+     * 
+     * @throws IllegalArgumentException
+     *             if size is smaller or equals zero or size isn't a multiple of
+     *             Integer.SIZE (32)
      */
     public BitVector extractWrapped(int fromIndex, int size) {
         return extract(fromIndex, size, ExtractType.WRAPPED);
     }
 
     private BitVector extract(int fromIndex, int size, ExtractType type) {
-        //TODO : returns a different size vector ?? (see test easyShiftWorksProperly...)
-        Preconditions.checkArgument(Math.floorMod(size,Integer.SIZE) == 0);
-        int[] ex = new int[size/Integer.SIZE];
+        Preconditions.checkArgument(size > 0 && size % Integer.SIZE == 0);
+        int[] extracted = new int[size / Integer.SIZE];
         
-        for(int i = 0; i < size/Integer.SIZE; i++) { //iterates on each 32-bit chunk
-            ex[i] = combinedExtended32bits(fromIndex+Integer.SIZE*i, 
-                        type);
+        for(int i = 0; i < extracted.length; i++) { //iterates on each 32-bit chunk
+            extracted[i] = combinedExtended32bits(fromIndex + Integer.SIZE*i, type);
         }
         
-        return new BitVector(ex);
+        return new BitVector(extracted);
     }
     
     private int combinedExtended32bits(int i, ExtractType type) {
-        //TODO implement optimal case!
-        int chunk = Math.floorDiv(i,Integer.SIZE); //chunk (32bits) of 'elements' designated by index
-        int part = Math.floorMod(i,Integer.SIZE); //size of chunk designated by index
+        //TODO implement optimal case !
         int bits = 0;
+        int chunk = Math.floorDiv(i, Integer.SIZE); //chunk (32bits) of 'elements' designated by index
+        int index = Math.floorMod(i, Integer.SIZE); //relative index in chunk [0;31]
+        int complIndex = Integer.SIZE-index;
         
-        if(type == ExtractType.WRAPPED) {
-        bits += Bits.extract(elements[Math.floorMod(chunk,elements.length)], part, Integer.SIZE-part) + //msb of chunk starting from 'part' as new32 lsb
-            (Bits.clip(part, elements[Math.floorMod((chunk + 1), elements.length)]) << 32-part); //lsb of next chunk as new32 msb
-        }
-        
-        else { //ExtractType = ZERO_EXT
+        switch(type) {
+        case WRAPPED:
+            // MSBs of chunk starting from index as bits LSBs
+            bits = Bits.extract(
+                    elements[Math.floorMod(chunk, elements.length)],
+                    index,
+                    complIndex);
+         
+            // LSBs of next chunk as bits MSBs
+            bits |= Bits.clip(index, elements[Math.floorMod(chunk + 1, elements.length)]) << complIndex;
+            break;
+            
+        case ZERO_EXT:
+            // MSBs of chunk starting from index as bits LSBs
             if(chunk >= 0 && chunk < elements.length)
-                bits += Bits.extract(elements[chunk], part, Integer.SIZE-part);
+                bits |= Bits.extract(elements[chunk], index, complIndex);
+            
+            // LSBs of next chunk as bits MSBs
             if(chunk+1 >= 0 && chunk+1 < elements.length)
-                bits += Bits.clip(part, elements[chunk+1]) << (Integer.SIZE-part);
+                bits |= Bits.clip(index, elements[chunk+1]) << complIndex;
+            break;
         }
+        
         return bits;
     }
 
@@ -286,6 +300,6 @@ public final class BitVector {
      * @return new bitVector with shifted bits
      */
     public BitVector shift(int delta) {
-        return extract(-delta, Integer.SIZE, ExtractType.ZERO_EXT);
+        return extract(-delta, size(), ExtractType.ZERO_EXT);
     }
 }
