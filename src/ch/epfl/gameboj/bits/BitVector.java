@@ -259,35 +259,49 @@ public final class BitVector {
     }
     
     private int combinedExtended32bits(int i, ExtractType type) {
-        //TODO implement optimal case !
+        
         int bits = 0;
         int chunk = Math.floorDiv(i, Integer.SIZE); //chunk (32bits) of 'elements' designated by index
         int index = Math.floorMod(i, Integer.SIZE); //relative index in chunk [0;31]
         int complIndex = Integer.SIZE-index;
         
-        switch(type) {
-        case WRAPPED:
-            // MSBs of chunk starting from index as bits LSBs
-            bits = Bits.extract(
-                    elements[Math.floorMod(chunk, elements.length)],
-                    index,
-                    complIndex);
-         
-            // LSBs of next chunk as bits MSBs
-            bits |= Bits.clip(index, elements[Math.floorMod(chunk + 1, elements.length)]) << complIndex;
-            break;
-            
-        case ZERO_EXT:
-            // MSBs of chunk starting from index as bits LSBs
-            if(chunk >= 0 && chunk < elements.length)
-                bits |= Bits.extract(elements[chunk], index, complIndex);
-            
-            // LSBs of next chunk as bits MSBs
-            if(chunk+1 >= 0 && chunk+1 < elements.length)
-                bits |= Bits.clip(index, elements[chunk+1]) << complIndex;
-            break;
+        //Optimal case
+        if (index == 0) {
+            switch (type) {
+            case WRAPPED:
+                bits = elements[Math.floorMod(chunk, elements.length)];
+                break;
+                
+            case ZERO_EXT:
+                if (chunk >= 0 && chunk < elements.length)
+                    bits = elements[chunk];
+                break;
+            }
         }
-        
+        else {
+            switch (type) {
+            case WRAPPED:
+                // MSBs of chunk starting from index as bits LSBs
+                bits = Bits.extract(
+                        elements[Math.floorMod(chunk, elements.length)], index,
+                        complIndex);
+
+                // LSBs of next chunk as bits MSBs
+                bits |= Bits.clip(index, elements[Math.floorMod(chunk + 1,
+                        elements.length)]) << complIndex;
+                break;
+
+            case ZERO_EXT:
+                // MSBs of chunk starting from index as bits LSBs
+                if (chunk >= 0 && chunk < elements.length)
+                    bits |= Bits.extract(elements[chunk], index, complIndex);
+
+                // LSBs of next chunk as bits MSBs
+                if (chunk + 1 >= 0 && chunk + 1 < elements.length)
+                    bits |= Bits.clip(index, elements[chunk + 1]) << complIndex;
+                break;
+            }
+        }
         return bits;
     }
 
