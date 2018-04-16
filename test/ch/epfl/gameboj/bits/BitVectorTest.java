@@ -197,6 +197,40 @@ public class BitVectorTest {
         assertThrows(IllegalArgumentException.class,
                 () -> b.or(a));
     }
+    /*------------TestBit tests--------------*/
+    @Test
+    public void testBitFailsOnInvalidIndex() {
+        BitVector a = new BitVector(32);
+        BitVector b = new BitVector(64, true);
+        
+        assertThrows(IllegalArgumentException.class,
+                () -> a.testBit(32));
+        assertThrows(IllegalArgumentException.class,
+                () -> b.testBit(64));
+        assertThrows(IllegalArgumentException.class,
+                () -> a.testBit(-1));
+        assertThrows(IllegalArgumentException.class,
+                () -> b.testBit(-10));
+    }
+    
+    @Test
+    public void testBitWorksProperly() {
+        BitVector a = new BitVector.Builder(64)
+                .setByte(4, 0b0001_0000)
+                .build();
+        assertEquals(true, a.testBit(36));
+        assertEquals(false, a.testBit(35));
+        
+        BitVector b = new BitVector.Builder(64)
+                .setByte(0, 0b0000_00001)
+                .setByte(7, 0b1000_0000)
+                .build();
+        assertEquals(true, b.testBit(0));
+        assertEquals(true, b.testBit(63));
+        for(int i = 1; i<63; i++) {
+            assertEquals(false, b.testBit(i));
+        }
+    }
     
     /*------------Builder Tests--------------*/
     @Test
