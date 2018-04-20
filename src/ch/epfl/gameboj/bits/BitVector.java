@@ -180,6 +180,20 @@ public final class BitVector {
         return Bits.test(elements[index / Integer.SIZE], index % Integer.SIZE);
     }
 
+    
+    /**
+     * Computes bitwise "not" of this BitVector
+     * 
+     * @return bitwise "not", as a new BitVector
+     */
+    public BitVector not() {
+        int[] notElements = new int[elements.length];
+        for(int i = 0; i < notElements.length; i++) {
+            notElements[i] = ~ elements[i];
+        }
+        return new BitVector(notElements);
+    }
+    
     /**
      * Computes bitwise "and" of this BitVector and given BitVector
      * 

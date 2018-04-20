@@ -4,17 +4,16 @@ import java.util.Objects;
 
 import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.bits.BitVector;
+import ch.epfl.gameboj.bits.Bits;
 
 public final class LcdImageLine {
     private final BitVector msb, lsb, opacity;
-    private final int size; //optional, but handy
     // Should we define a size attribute instead of calling BitVector.size()
     // everywhere ?
 
     public LcdImageLine(BitVector msb, BitVector lsb, BitVector opacity) {
-        size = msb.size();
         Preconditions.checkArgument(
-                size == lsb.size() && size == opacity.size());
+                msb.size() == lsb.size() && msb.size() == opacity.size());
 
         // Since BitVector is immutable, no need to copy here
         this.msb = msb;
@@ -23,7 +22,7 @@ public final class LcdImageLine {
     }
 
     public int size() {
-        return size;
+        return msb.size(); //ok since msb, lsb, and opacity all have same size
     }
 
     public BitVector msb() {
@@ -55,21 +54,41 @@ public final class LcdImageLine {
     }
 
     public LcdImageLine below(LcdImageLine top) {
-        Preconditions.checkArgument(top.size == size);
-        //TODO implement
-        return null;
+        return below(top, top.opacity);
     }
 
     public LcdImageLine below(LcdImageLine top, BitVector opacity) {
-        Preconditions.checkArgument(top.size == size);
-        BitVector msb = opacity.and(top.msb).or
-        return null;
+        Preconditions.checkArgument(top.size() == size());
+        //(opacity AND top.msb) OR (NOT(opacity) AND this.msb)
+        BitVector msb = opacity.and(top.msb).or(opacity.not().and(this.msb)); 
+        BitVector lsb = opacity.and(top.lsb).or(opacity.not().and(this.lsb));
+        
+        BitVector op = opacity.and(this.opacity);
+        
+        return new LcdImageLine(msb, lsb, op);
     }
 
     public LcdImageLine join(LcdImageLine other, int fromIndex) {
-        Preconditions.checkArgument(other.size == size);
-        // TODO implement
+        Preconditions.checkArgument(other.size() == size());
+        BitVector mask = new BitVector(size(), true).shift(fromIndex);
+        
+        // (other.mbs AND mask) OR (this.msb AND (NOT mask))
+        // selects (fromIndex)-least significant bits of this.msb
+        // and concatenates (size-fromIndex)-most significant bits of other.msb
+        BitVector joinedMsb = other.msb.and(mask).or(this.msb.and(mask.not()));
+        BitVector joinedLsb = other.lsb.and(mask).or(this.lsb.and(mask.not()));
+        
+        
         return null;
+    }
+    
+    public int pixelColor(int index) {
+        if(opacity.testBit(index)) {
+            int msbI = msb.testBit(index) ? 1 : 0;
+            int lsbI = lsb.testBit(index) ? 1 : 0;
+            return msbI << 1 | lsbI;
+        }
+        return 0;
     }
 
     @Override
