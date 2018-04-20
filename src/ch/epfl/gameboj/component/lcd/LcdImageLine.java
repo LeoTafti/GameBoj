@@ -29,13 +29,13 @@ public final class LcdImageLine {
             this.lsb = lsb;
         }
         
-        public Builder setBytes(int index, int b) {
-            
-        }
-        
-        public LcdImageLine build() {
-            
-        }
+//        public Builder setBytes(int index, int b) {
+//            
+//        }
+//        
+//        public LcdImageLine build() {
+//            
+//        }
     }
 
     public int size() {
