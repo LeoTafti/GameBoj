@@ -49,8 +49,34 @@ public final class LcdImageLine {
     }
 
     public LcdImageLine mapColors(int palette) {
-        // TODO implement
-        return null;
+        Preconditions.checkBits8(palette);
+        
+        if(palette == 0b11_10_01_00)    //identity palette
+            return this;
+        
+        BitVector newMsb = msb;
+        BitVector newLsb = lsb;
+        
+        for(int color = 0; color < 4; color++) {
+            int newColor = palette & (0b11 << color);
+            
+            if (newColor == color)  //color doesn't change
+                continue;
+            
+            int colorMsb = color & 0b10;
+            int colorLsb = color & 0b01;
+            int newColorMsb = newColor & 0b10;
+            int newColorLsb = newColor & 0b01;
+            
+            BitVector maskMsb = colorMsb == 1 ? msb : msb.not();
+            BitVector maskLsb = colorLsb == 1 ? lsb : lsb.not();
+            BitVector changePos = maskMsb.and(maskLsb);
+            
+            newMsb = colorMsb == newColorMsb ? msb : msb.xor(changePos);
+            newLsb = colorLsb == newColorLsb ? lsb : lsb.xor(changePos);
+        }
+        
+        return new LcdImageLine(newMsb, newLsb, opacity);
     }
 
     public LcdImageLine below(LcdImageLine top) {
@@ -73,13 +99,14 @@ public final class LcdImageLine {
         BitVector mask = new BitVector(size(), true).shift(fromIndex);
         
         // (other.mbs AND mask) OR (this.msb AND (NOT mask))
+        //
         // selects (fromIndex)-least significant bits of this.msb
         // and concatenates (size-fromIndex)-most significant bits of other.msb
         BitVector joinedMsb = other.msb.and(mask).or(this.msb.and(mask.not()));
         BitVector joinedLsb = other.lsb.and(mask).or(this.lsb.and(mask.not()));
+        BitVector joinedOpacity = other.opacity.and(mask).or(this.opacity.and(mask.not()));
         
-        
-        return null;
+        return new LcdImageLine(joinedMsb, joinedLsb, joinedOpacity);
     }
     
     public int pixelColor(int index) {

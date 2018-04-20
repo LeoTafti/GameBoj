@@ -228,6 +228,24 @@ public final class BitVector {
         }
         return new BitVector(res);
     }
+    
+    /**
+     * Computes bitwise "xor" of this BitVector and given BitVector
+     * 
+     * @param that
+     *            other bitVector
+     * @return bitwise "xor", as a new BitVector
+     */
+    public BitVector xor(BitVector that) {
+        int length = elements.length;
+        Preconditions.checkArgument(length == that.elements.length);
+
+        int[] res = new int[length];
+        for (int i = 0; i < length; i++) {
+            res[i] = elements[i] ^ that.elements[i];
+        }
+        return new BitVector(res);
+    }
 
     /**
      * Computes the generalized extraction of size-bits, in the zero-extended
