@@ -75,6 +75,7 @@ public final class BitVector {
          * 
          * @param size
          *            number of bits, must be 0mod32
+         * @throws
          */
         public Builder(int size) {
             Preconditions.checkArgument(size > 0 && size % Integer.SIZE == 0);
@@ -103,6 +104,8 @@ public final class BitVector {
          * @param b
          *            byte value
          * @return
+         * 
+         * @throws
          */
         public Builder setByte(int index, int b) {
             if (elements == null)
@@ -113,6 +116,14 @@ public final class BitVector {
             
             elements[index / Integer.BYTES] += b << index*Byte.SIZE;
             return this;
+        }
+        
+        /**
+         * Getter for Builder's size
+         * @return Builder's size in bits
+         */
+        public int size() {
+            return elements.length * Integer.SIZE;
         }
     }
 
