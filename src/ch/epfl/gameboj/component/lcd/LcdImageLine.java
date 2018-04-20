@@ -20,6 +20,23 @@ public final class LcdImageLine {
         this.lsb = lsb;
         this.opacity = opacity;
     }
+    
+    public static final class Builder{
+        BitVector msb, lsb;
+        
+        public Builder(BitVector msb, BitVector lsb) {
+            this.msb = msb;
+            this.lsb = lsb;
+        }
+        
+        public Builder setBytes(int index, int b) {
+            
+        }
+        
+        public LcdImageLine build() {
+            
+        }
+    }
 
     public int size() {
         return msb.size(); //ok since msb, lsb, and opacity all have same size
@@ -58,7 +75,7 @@ public final class LcdImageLine {
         BitVector newLsb = lsb;
         
         for(int color = 0; color < 4; color++) {
-            int newColor = palette & (0b11 << color);
+            int newColor = palette & (0b11 << 2*color);
             
             if (newColor == color)  //color doesn't change
                 continue;

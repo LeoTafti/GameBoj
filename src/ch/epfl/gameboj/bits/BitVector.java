@@ -67,7 +67,7 @@ public final class BitVector {
      * Builder for BitVector Allows to create a BitVector incrementally, byte by
      * byte
      */
-    public final static class Builder {
+    public static final class Builder {
         private int[] elements;
 
         /**
