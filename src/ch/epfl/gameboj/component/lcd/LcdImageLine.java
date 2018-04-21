@@ -35,24 +35,22 @@ public final class LcdImageLine {
 
     public static final class Builder {
         BitVector.Builder msbB, lsbB;
-
+        
         /**
          * Constructor for Builder : allows to create a new LcdImage
          * incrementally
          * 
-         * @param msbB
-         *            BitVector.Builder for msb
-         * @param lsbB
-         *            BitVector.Builder for lsb
-         * @throws IllegalArgumentException
-         *             if msbB and lsbB aren't same-sized
+         * @param size size of line, in pixels
+         * 
+         * * @throws IllegalArgumentException
+         *             if size isn't a multiple of 32
          */
-        public Builder(BitVector.Builder msbB, BitVector.Builder lsbB) {
-            Preconditions.checkArgument(msbB.size() == lsbB.size());
+        public Builder(int size) {
+            Preconditions.checkArgument(size > 0 && size % Integer.SIZE == 0);
             // TODO : Since BitVector.Builder are NOT immutable, should we copy
             // them here ?
-            this.msbB = msbB;
-            this.lsbB = lsbB;
+            msbB = new BitVector.Builder(size);
+            lsbB = new BitVector.Builder(size);
         }
 
         /**

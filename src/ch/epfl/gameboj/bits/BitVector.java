@@ -85,6 +85,7 @@ public final class BitVector {
         /**
          * Builds BitVector of previously given elements (0 as default)
          * 
+         * TODO : complete javadoc
          * @return
          */
         public BitVector build() {
@@ -98,6 +99,8 @@ public final class BitVector {
 
         /**
          * Sets byte at given index of pending BitVector
+         * 
+         * TODO : complete javadoc
          * 
          * @param index
          *            bitVector's Index in BYTES (i.e 8-th bit is index 1)
