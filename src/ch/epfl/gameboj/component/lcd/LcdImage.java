@@ -66,7 +66,7 @@ public final class LcdImage {
          * @param width
          *            number of pixels in a line
          */
-        public Builder(int height, int width) {
+        public Builder(int width, int height) {
             //TODO : check width to be a multiple of 32 + add throws in javadoc
             this.height = height;
             this.width = width;
