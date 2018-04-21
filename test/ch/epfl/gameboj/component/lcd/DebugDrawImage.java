@@ -19,7 +19,8 @@ public final class DebugDrawImage {
             0xA9_A9_A9, 0x00_00_00 };
 
     public static void main(String[] args) throws IOException {
-        String f = "sml.bin.gz";
+//        String f = "sml.bin.gz";
+        String f = "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/lcd/sml.bin.gz";
         int w = 256, h = 256;
         LcdImage.Builder ib = new LcdImage.Builder(w, h);
 

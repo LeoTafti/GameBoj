@@ -29,10 +29,14 @@ public final class LcdImage {
      *            the image's lines
      * @throws IllegalArgumentException
      *             if dimensions are invalid (if either is negative or null)
-     * @throws IllegalArgumentException
-     *             if lines are not of width-length
+     *             or if lines are not of width-length
      */
     public LcdImage(int width, int height, List<LcdImageLine> lines) {
+        // TODO : if we decide to take width and height, then store them as
+        // attributes
+        // see piazza @239
+        // TODO : check height vs lines.size() too, not only width
+        // TODO : check width to be a multiple of 32
         Preconditions.checkArgument(width == lines.get(0).size());
         Preconditions.checkArgument(width > 0 && height > 0);
 
@@ -41,10 +45,17 @@ public final class LcdImage {
 
     public static final class Builder {
         private List<LcdImageLine> lines = new LinkedList<>();
+        // TODO : Change to ArrayList ?
+        // why a LinkedList here ? We'll principaly do
+        // get/set operations, for which an ArrayList is generally faster
+        // + add (as used in Builder Constructor) is efficient when at the end
+        // of the list on an ArraList, so no pb here
+
         private int height, width; // TODO : redundant since height is
                                    // lines.length() and width is
                                    // lines.get(0).size ? Maybe better define
-                                   // private methods ?
+                                   // private methods ? + see comment in
+                                   // LcdImageConstructor
 
         /**
          * Creates LcdImage builder for and image of given width and given
@@ -56,6 +67,7 @@ public final class LcdImage {
          *            number of pixels in a line
          */
         public Builder(int height, int width) {
+            //TODO : check width to be a multiple of 32 + add throws in javadoc
             this.height = height;
             this.width = width;
             for (int i = 0; i < height; ++i)
@@ -75,6 +87,7 @@ public final class LcdImage {
          *             if index is negative or bigger than height
          * @throws IllegalArgumentException
          *             if line does not have a correct size
+         *         IndexOutOfBoundException if given index is out-of-bounds, ie not in [0, height[
          */
         public void setLine(int index, LcdImageLine newLine) {
             Preconditions.checkArgument(newLine.size() <= width);
@@ -84,6 +97,7 @@ public final class LcdImage {
 
         /**
          * TODO : complete javadoc
+         * 
          * @return constructed LcdImage
          */
         public LcdImage build() {
@@ -92,16 +106,14 @@ public final class LcdImage {
     }
 
     /**
-     * TODO : complete javadoc
-     * Returns the height of the image in pixels
+     * TODO : complete javadoc Returns the height of the image in pixels
      */
     public int height() {
         return lines.size();
     }
 
     /**
-     * TODO : complete javadoc
-     * Returns the width of the image in pixels
+     * TODO : complete javadoc Returns the width of the image in pixels
      */
     public int width() {
         return lines.get(0).size();
@@ -127,10 +139,14 @@ public final class LcdImage {
      */
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof LcdImage))
-            return false;
-        LcdImage that = (LcdImage) o;
-        return this.lines == that.lines;
+        // if (!(o instanceof LcdImage))
+        // return false;
+        // LcdImage that = (LcdImage) o;
+        // return this.lines == that.lines;
+
+        // TODO : shorter, usually teacher does it this way
+        return (o instanceof LcdImage
+                && lines.equals(((LcdImage) o).lines));
     }
 
     /*
