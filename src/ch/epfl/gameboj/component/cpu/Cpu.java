@@ -120,7 +120,7 @@ public final class Cpu implements Component, Clocked {
             return;
         }
         reallyCycle();
-    };
+    }
     
     private void reallyCycle() {
         if (IME && pendingInterrupt()) {

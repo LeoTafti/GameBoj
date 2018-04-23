@@ -256,7 +256,7 @@ public final class LcdImageLine {
         BitVector msb = opacity.and(top.msb).or(opacity.not().and(this.msb));
         BitVector lsb = opacity.and(top.lsb).or(opacity.not().and(this.lsb));
 
-        BitVector op = opacity.and(this.opacity);
+        BitVector op = opacity.or(this.opacity);
 
         return new LcdImageLine(msb, lsb, op);
     }

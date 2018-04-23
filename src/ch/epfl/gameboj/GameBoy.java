@@ -10,6 +10,7 @@ import java.util.Objects;
 import ch.epfl.gameboj.component.Timer;
 import ch.epfl.gameboj.component.cartridge.Cartridge;
 import ch.epfl.gameboj.component.cpu.Cpu;
+import ch.epfl.gameboj.component.lcd.LcdController;
 import ch.epfl.gameboj.component.memory.BootRomController;
 import ch.epfl.gameboj.component.memory.Ram;
 import ch.epfl.gameboj.component.memory.RamController;
@@ -52,6 +53,9 @@ public final class GameBoy {
         BootRomController romController = new BootRomController(
                 Objects.requireNonNull(cartridge));
         romController.attachTo(bus);
+        
+//        LcdController lcdController = new LcdController(this);
+//        lcdController.attachTo(bus);
         
     }
 
