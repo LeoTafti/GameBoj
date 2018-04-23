@@ -20,10 +20,10 @@ import ch.epfl.gameboj.bits.BitVector;
 
 public class LcdImageTest {
     
-    private static LcdImage image32 = new LcdImage(32, 2, new ArrayList<>(List.of(
+    private static LcdImage image32 = new LcdImage(new ArrayList<>(List.of(
             new LcdImageLine(new BitVector(32), new BitVector(32), new BitVector(32)),
             new LcdImageLine(new BitVector(32), new BitVector(32), new BitVector(32)))));
-    private static LcdImage image64 = new LcdImage(64, 2, new ArrayList<>(List.of(
+    private static LcdImage image64 = new LcdImage(new ArrayList<>(List.of(
             new LcdImageLine(new BitVector(64), new BitVector(64), new BitVector(64)),
             new LcdImageLine(new BitVector(64), new BitVector(64), new BitVector(64)))));
     
@@ -33,32 +33,32 @@ public class LcdImageTest {
     @Test
     public void constructorFailsOnInvalidArgs() {
         assertThrows(NullPointerException.class,                //null lines
-                () -> new LcdImage(32, 1, null));
+                () -> new LcdImage(null));
         assertThrows(IllegalArgumentException.class,
-                () -> new LcdImage(0, 1, new ArrayList<>()));   // 0 height
+                () -> new LcdImage(new ArrayList<>()));   // 0 height
         assertThrows(IllegalArgumentException.class,
-                () -> new LcdImage(32, 0, new ArrayList<>()));  // 0 width
+                () -> new LcdImage(new ArrayList<>()));  // 0 width
         
         
         //invalid width
         assertThrows(IllegalArgumentException.class,
-                () -> new LcdImage(1, 10, new ArrayList<>()));
+                () -> new LcdImage(new ArrayList<>()));
         
         //not matching width and lines
         assertThrows(IllegalArgumentException.class,
-                () -> new LcdImage(32, 1, new ArrayList<>(List.of(
+                () -> new LcdImage(new ArrayList<>(List.of(
                         new LcdImageLine(new BitVector(64), new BitVector(64), new BitVector(64))))));
         assertThrows(IllegalArgumentException.class,
-                () -> new LcdImage(64, 1, new ArrayList<>(List.of(
+                () -> new LcdImage( new ArrayList<>(List.of(
                         new LcdImageLine(new BitVector(32), new BitVector(32), new BitVector(32))))));
         
         //not matching height and lines
         assertThrows(IllegalArgumentException.class,
-                () -> new LcdImage(32, 1, new ArrayList<>(List.of(
+                () -> new LcdImage(new ArrayList<>(List.of(
                                 new LcdImageLine(new BitVector(32), new BitVector(32), new BitVector(32)),
                                 new LcdImageLine(new BitVector(32), new BitVector(32), new BitVector(32))))));
         assertThrows(IllegalArgumentException.class,
-                () -> new LcdImage(32, 2, new ArrayList<>(List.of(
+                () -> new LcdImage(new ArrayList<>(List.of(
                         new LcdImageLine(new BitVector(32), new BitVector(32), new BitVector(32))))));
     }
 
@@ -109,20 +109,22 @@ public class LcdImageTest {
     
     @Test
     public void builderWorksProperly() {
-        LcdImage image = new LcdImage.Builder(32, 2)
-                .setLine(0, line32)
-                .setLine(1, line32)
-                .build();
-        
-        LcdImage control = new LcdImage(32, 2, new ArrayList<>(List.of(line32, line32)));
+        LcdImage.Builder b = new LcdImage.Builder(32, 2);
+        b.setLine(0, line32);
+        b.setLine(1, line32);
+        LcdImage image = b.build();
+
+        LcdImage control = new LcdImage(
+                new ArrayList<>(List.of(line32, line32)));
         assertEquals(control, image);
-        
-        LcdImage image2 = new LcdImage.Builder(64, 2)
-                .setLine(0, line64)
-                .setLine(1, line64)
-                .build();
-        
-        LcdImage control2 = new LcdImage(64, 2, new ArrayList<>(List.of(line64, line64)));
+
+        LcdImage.Builder d = new LcdImage.Builder(64, 2);
+        d.setLine(0, line64);
+        d.setLine(1, line64);
+        LcdImage image2 = d.build();
+
+        LcdImage control2 = new LcdImage(
+                new ArrayList<>(List.of(line64, line64)));
         assertEquals(control2, image2);
     }
     
@@ -169,7 +171,7 @@ public class LcdImageTest {
                 .setByte(4, 0b0000_0001)
                 .build();
         
-        LcdImage image = new LcdImage(32, 2, new ArrayList<>(List.of(
+        LcdImage image = new LcdImage( new ArrayList<>(List.of(
                 new LcdImageLine(new BitVector(32), new BitVector(32), new BitVector(32)),
                 new LcdImageLine(msb, new BitVector(32), new BitVector(32)))));
         
@@ -187,14 +189,14 @@ public class LcdImageTest {
     /* ------------ equals() and hashCode() tests ------------- */
     @Test
     public void equalsWorksProperly() {
-        LcdImage otherDifferentHeight = new LcdImage(64, 1, new ArrayList<>(List.of(
+        LcdImage otherDifferentHeight = new LcdImage(new ArrayList<>(List.of(
                 new LcdImageLine(new BitVector(64), new BitVector(64), new BitVector(64)))));
         
-        LcdImage otherDifferentWidth = new LcdImage(32, 2, new ArrayList<>(List.of(
+        LcdImage otherDifferentWidth = new LcdImage( new ArrayList<>(List.of(
                 new LcdImageLine(new BitVector(32), new BitVector(32), new BitVector(32)),
                 new LcdImageLine(new BitVector(32), new BitVector(32), new BitVector(32)))));
         
-        LcdImage otherButSame = new LcdImage(64, 2, new ArrayList<>(List.of(
+        LcdImage otherButSame = new LcdImage(new ArrayList<>(List.of(
                 new LcdImageLine(new BitVector(64), new BitVector(64), new BitVector(64)),
                 new LcdImageLine(new BitVector(64), new BitVector(64), new BitVector(64)))));
         
@@ -209,14 +211,14 @@ public class LcdImageTest {
     
     @Test
     public void hashCodeWorksProperly() {
-        LcdImage otherDifferentHeight = new LcdImage(64, 1, new ArrayList<>(List.of(
+        LcdImage otherDifferentHeight = new LcdImage(new ArrayList<>(List.of(
                 new LcdImageLine(new BitVector(64), new BitVector(64), new BitVector(64)))));
         
-        LcdImage otherDifferentWidth = new LcdImage(32, 2, new ArrayList<>(List.of(
+        LcdImage otherDifferentWidth = new LcdImage(new ArrayList<>(List.of(
                 new LcdImageLine(new BitVector(32), new BitVector(32), new BitVector(32)),
                 new LcdImageLine(new BitVector(32), new BitVector(32), new BitVector(32)))));
         
-        LcdImage otherButSame = new LcdImage(64, 2, new ArrayList<>(List.of(
+        LcdImage otherButSame = new LcdImage(new ArrayList<>(List.of(
                 new LcdImageLine(new BitVector(64), new BitVector(64), new BitVector(64)),
                 new LcdImageLine(new BitVector(64), new BitVector(64), new BitVector(64)))));
         

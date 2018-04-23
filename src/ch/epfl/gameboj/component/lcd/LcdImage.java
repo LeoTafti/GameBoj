@@ -31,27 +31,17 @@ public final class LcdImage {
      *             if dimensions are invalid (if either is negative or null)
      *             or if lines are not of width-length
      */
-    public LcdImage(int width, int height, List<LcdImageLine> lines) {
-        // TODO : if we decide to take width and height, then store them as
-        // attributes
-        // see piazza @239
-        // TODO : check height vs lines.size() too, not only width
-        // TODO : check width to be a multiple of 32
-        Preconditions.checkArgument(width == lines.get(0).size());
-        Preconditions.checkArgument(width > 0 && height > 0);
+    public LcdImage(List<LcdImageLine> lines) {
+        Preconditions.checkArgument(lines.get(0).size()% Integer.SIZE == 0);
+        Preconditions.checkArgument(lines.get(0).size() > 0 && lines.size() > 0);
 
         this.lines = Collections.unmodifiableList(new ArrayList<>(lines));
     }
 
     public static final class Builder {
-        private List<LcdImageLine> lines = new LinkedList<>();
-        // TODO : Change to ArrayList ?
-        // why a LinkedList here ? We'll principaly do
-        // get/set operations, for which an ArrayList is generally faster
-        // + add (as used in Builder Constructor) is efficient when at the end
-        // of the list on an ArraList, so no pb here
+        private List<LcdImageLine> lines = new ArrayList<>();
 
-        private int height, width; // TODO : redundant since height is
+        // TODO : redundant since height is
                                    // lines.length() and width is
                                    // lines.get(0).size ? Maybe better define
                                    // private methods ? + see comment in
@@ -65,16 +55,20 @@ public final class LcdImage {
          *            number of lines
          * @param width
          *            number of pixels in a line
+         * @throws IllegalAgumentException if width is not a multiple of Integer.SIZE
+         *            or if height(width) is negative or null
          */
         public Builder(int width, int height) {
-            //TODO : check width to be a multiple of 32 + add throws in javadoc
-            this.height = height;
-            this.width = width;
+            Preconditions.checkArgument(width % Integer.SIZE == 0);
+            Preconditions.checkArgument(width > 0 && height > 0);
             for (int i = 0; i < height; ++i)
                 lines.add(new LcdImageLine(new BitVector(width, false),
                         new BitVector(width, false),
                         new BitVector(width, false)));
         }
+        
+        private int width() { return lines.get(0).size(); }
+        private int height() { return lines.size(); }
 
         /**
          * Sets a line of LcdImage as given line
@@ -90,8 +84,8 @@ public final class LcdImage {
          *         IndexOutOfBoundException if given index is out-of-bounds, ie not in [0, height[
          */
         public void setLine(int index, LcdImageLine newLine) {
-            Preconditions.checkArgument(newLine.size() <= width);
-            Objects.checkIndex(index, height);
+            Preconditions.checkArgument(newLine.size() <= width());
+            Objects.checkIndex(index, height());
             lines.set(index, newLine);
         }
 
@@ -101,7 +95,7 @@ public final class LcdImage {
          * @return constructed LcdImage
          */
         public LcdImage build() {
-            return new LcdImage(width, height, lines);
+            return new LcdImage(lines);
         }
     }
 
@@ -139,12 +133,7 @@ public final class LcdImage {
      */
     @Override
     public boolean equals(Object o) {
-        // if (!(o instanceof LcdImage))
-        // return false;
-        // LcdImage that = (LcdImage) o;
-        // return this.lines == that.lines;
-
-        // TODO : shorter, usually teacher does it this way
+        
         return (o instanceof LcdImage
                 && lines.equals(((LcdImage) o).lines));
     }
