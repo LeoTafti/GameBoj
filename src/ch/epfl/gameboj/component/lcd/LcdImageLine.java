@@ -87,7 +87,7 @@ public final class LcdImageLine {
         public LcdImageLine build() {
             BitVector msb = msbB.build();
             BitVector lsb = lsbB.build();
-            BitVector opacity = msb.not().and(lsb.not());
+            BitVector opacity = lsb.or(msb);
 
             return new LcdImageLine(msb, lsb, opacity);
         }
