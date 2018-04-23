@@ -14,6 +14,11 @@ import ch.epfl.gameboj.bits.BitVector;
 import ch.epfl.gameboj.bits.BitVector.Builder;
 
 public class LcdImageLineTest {
+    
+//    System.out.println(l.msb());
+//    System.out.println(l.lsb());
+//    System.out.println(l.opacity());
+    
 
     // -------------------- CONSTRUCTOR TEST --------------------
    
@@ -52,20 +57,6 @@ public class LcdImageLineTest {
     }
     
     @Test
-    public void setBytesWorks() {
-        
-        LcdImageLine.Builder b = new LcdImageLine.Builder(32);
-        LcdImageLine l = b.build();       
-        
-        assertEquals(colorLine_0(), l);
-        
-        b.setBytes(0, 0xF0, 0x0F);
-        
-        assertEquals(lsb0FmsbF0(), b.build());
-        
-    }
-    
-    @Test
     public void setBytesWorksOnBigLine() {
         
         LcdImageLine.Builder b = new LcdImageLine.Builder(64);
@@ -74,10 +65,9 @@ public class LcdImageLineTest {
         
         b.setBytes(4, 0xF0, 0x0F);
         LcdImageLine l = b.build();
-        System.out.println(l.msb());
-        System.out.println(l.lsb());
-        System.out.println(l.opacity());
-        assertEquals(bigLsb0FmsbF0(), l);
+        
+        assertEquals(bigLsb0FmsbF0().msb(), l.msb());
+        assertEquals(bigLsb0FmsbF0().lsb(), l.lsb());
     }
     
     @Test
@@ -155,7 +145,8 @@ public class LcdImageLineTest {
     @Test
     public void trivialExtractWorks() {
         assertEquals(colorLine_0(), bigColorLine_0().extractWrapped(0, 32));
-        assertEquals(lsb0FmsbF0(), bigLsb0FmsbF0().extractWrapped(32, 32));
+        LcdImageLine l = bigLsb0FmsbF0().extractWrapped(32, 32);
+        assertEquals(lsb0FmsbF0(), l );
     }
     
     @Test
@@ -178,8 +169,8 @@ public class LcdImageLineTest {
     
     @Test
     public void extractWorksOnNonTrivialValues() {
-        assertEquals(colorLine_3_0_1_2(), 
-                colorLine_1_2_3_0().extractWrapped(16, 32));
+        LcdImageLine l = colorLine_1_2_3_0().extractWrapped(16, 32);
+        assertEquals(colorLine_3_0_1_2(), l);
         
         
     }
@@ -246,41 +237,44 @@ public class LcdImageLineTest {
         assertThrows(IllegalArgumentException.class,
                 () -> colorLine_0().below(transparentLine(), bit64_0()));
     }
-    
-    @Test
-    public void belowWorksOnNonTrivialLines() {
-//        assertEquals(colorLine_3_0_1_0(), 
-//                colorLine_3_2_1_0().below(emptyLine(), bit32_f0f0()));
-        
-        assertEquals(colorLine_3_0_1_0().msb(), 
-                colorLine_3_2_1_0().below(emptyLine(), bit32_f0f0()).msb());
-        
-        assertEquals(colorLine_3_0_1_0().lsb(), 
-                colorLine_3_2_1_0().below(emptyLine(), bit32_f0f0()).lsb());
-        
-        assertEquals(colorLine_3_0_1_0().opacity(), 
-                colorLine_3_2_1_0().below(emptyLine(), bit32_f0f0()).opacity());
-    }
-    
+     
     
     // -------------------- JOIN TEST        --------------------
     @Test
     public void joinWorksOnTrivialValues() {
-        
+        assertEquals(line_1(), colorLine_0().join(line_1(), 0));
     }
     
     @Test
     public void joinFailsOnDifferentLengths() {
+        assertThrows(IllegalArgumentException.class,
+                () -> colorLine_0().join(big2Line1(), 0));
         
     }
     
     @Test
     public void joinFailsOnInvalidIndex() {
-        
+        assertThrows(IllegalArgumentException.class,
+                () -> colorLine_0().join(line_1(), -1));
+        assertThrows(IllegalArgumentException.class,
+                () -> colorLine_0().join(line_1(), 32));
+    }
+    
+    @Test
+    public void joinWorksForBigLines() {
+        LcdImageLine l = bigLsb0FmsbF0().join(bigColorLine_0(), 32);
+
+        assertEquals(bigColorLine_0(),l);
     }
     
     @Test
     public void joinWorksOnNonTrivialValues() {
+        LcdImageLine l = colorLine_3_0_1_2().join(colorLine_0(), 24);
+        System.out.println(l.msb());
+      System.out.println(l.lsb());
+      System.out.println(l.opacity());
+        assertEquals(colorLine_3_0_1_0(), l);
+        
         
     }
     
@@ -294,7 +288,7 @@ public class LcdImageLineTest {
     private LcdImageLine colorLine_0() {
         int[] MSBchunks = { 0, 0, 0, 0};
         int[] LSBchunks = { 0, 0, 0, 0};
-        int[] OPchunks =  { 0, 0, 0, 0};
+        int[] OPchunks =  {  0xff, 0xff, 0xff, 0xff};
         
         BitVector.Builder msbB = new Builder(Integer.SIZE);
         BitVector.Builder lsbB = new Builder(Integer.SIZE);
@@ -380,7 +374,7 @@ public class LcdImageLineTest {
     private LcdImageLine colorLine_3_0_1_2() {
         
         int[] MSBchunks = { 0xff, 0, 0, 0xff,};
-        int[] LSBchunks = { 0, 0xff, 0, 0xff,};
+        int[] LSBchunks = { 0xff, 0, 0xff, 0,};
         int[] OPchunks = { 0xff, 0xff, 0xff, 0xff};
         
         BitVector.Builder msbB = new Builder(Integer.SIZE);
@@ -400,8 +394,8 @@ public class LcdImageLineTest {
     }
 
     private LcdImageLine colorLine_3_0_1_0() {
-        int[] MSBchunks = { 0b1111_1111, 0b0000_0000, 0b0000_0000, 0,};
-        int[] LSBchunks = { 0b1111_1111, 0b0000_0000, 0b1111_1111, 0b0000_0000,};
+        int[] MSBchunks = { 0xff, 0, 0, 0};
+        int[] LSBchunks = { 0xff, 0, 0xff, 0,};
         int[] OPchunks = { 0xff, 0xff, 0xff, 0xff};
         
         BitVector.Builder msbB = new Builder(Integer.SIZE);
@@ -435,7 +429,7 @@ public class LcdImageLineTest {
     private LcdImageLine lsb0FmsbF0() {
             int[] MSBchunks = { 0xf0, 0, 0, 0};
             int[] LSBchunks = { 0x0f, 0, 0, 0};
-            int[] OPchunks =  { 0, 0, 0, 0};
+            int[] OPchunks =  { 0xff, 0xff, 0xff, 0xff};
             
             BitVector.Builder msbB = new Builder(Integer.SIZE);
             BitVector.Builder lsbB = new Builder(Integer.SIZE);
@@ -456,7 +450,7 @@ public class LcdImageLineTest {
     private LcdImageLine bigColorLine_0() {
         int[] MSBchunks = { 0, 0, 0, 0, 0, 0, 0, 0};
         int[] LSBchunks = { 0, 0, 0, 0, 0, 0, 0, 0};
-        int[] OPchunks =  { 0, 0, 0, 0, 0, 0, 0, 0};
+        int[] OPchunks =  { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,0xff, 0xff};
         
         BitVector.Builder msbB = new Builder(Integer.SIZE*2);
         BitVector.Builder lsbB = new Builder(Integer.SIZE*2);
@@ -577,8 +571,20 @@ public class LcdImageLineTest {
         
     }
     
+    private BitVector bit32_0f0f() {
+        int[] chunks = { 0xff, 0, 0xff, 0};
+        
+        BitVector.Builder b = new BitVector.Builder(Integer.SIZE);
+        for(int i = 0; i < Integer.BYTES; i++) {
+            b.setByte(i, chunks[i]);
+        }
+        
+        return b.build();
+        
+    }
+    
     private BitVector bit32_f0f0() {
-        int[] chunks = { 0, 0xff, 0, 0xff };
+        int[] chunks = {  0, 0xff, 0, 0xff};
         
         BitVector.Builder b = new BitVector.Builder(Integer.SIZE);
         for(int i = 0; i < Integer.BYTES; i++) {
@@ -616,7 +622,7 @@ public class LcdImageLineTest {
     private BitVector bit64_0() {
         int[] chunks = { 0, 0, 0, 0, 0, 0, 0, 0};
         
-        BitVector.Builder b = new Builder(Integer.SIZE);
+        BitVector.Builder b = new Builder(Integer.SIZE*2);
         for(int i = 0; i < Integer.BYTES * 2; i++) {
             b.setByte(i, chunks[i]);
         }
@@ -628,7 +634,7 @@ public class LcdImageLineTest {
         int[] chunks = {  0xff, 0xff, 0xff, 0xff,
                           0xff, 0xff, 0xff, 0xff};
         
-        BitVector.Builder b = new Builder(Integer.SIZE);
+        BitVector.Builder b = new Builder(Integer.SIZE*2);
         for(int i = 0; i < Integer.BYTES * 2; i++) {
             b.setByte(i, chunks[i]);
         }
@@ -640,7 +646,7 @@ public class LcdImageLineTest {
         int[] chunks = {  1, 0, 0, 0,
                           1, 0, 0, 0};
 
-        BitVector.Builder b = new Builder(Integer.SIZE);
+        BitVector.Builder b = new Builder(Integer.SIZE*2);
         for(int i = 0; i < Integer.BYTES * 2; i++) {
           b.setByte(i, chunks[i]);
         }
