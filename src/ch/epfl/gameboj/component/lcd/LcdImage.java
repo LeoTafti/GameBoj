@@ -7,7 +7,6 @@ package ch.epfl.gameboj.component.lcd;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
@@ -40,12 +39,6 @@ public final class LcdImage {
 
     public static final class Builder {
         private List<LcdImageLine> lines = new ArrayList<>();
-
-        // TODO : redundant since height is
-                                   // lines.length() and width is
-                                   // lines.get(0).size ? Maybe better define
-                                   // private methods ? + see comment in
-                                   // LcdImageConstructor
 
         /**
          * Creates LcdImage builder for and image of given width and given
@@ -83,15 +76,15 @@ public final class LcdImage {
          *             if line does not have a correct size
          *         IndexOutOfBoundException if given index is out-of-bounds, ie not in [0, height[
          */
-        public void setLine(int index, LcdImageLine newLine) {
+        public LcdImage.Builder setLine(int index, LcdImageLine newLine) {
             Preconditions.checkArgument(newLine.size() <= width());
             Objects.checkIndex(index, height());
             lines.set(index, newLine);
+            return this;
         }
 
         /**
-         * TODO : complete javadoc
-         * 
+         * Builds LcdImage out of the previously set lines
          * @return constructed LcdImage
          */
         public LcdImage build() {
@@ -100,17 +93,17 @@ public final class LcdImage {
     }
 
     /**
-     * TODO : complete javadoc Returns the height of the image in pixels
-     */
-    public int height() {
-        return lines.size();
-    }
-
-    /**
-     * TODO : complete javadoc Returns the width of the image in pixels
+     * @return number of pixels in a line
      */
     public int width() {
         return lines.get(0).size();
+    }
+
+    /**
+     * @return number of lines of the image
+     */
+    public int height() {
+        return lines.size();
     }
 
     /**
