@@ -13,10 +13,16 @@ public interface AddressMap {
 
     // Video RAM
 //    int[] TILE_SOURCE = new int[] { 0x8800, 0x8000 };
-    int TILE_SOURCE_START = 0x8000 , TILE_SOURCE_END = 0x97FF;
-    int TILE_SOURCE_0_START = 0x8800 , TILE_SOURCE_0_END = 0x97FF;
-    int TILE_SOURCE_1_START = 0x8000, TILE_SOURCE_1_END = 0x8FFF;
-    int[] BG_DISPLAY_DATA = new int[] { 0x9800, 0x9C00 };
+    
+    // TILE DATA
+    int TILE_SOURCE_START = 0x8000 , TILE_SOURCE_END = 0x97FF;     //end bound is inclusive
+    int TILE_SOURCE_0_START = 0x8800 , TILE_SOURCE_0_END = 0x97FF; //end bound is inclusive
+    int TILE_SOURCE_1_START = 0x8000, TILE_SOURCE_1_END = 0x8FFF;  //end bound is inclusive
+    
+    // TILE INDEX
+    int TILE_AREA_START =   0x9800, TILE_AREA_END = 0xA000;   //end bound is exclusive
+    int TILE_AREA_0_START = 0x9800, TILE_AREA_0_END = 0x9C00; //end bound is exclusive
+    int TILE_AREA_1_START = 0x9C00, TILE_AREA_1_END = 0xA000; //end bound is exclusive
 
     // Memory-mapped "IO" registers
     int REGS_START = 0xFF00;
@@ -27,19 +33,20 @@ public interface AddressMap {
     int REG_TAC = 0xFF07;
     int REG_IF = 0xFF0F;
     int REGS_LCDC_START = 0xFF40, REGS_LCDC_END = 0xFF4C;
-        //Memory-mapped "LCD" registers
-        int REG_LCDC = 0xFF40;
-        int REG_LCDC_STAT = 0xFF41;
-        int REG_LCDC_SCY = 0xFF42;
-        int REG_LCDC_SCX = 0xFF43;
-        int REG_LCDC_LY = 0xFF44;
-        int REG_LCDC_LYC = 0xFF45;
-        int REG_LCDC_DMA = 0xFF6;
-        int REG_LCDC_BGP = 0xFF7;
-        int REG_LCDC_OBP0 = 0xFF8;
-        int REG_LCDC_OBP1 = 0xFF9;
-        int REG_LCDC_WY = 0xFFA;
-        int REG_LCDC_WX = 0xFFB;
+    //Memory-mapped "LCD" registers
+    int REG_LCDC = 0xFF40;
+    int REG_LCDC_STAT = 0xFF41;
+    int REG_LCDC_SCY = 0xFF42;
+    int REG_LCDC_SCX = 0xFF43;
+    int REG_LCDC_LY = 0xFF44;
+    int REG_LCDC_LYC = 0xFF45;
+    int REG_LCDC_DMA = 0xFF6;
+    int REG_LCDC_BGP = 0xFF7;
+    int REG_LCDC_OBP0 = 0xFF8;
+    int REG_LCDC_OBP1 = 0xFF9;
+    int REG_LCDC_WY = 0xFFA;
+    int REG_LCDC_WX = 0xFFB;
+    //other mapped registers
     int REG_BOOT_ROM_DISABLE = 0xFF50;
     int REG_IE = 0xFFFF;
     

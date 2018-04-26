@@ -18,13 +18,13 @@ public final class LcdController implements Component, Clocked {
 
     // 8-bit registers
     private int LCDC = 0, STAT = 0,
-            SCY = 0, SCX = 0,
-            LY = 0, LYC = 0,
-            DMA = 0,
-            BGP = 0, OBP0 = 0, OBP1 = 0,
-            WY = 0, WX = 0;
+                SCY  = 0, SCX  = 0,
+                LY   = 0, LYC  = 0,
+                DMA  = 0,
+                BGP  = 0, OBP0 = 0, OBP1 = 0,
+                WY   = 0, WX   = 0;
+    
     private enum LcdMode {H_BLANK , V_BLANK, MODE_2, MODE_3 };
-    private enum TileSource{ TILE_SOURCE_0, TILE_SOURCE_1 };
     
     private final Cpu cpu;
     private final Bus bus;
@@ -104,20 +104,22 @@ public final class LcdController implements Component, Clocked {
                 return WY;
             case AddressMap.REG_LCDC_WX:
                 return WX;
-            // TODO : etc ? seems very shitty
+            // TODO : seems very shitty
 //            default: return NO_DATA;
             }
         }
-        //TODO distinguish between states ( TILESOURCE0 and TILESOURCE1 )
         
+        //TODO distinguish between states:
+        // BG_AREA 0 and BG_AREA 1          Bits.test(LCDC, 3);
+        // WIN_AREA 0 and WIN_AREA 1        Bits.test(LCDC, 6);
+        //  TILESOURCE0 and TILESOURCE1     Bits.test(LCDC, 4);
+        // ====> implemented private methods to make it clean, maybe do so as well for the first range 
+        // even for cpu?
         
-        else if(address >= AddressMap.VIDEO_RAM_START && address < AddressMap.VIDEO_RAM_END) {
-            if(address >= AddressMap.TILE_SOURCE_START && address < AddressMap.TILE_SOURCE_END)
-                switch(tileSource()) {
-                case TILE_SOURCE_0 : //if ... else ...
-                case TILE_SOURCE_1 : // if ... else ...
-                //WTF ITS HORRIBLE
-                }
+        //TODO should we have a single if? this way optimises time though
+        
+        else if(videoRamRange(address)) {
+            if(tileSourceRange(address) || tileAreaRange(address))
             return bus.read(address);
         }
         return NO_DATA;
@@ -156,11 +158,10 @@ public final class LcdController implements Component, Clocked {
                 //            default: return NO_DATA;
             }
         }
+        //TODO does write depend on LCDC modes?
         else if(address >= AddressMap.VIDEO_RAM_START && address < AddressMap.VIDEO_RAM_END) {
                 bus.write(address, data);
         }
-        
-        
         //TODO : again, switch seems baaadddd ?
     }
 
@@ -169,6 +170,30 @@ public final class LcdController implements Component, Clocked {
         return null;
     }
     
+    private boolean videoRamRange(int address) {
+        return address >= AddressMap.VIDEO_RAM_START && address < AddressMap.VIDEO_RAM_END;
+    }
+
+    private boolean tileSourceRange(int address) {
+        boolean source0 = (address >= AddressMap.TILE_SOURCE_0_START
+                && address < AddressMap.TILE_SOURCE_0_END )
+                && !Bits.test(LCDC, 4);
+        boolean source1 = (address >= AddressMap.TILE_SOURCE_1_START
+                && address < AddressMap.TILE_SOURCE_1_END )
+                && Bits.test(LCDC, 4);
+        return source0 || source1;
+    }
+
+    private boolean tileAreaRange(int address) {
+        boolean area0 = (address >= AddressMap.TILE_AREA_0_START
+                && address < AddressMap.TILE_AREA_0_END )
+                && !(Bits.test(LCDC, 3) && Bits.test(LCDC, 6));
+        boolean area1 = (address >= AddressMap.TILE_AREA_1_START
+                && address < AddressMap.TILE_AREA_1_END )
+                && (Bits.test(LCDC, 3) || Bits.test(LCDC, 6));
+        return area0 || area1;
+    }
+
     private boolean screenIsOn() {
         return Bits.test(LCDC, 7); //LCDC_STATUS is bit 7
     }
@@ -187,10 +212,4 @@ public final class LcdController implements Component, Clocked {
         }
         throw new IllegalStateException();
     }
-    
-    private TileSource tileSource() {
-        return Bits.test(LCDC, 4)?
-                TileSource.TILE_SOURCE_0 : TileSource.TILE_SOURCE_1;
-    }
-
 }
