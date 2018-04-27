@@ -43,7 +43,7 @@ public final class LcdController implements Component, Clocked {
     
     private final RegisterFile<Reg> registerFile = new RegisterFile<>(Reg.values());
     
-    private long nextNonIdleCycle = 0; //TODO : should be 0 or what ? we didn't give it an initial value in cpu.java…
+    private long nextNonIdleCycle = Long.MAX_VALUE; //TODO : should be 0 or what ? we didn't give it an initial value in cpu.java…
     private long lcdOnCycle; //TODO : @289
     
     public LcdController(Cpu cpu) {
@@ -60,11 +60,12 @@ public final class LcdController implements Component, Clocked {
     }
 
     public void cycle(long cycle) {
-        
-        if(nextNonIdleCycle == Long.MAX_VALUE && screenIsOn())
+        if(nextNonIdleCycle == Long.MAX_VALUE && screenIsOn()) {
             lcdOnCycle = cycle;
+            nextNonIdleCycle = cycle;
+        }
             //TODO : force nextNonIdleCycle to current cycle value ?
-
+        
         else if(cycle != nextNonIdleCycle)
             return;
         
@@ -76,33 +77,41 @@ public final class LcdController implements Component, Clocked {
         switch(mode()) {
         case MODE_2:
             // TODO DRAW
+            //System.out.println("Mode 2");
             setMode(LcdMode.MODE_3);
-            nextNonIdleCycle += 43;
+            nextNonIdleCycle += 43; //TODO : static var
             break;
             
         case MODE_3:
             setMode(LcdMode.H_BLANK);
-            nextNonIdleCycle += 51;
+            nextNonIdleCycle += 51;//TODO : static var
             break;
             
         case H_BLANK:
             if(reg(Reg.LY) != LCD_HEIGHT) {
                 setMode(LcdMode.MODE_2);
-                nextNonIdleCycle += 20;
+                nextNonIdleCycle += 20;//TODO : static var
             }
             else {
                 setMode(LcdMode.V_BLANK);
                 nextNonIdleCycle += LINE_CYCLES;
+                cpu.requestInterrupt(Cpu.Interrupt.VBLANK);
+                //System.out.println("V_Blank from H_Blank: " + cycle);
             }
             incLY();
             break;
             
         case V_BLANK:
-            if(reg(Reg.LY) == LCD_HEIGHT + V_BLANK_LINES - 1) 
+            //System.out.println("Case V_Blank");
+            if(reg(Reg.LY) == LCD_HEIGHT + V_BLANK_LINES - 1) {
                 setMode(LcdMode.MODE_2);
+                //System.out.println("Mode 2 from V Blank");
+                nextNonIdleCycle++;
+            }
             else 
                 nextNonIdleCycle += LINE_CYCLES;
             incLY();
+            //System.out.println("Ly : " + reg(Reg.LY));
             break;
         }
         
@@ -112,18 +121,17 @@ public final class LcdController implements Component, Clocked {
         
     private void incLY() {
         int LY = reg(Reg.LY);
-        if( LY == 153) 
+        if(LY == LCD_HEIGHT + V_BLANK_LINES - 1)
             setReg(Reg.LY, 0);
         else
             setReg(Reg.LY, ++LY);
+        //TODO : ternary operator ?
         updateLYC_EQ_LY();
     }
 
     private void requestPotentialInterrupt() {
-        if(mode() == LcdMode.V_BLANK)
-            cpu.requestInterrupt(Cpu.Interrupt.VBLANK);
-        else if (Bits.extract(reg(Reg.STAT), 3, 3) != 0)
-                cpu.requestInterrupt(Cpu.Interrupt.LCD_STAT);
+       if(Bits.extract(reg(Reg.STAT), 3, 3) != 0)
+           cpu.requestInterrupt(Cpu.Interrupt.LCD_STAT);
     }
 
     @Override
@@ -196,25 +204,26 @@ public final class LcdController implements Component, Clocked {
         return null;
     }
 
-    private boolean tileSourceRange(int address) {
-        boolean source0 = (address >= AddressMap.TILE_SOURCE_0_START
-                && address < AddressMap.TILE_SOURCE_0_END )
-                && !testBitLCDC(LCDC_Bits.TILE_SOURCE);
-        boolean source1 = (address >= AddressMap.TILE_SOURCE_1_START
-                && address < AddressMap.TILE_SOURCE_1_END )
-                && testBitLCDC(LCDC_Bits.TILE_SOURCE);
-        return source0 || source1;
-    }
-
-    private boolean tileAreaRange(int address) {
-        boolean area0 = (address >= AddressMap.TILE_AREA_0_START
-                && address < AddressMap.TILE_AREA_0_END )
-                && !(testBitLCDC(LCDC_Bits.BG_AREA) && testBitLCDC(LCDC_Bits.WIN_AREA));
-        boolean area1 = (address >= AddressMap.TILE_AREA_1_START
-                && address < AddressMap.TILE_AREA_1_END )
-                && (testBitLCDC(LCDC_Bits.BG_AREA) || testBitLCDC(LCDC_Bits.WIN_AREA));
-        return area0 || area1;
-    }
+   //TODO : remove ?
+//    private boolean tileSourceRange(int address) {
+//        boolean source0 = (address >= AddressMap.TILE_SOURCE_0_START
+//                && address < AddressMap.TILE_SOURCE_0_END )
+//                && !testBitLCDC(LCDC_Bits.TILE_SOURCE);
+//        boolean source1 = (address >= AddressMap.TILE_SOURCE_1_START
+//                && address < AddressMap.TILE_SOURCE_1_END )
+//                && testBitLCDC(LCDC_Bits.TILE_SOURCE);
+//        return source0 || source1;
+//    }
+//
+//    private boolean tileAreaRange(int address) {
+//        boolean area0 = (address >= AddressMap.TILE_AREA_0_START
+//                && address < AddressMap.TILE_AREA_0_END )
+//                && !(testBitLCDC(LCDC_Bits.BG_AREA) && testBitLCDC(LCDC_Bits.WIN_AREA));
+//        boolean area1 = (address >= AddressMap.TILE_AREA_1_START
+//                && address < AddressMap.TILE_AREA_1_END )
+//                && (testBitLCDC(LCDC_Bits.BG_AREA) || testBitLCDC(LCDC_Bits.WIN_AREA));
+//        return area0 || area1;
+//    }
 
     private boolean screenIsOn() {
         return testBitLCDC(LCDC_Bits.LCD_STATUS);
@@ -237,7 +246,7 @@ public final class LcdController implements Component, Clocked {
     
     private void setMode(LcdMode mode) {
         setReg(Reg.STAT,
-                reg(Reg.STAT) << 2 | mode.ordinal());
+                Bits.extract(reg(Reg.STAT), 2, 6) << 2 | mode.ordinal());
     }
     
     /**

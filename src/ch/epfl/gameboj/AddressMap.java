@@ -14,15 +14,17 @@ public interface AddressMap {
     // Video RAM
     int[] TILE_SOURCE = new int[] { 0x8800, 0x8000 };
     
-    // TILE DATA
-    int TILE_SOURCE_START = 0x8000 , TILE_SOURCE_END = 0x97FF;     //end bound is inclusive
-    int TILE_SOURCE_0_START = 0x8800 , TILE_SOURCE_0_END = 0x97FF; //end bound is inclusive
-    int TILE_SOURCE_1_START = 0x8000, TILE_SOURCE_1_END = 0x8FFF;  //end bound is inclusive
     
-    // TILE INDEX
-    int TILE_AREA_START =   0x9800, TILE_AREA_END = 0xA000;   //end bound is exclusive
-    int TILE_AREA_0_START = 0x9800, TILE_AREA_0_END = 0x9C00; //end bound is exclusive
-    int TILE_AREA_1_START = 0x9C00, TILE_AREA_1_END = 0xA000; //end bound is exclusive
+    //TODO : remove ?
+//    // TILE DATA
+//    int TILE_SOURCE_START = 0x8000 , TILE_SOURCE_END = 0x97FF;     //end bound is inclusive
+//    int TILE_SOURCE_0_START = 0x8800 , TILE_SOURCE_0_END = 0x97FF; //end bound is inclusive
+//    int TILE_SOURCE_1_START = 0x8000, TILE_SOURCE_1_END = 0x8FFF;  //end bound is inclusive
+//    
+//    // TILE INDEX
+//    int TILE_AREA_START =   0x9800, TILE_AREA_END = 0xA000;   //end bound is exclusive
+//    int TILE_AREA_0_START = 0x9800, TILE_AREA_0_END = 0x9C00; //end bound is exclusive
+//    int TILE_AREA_1_START = 0x9C00, TILE_AREA_1_END = 0xA000; //end bound is exclusive
 
     // Memory-mapped "IO" registers
     int REGS_START = 0xFF00;
