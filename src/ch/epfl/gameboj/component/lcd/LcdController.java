@@ -5,11 +5,13 @@ import java.util.Objects;
 import ch.epfl.gameboj.AddressMap;
 import ch.epfl.gameboj.Bus;
 import ch.epfl.gameboj.Preconditions;
+import ch.epfl.gameboj.Register;
+import ch.epfl.gameboj.RegisterFile;
+import ch.epfl.gameboj.bits.Bit;
 import ch.epfl.gameboj.bits.Bits;
 import ch.epfl.gameboj.component.Clocked;
 import ch.epfl.gameboj.component.Component;
 import ch.epfl.gameboj.component.cpu.Cpu;
-import ch.epfl.gameboj.component.cpu.Opcode;
 import ch.epfl.gameboj.component.memory.Ram;
 import ch.epfl.gameboj.component.memory.RamController;
 
@@ -18,18 +20,24 @@ public final class LcdController implements Component, Clocked {
     public static final int LCD_WIDTH = 160, LCD_HEIGHT = 144;
 
     // 8-bit registers
-    private int LCDC = 0, STAT = 0,
-                SCY  = 0, SCX  = 0,
-                LY   = 0, LYC  = 0,
-                DMA  = 0,
-                BGP  = 0, OBP0 = 0, OBP1 = 0,
-                WY   = 0, WX   = 0;
+    private enum Reg implements Register {
+        LCDC, STAT, SCY, SCX, LY, LYC, DMA, BGP, OBP0, OBP1, WY, WX
+    }
+    
+    private enum LCDC_Bits implements Bit {
+        BG, OBJ, OBJ_SIZE, BG_AREA, TILE_SOURCE, WIN, WIN_AREA, LCD_STATUS
+    }
+    
+    private enum STAT_Bits implements Bit{
+        MODE0, MODE1, LYC_EQ_LY, INT_MODE0, INT_MODE1, INT_MODE2, INT_LYC, UNUSED_7
+    }
     
     private enum LcdMode {H_BLANK , V_BLANK, MODE_2, MODE_3 };
-    private enum LcdInterrupts {VBLANK};
     
     private final Cpu cpu;
     private final Bus bus;
+    
+    private final RegisterFile<Reg> registerFile = new RegisterFile<>(Reg.values());
     
     private long nextNonIdleCycle = 0; //TODO : should be 0 or what ? we didn't give it an initial value in cpu.java…
     private long lcdOnCycle; //TODO : @289
@@ -84,7 +92,7 @@ public final class LcdController implements Component, Clocked {
     private void interrupt() {
         if(mode() == LcdMode.V_BLANK)
             cpu.requestInterrupt(Cpu.Interrupt.VBLANK);
-        else if (Bits.extract(STAT, 3, 3) != 0)
+        else if (Bits.extract(reg(Reg.STAT), 3, 3) != 0)
                 cpu.requestInterrupt(Cpu.Interrupt.LCD_STAT);
     }
 
@@ -98,34 +106,9 @@ public final class LcdController implements Component, Clocked {
          * placer dans les vecteurs représentant les lignes, et c'est ce que
          * nous ferons dans le simulateur."
          */
+        
         if(address >= AddressMap.REGS_LCDC_START && address < AddressMap.REGS_LCDC_END) {
-            
-            switch(address) {
-            case AddressMap.REG_LCDC:
-                return LCDC;
-            case AddressMap.REG_LCDC_STAT:
-                return STAT;
-            case AddressMap.REG_LCDC_SCY:
-                return SCY;
-            case AddressMap.REG_LCDC_SCX:
-                return SCX;
-            case AddressMap.REG_LCDC_LY:
-                return LY;
-            case AddressMap.REG_LCDC_LYC:
-                return LYC;
-            case AddressMap.REG_LCDC_BGP:
-                return BGP;
-            case AddressMap.REG_LCDC_OBP0:
-                return OBP0;
-            case AddressMap.REG_LCDC_OBP1:
-                return OBP1;
-            case AddressMap.REG_LCDC_WY:
-                return WY;
-            case AddressMap.REG_LCDC_WX:
-                return WX;
-            // TODO : seems very shitty
-//            default: return NO_DATA;
-            }
+            readRegAtAddress(address);
         }
         
         //TODO distinguish between states:
@@ -203,11 +186,11 @@ public final class LcdController implements Component, Clocked {
    
     //TODO call in setReg for case LY and LYC
    private void updateLYC_EQ_LY() {
-       setBitSTAT(STAT_Bits.LYC_EQ_LY, (LYC == LY));
+       setBitSTAT(STAT_Bits.LYC_EQ_LY, reg(Reg.LYC) == reg(Reg.LY));
        interrupt();
    }
    
- public LcdImage currentImage() {
+   public LcdImage currentImage() {
         // TODO : implement
         return null;
     }
@@ -219,30 +202,30 @@ public final class LcdController implements Component, Clocked {
     private boolean tileSourceRange(int address) {
         boolean source0 = (address >= AddressMap.TILE_SOURCE_0_START
                 && address < AddressMap.TILE_SOURCE_0_END )
-                && !Bits.test(LCDC, 4);
+                && !testBitLCDC(LCDC_Bits.TILE_SOURCE);
         boolean source1 = (address >= AddressMap.TILE_SOURCE_1_START
                 && address < AddressMap.TILE_SOURCE_1_END )
-                && Bits.test(LCDC, 4);
+                && testBitLCDC(LCDC_Bits.TILE_SOURCE);
         return source0 || source1;
     }
 
     private boolean tileAreaRange(int address) {
         boolean area0 = (address >= AddressMap.TILE_AREA_0_START
                 && address < AddressMap.TILE_AREA_0_END )
-                && !(Bits.test(LCDC, 3) && Bits.test(LCDC, 6));
+                && !(testBitLCDC(LCDC_Bits.BG_AREA) && testBitLCDC(LCDC_Bits.WIN_AREA));
         boolean area1 = (address >= AddressMap.TILE_AREA_1_START
                 && address < AddressMap.TILE_AREA_1_END )
-                && (Bits.test(LCDC, 3) || Bits.test(LCDC, 6));
+                && (testBitLCDC(LCDC_Bits.BG_AREA) || testBitLCDC(LCDC_Bits.WIN_AREA));
         return area0 || area1;
     }
 
     private boolean screenIsOn() {
-        return Bits.test(LCDC, 7); //LCDC_STATUS is bit 7
+        return testBitLCDC(LCDC_Bits.LCD_STATUS);
     }
     
     private LcdMode mode() {
         
-        switch (Bits.clip(2, STAT)) {
+        switch (Bits.clip(2, reg(Reg.STAT))) {
         case 0:
             return LcdMode.H_BLANK;
         case 1:
@@ -256,7 +239,60 @@ public final class LcdController implements Component, Clocked {
     }
     
     private void setMode(LcdMode mode) {
-        Bits.set(STAT, 0, Bits.test(mode.ordinal(), 0));
-        Bits.set(STAT, 1, Bits.test(mode.ordinal(), 1));
+//        Bits.set(STAT, 0, Bits.test(mode.ordinal(), 0));
+//        Bits.set(STAT, 1, Bits.test(mode.ordinal(), 1));
+        
+        //TODO : Bits.test(mode.ordinal(), 0) makes no sense ?
+        
+        setBitSTAT(STAT_Bits.MODE0, newValue);
+        setBitSTAT(STAT_Bits.MODE1, newValue);
+    }
+    
+    /**
+     * Returns value stored in given 8-bit reg
+     * 
+     * @param r
+     *            register
+     * @return value stored in register
+     */
+    private int reg(Reg r) {
+        return registerFile.get(r);
+    }
+    
+    /**
+     * Sets given reg with given value
+     * 
+     * @param r
+     *            register in which to put value
+     * @param newV
+     *            new value to store
+     */
+    private void setReg(Reg r, int newV) {
+        registerFile.set(r, newV);
+    }
+    
+    private int readRegAtAddress(int address) {
+        return reg(Reg.values()[address - AddressMap.REG_LCDC]);
+    }
+    
+    
+    private boolean testBit(Reg r, int index) {
+        return Bits.test(reg(r), index);
+    }
+    private boolean testBitLCDC(LCDC_Bits bit) {
+        return testBit(Reg.LCDC, bit.index());
+    }
+    private boolean testBitSTAT(STAT_Bits bit) {
+        return testBit(Reg.STAT, bit.index());
+    }
+    
+    private void setBit(Reg r, int index, boolean newValue) {
+        setReg(r, Bits.set(reg(r), index, newValue));
+    }
+    private void setBitLCDC(LCDC_Bits bit, boolean newValue) {
+        setBit(Reg.LCDC, bit.index(), newValue);
+    }
+    private void setBitSTAT(STAT_Bits bit, boolean newValue) {
+        setBit(Reg.STAT, bit.index(), newValue);
     }
 }
