@@ -133,54 +133,26 @@ public final class LcdController implements Component, Clocked {
         Preconditions.checkBits8(data);
         
         if(address >= AddressMap.REGS_LCDC_START && address < AddressMap.REGS_LCDC_END) {
-            
-            switch(address) {
-            case AddressMap.REG_LCDC:
-                LCDC = data;
-                if(!screenIsOn()) {
+            if(address == AddressMap.REG_LCDC_STAT) {
+                setReg(Reg.STAT,
+                        Bits.clip(3, reg(Reg.STAT)) & (Bits.extract(data, 3, 5)<<3));
+            }
+            else {
+                setRegAtAddress(address, data);
+                
+                if(address == AddressMap.REG_LCDC && !screenIsOn()) {
                     setMode(LcdMode.H_BLANK);
-                    LY = 0;
+                    setReg(Reg.LY, 0);
                     nextNonIdleCycle = Long.MAX_VALUE;
                 }
-                break; 
-            case AddressMap.REG_LCDC_STAT:
-                STAT = Bits.clip(3, STAT) & (Bits.extract(data, 3, 5)<<3);
-                break; 
-            case AddressMap.REG_LCDC_SCY:
-                SCY = data;
-                break; 
-            case AddressMap.REG_LCDC_SCX:
-                SCX = data;
-                break; 
-            case AddressMap.REG_LCDC_LY:
-                LY = data;
-                break; 
-            case AddressMap.REG_LCDC_LYC:
-                LYC = data;
-                break; 
-            case AddressMap.REG_LCDC_BGP:
-                BGP = data;
-                break; 
-            case AddressMap.REG_LCDC_OBP0:
-                OBP0 = data;
-                break; 
-            case AddressMap.REG_LCDC_OBP1:
-                OBP1 = data;
-                break; 
-            case AddressMap.REG_LCDC_WY:
-                WY = data;
-                break; 
-            case AddressMap.REG_LCDC_WX:
-                WX = data;
-                break;
-                //            default: return NO_DATA;
+                else if(address == AddressMap.REG_LCDC_LY || address == AddressMap.REG_LCDC_LYC)
+                    updateLYC_EQ_LY();
             }
         }
         //TODO does write depend on LCDC modes?
         else if(address >= AddressMap.VIDEO_RAM_START && address < AddressMap.VIDEO_RAM_END) {
                 bus.write(address, data);
         }
-        //TODO : again, switch seems baaadddd ?
     }
 
    
@@ -268,6 +240,10 @@ public final class LcdController implements Component, Clocked {
     
     private int readRegAtAddress(int address) {
         return reg(Reg.values()[address - AddressMap.REG_LCDC]);
+    }
+    
+    private void setRegAtAddress(int address, int newV) {
+        setReg(Reg.values()[address - AddressMap.REG_LCDC], newV);
     }
     
     
