@@ -25,12 +25,13 @@ public final class LcdController implements Component, Clocked {
                 WY   = 0, WX   = 0;
     
     private enum LcdMode {H_BLANK , V_BLANK, MODE_2, MODE_3 };
+    private enum LcdInterrupts {INT_MODE0, INT_MODE1, INT_MODE2, INT_LYC};
     
     private final Cpu cpu;
     private final Bus bus;
     
     private long nextNonIdleCycle = 0; //TODO : should be 0 or what ? we didn't give it an initial value in cpu.java…
-    private long lcdOnCycle; //TODO : inital value
+    private long lcdOnCycle; //TODO : @289
     
     public LcdController(Cpu cpu, Bus bus) {
         //TODO : should we take bus as argument ?
@@ -134,16 +135,29 @@ public final class LcdController implements Component, Clocked {
             
             switch(address) {
             case AddressMap.REG_LCDC:
+                LCDC = data;
+                if(!screenIsOn()) {
+                    setMode(LcdMode.H_BLANK);
+                    LY = 0;
+                    nextNonIdleCycle = Long.MAX_VALUE;
+                }
                 break; 
             case AddressMap.REG_LCDC_STAT:
+                STAT = Bits.clip(3, STAT) & (Bits.extract(data, 3, 5)<<3);
                 break; 
             case AddressMap.REG_LCDC_SCY:
+                SCY = data;
                 break; 
             case AddressMap.REG_LCDC_SCX:
+                SCX = data;
                 break; 
             case AddressMap.REG_LCDC_LY:
+                LY = data;
                 break; 
             case AddressMap.REG_LCDC_LYC:
+                LYC = data;
+                Bits.set(STAT, 2, LYC == LY);
+                
                 break; 
             case AddressMap.REG_LCDC_BGP:
                 break; 
@@ -211,5 +225,10 @@ public final class LcdController implements Component, Clocked {
             return LcdMode.MODE_3;
         }
         throw new IllegalStateException();
+    }
+    
+    private void setMode(LcdMode mode) {
+        Bits.set(STAT, 0, Bits.test(mode.ordinal(), 0));
+        Bits.set(STAT, 1, Bits.test(mode.ordinal(), 1));
     }
 }
