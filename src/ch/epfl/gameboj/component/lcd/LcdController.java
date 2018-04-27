@@ -35,24 +35,26 @@ public final class LcdController implements Component, Clocked {
     private enum LcdMode {H_BLANK , V_BLANK, MODE_2, MODE_3 };
     
     private final Cpu cpu;
-    private final Bus bus;
+    private Bus bus;
+    
+    private final Ram vRam;
     
     private final RegisterFile<Reg> registerFile = new RegisterFile<>(Reg.values());
     
     private long nextNonIdleCycle = 0; //TODO : should be 0 or what ? we didn't give it an initial value in cpu.java…
     private long lcdOnCycle; //TODO : @289
     
-    public LcdController(Cpu cpu, Bus bus) {
-        //TODO : should we take bus as argument ?
-        // there seem to be a contradiction between
-        // what he says about attachTo and the constructor..
+    public LcdController(Cpu cpu) {
         this.cpu = Objects.requireNonNull(cpu);
-        this.bus = Objects.requireNonNull(bus);
 
-        Ram vRam = new Ram(AddressMap.VIDEO_RAM_SIZE);
-        RamController vRamController = new RamController(vRam,
-                AddressMap.VIDEO_RAM_START, AddressMap.VIDEO_RAM_END);
-        vRamController.attachTo(this.bus);
+        vRam = new Ram(AddressMap.VIDEO_RAM_SIZE);
+    }
+    
+    @Override
+    public void attachTo(Bus bus) {
+        Component.super.attachTo(bus);
+        
+        this.bus = bus;
     }
 
     @Override
@@ -120,9 +122,10 @@ public final class LcdController implements Component, Clocked {
         
         //TODO should we have a single if? this way optimises time though
         
-        else if(videoRamRange(address)) {
+        else if(address >= AddressMap.VIDEO_RAM_START && address < AddressMap.VIDEO_RAM_END) {
+            //TODO : strange ?
             if(tileSourceRange(address) || tileAreaRange(address))
-            return bus.read(address);
+                return vRam.read(address - AddressMap.VIDEO_RAM_START);
         }
         return NO_DATA;
     }
@@ -165,10 +168,6 @@ public final class LcdController implements Component, Clocked {
    public LcdImage currentImage() {
         // TODO : implement
         return null;
-    }
-    
-    private boolean videoRamRange(int address) {
-        return address >= AddressMap.VIDEO_RAM_START && address < AddressMap.VIDEO_RAM_END;
     }
 
     private boolean tileSourceRange(int address) {

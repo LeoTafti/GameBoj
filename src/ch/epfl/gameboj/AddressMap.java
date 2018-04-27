@@ -12,7 +12,7 @@ public interface AddressMap {
     int HIGH_RAM_START = 0xFF80, HIGH_RAM_END = 0xFFFF, HIGH_RAM_SIZE = HIGH_RAM_END - HIGH_RAM_START;
 
     // Video RAM
-//    int[] TILE_SOURCE = new int[] { 0x8800, 0x8000 };
+    int[] TILE_SOURCE = new int[] { 0x8800, 0x8000 };
     
     // TILE DATA
     int TILE_SOURCE_START = 0x8000 , TILE_SOURCE_END = 0x97FF;     //end bound is inclusive

@@ -20,6 +20,7 @@ public final class GameBoy {
     private final Bus bus;
     private final Cpu cpu;
     private final Timer timer;
+    private final LcdController lcdController;
 
     private long cycleCount;
 
@@ -54,8 +55,8 @@ public final class GameBoy {
                 Objects.requireNonNull(cartridge));
         romController.attachTo(bus);
         
-//        LcdController lcdController = new LcdController(this);
-//        lcdController.attachTo(bus);
+        lcdController = new LcdController(this.cpu);
+        lcdController.attachTo(bus);
         
     }
 
@@ -73,6 +74,7 @@ public final class GameBoy {
 
         while (cycleCount < cycle) {
             timer.cycle(cycleCount);
+            lcdController.cycle(cycleCount);
             cpu.cycle(cycleCount);
             ++cycleCount;
         }
@@ -98,9 +100,20 @@ public final class GameBoy {
     
     /**
      * Getter for timer
+     * 
+     * @return GameBoy's timer
      */
     public Timer timer() {
         return timer;
+    }
+    
+    /**
+     * Getter for lcdController
+     * 
+     * @return GameBoy's lcdController
+     */
+    public LcdController lcdController() {
+        return lcdController;
     }
 
     /**
