@@ -18,6 +18,9 @@ import ch.epfl.gameboj.component.memory.RamController;
 public final class LcdController implements Component, Clocked {
 
     public static final int LCD_WIDTH = 160, LCD_HEIGHT = 144;
+    private static final int IMAGE_CYCLES = 17556;
+    private static final int LINE_CYCLES= 114;
+    private static final int VBLANK_CYCLES = LINE_CYCLES * 10;
 
     // 8-bit registers
     private enum Reg implements Register {
@@ -57,41 +60,53 @@ public final class LcdController implements Component, Clocked {
         this.bus = bus;
     }
 
-    @Override
     public void cycle(long cycle) {
+        
         if(nextNonIdleCycle == Long.MAX_VALUE && screenIsOn())
             lcdOnCycle = cycle;
             //TODO : force nextNonIdleCycle to current cycle value ?
+
         else if(cycle != nextNonIdleCycle)
             return;
         
-        reallyCycle();
-        
-        
-        //From cpu :
-//        if (nextNonIdleCycle == Long.MAX_VALUE && pendingInterrupt()) {
-//            nextNonIdleCycle = cycle;
-//        } else if (cycle != nextNonIdleCycle) {
-//            return;
-//        }
-//        reallyCycle();
+        reallyCycle(cycle);
     }
     
-    private void reallyCycle() {
-        interrupt();
+    private void reallyCycle(long cycle) {
         
-        //from cpu
-//        if (IME && pendingInterrupt()) {
-//            handleInterrupt();
-//        } else {
-//            Opcode opcode = getOpcode();
-//            dispatch(opcode);
-//
-//            nextNonIdleCycle += opcode.cycles;
-//        }
+        int imageCycle = (int) (cycle - lcdOnCycle) % IMAGE_CYCLES;
+        int line = imageCycle / LINE_CYCLES;
+        int lineCycle = imageCycle % LINE_CYCLES;
+
+        switch(mode()) {
+        case MODE_2:
+            // TODO DRAW
+            setMode(LcdMode.MODE_3);
+            nextNonIdleCycle += 43;
+            break;
+        case MODE_3:
+            setMode(LcdMode.H_BLANK);
+            nextNonIdleCycle += 51;
+            break;
+        case H_BLANK:
+            if(line != LCD_HEIGHT)
+                setMode(LcdMode.MODE_2);
+            else setMode(LcdMode.V_BLANK);
+            setReg(Reg.LY, reg(Reg.LY) + 1);
+            break;
+        case V_BLANK:
+            if(line == 0)
+                setMode(LcdMode.MODE_2);
+            else nextNonIdleCycle += LINE_CYCLES;
+            setReg(Reg.LY, reg(Reg.LY) + 1);
+            break;
+        }
+        
+        requestPotentialInterrupt();
+        
     }
         
-    private void interrupt() {
+    private void requestPotentialInterrupt() {
         if(mode() == LcdMode.V_BLANK)
             cpu.requestInterrupt(Cpu.Interrupt.VBLANK);
         else if (Bits.extract(reg(Reg.STAT), 3, 3) != 0)
@@ -110,7 +125,7 @@ public final class LcdController implements Component, Clocked {
          */
         
         if(address >= AddressMap.REGS_LCDC_START && address < AddressMap.REGS_LCDC_END) {
-            readRegAtAddress(address);
+            readRegAt(address);
         }
         
         //TODO distinguish between states:
@@ -123,9 +138,7 @@ public final class LcdController implements Component, Clocked {
         //TODO should we have a single if? this way optimises time though
         
         else if(address >= AddressMap.VIDEO_RAM_START && address < AddressMap.VIDEO_RAM_END) {
-            //TODO : strange ?
-            if(tileSourceRange(address) || tileAreaRange(address))
-                return vRam.read(address - AddressMap.VIDEO_RAM_START);
+            return vRam.read(address - AddressMap.VIDEO_RAM_START);
         }
         return NO_DATA;
     }
@@ -138,17 +151,17 @@ public final class LcdController implements Component, Clocked {
         if(address >= AddressMap.REGS_LCDC_START && address < AddressMap.REGS_LCDC_END) {
             if(address == AddressMap.REG_LCDC_STAT) {
                 setReg(Reg.STAT,
-                        Bits.clip(3, reg(Reg.STAT)) & (Bits.extract(data, 3, 5)<<3));
+                        Bits.extract(data, 3, 5)<<3 | Bits.clip(3, reg(Reg.STAT)));
             }
             else {
-                setRegAtAddress(address, data);
+                setRegAt(address, data);
                 
                 if(address == AddressMap.REG_LCDC && !screenIsOn()) {
                     setMode(LcdMode.H_BLANK);
                     setReg(Reg.LY, 0);
                     nextNonIdleCycle = Long.MAX_VALUE;
                 }
-                else if(address == AddressMap.REG_LCDC_LY || address == AddressMap.REG_LCDC_LYC)
+                else if(address == AddressMap.REG_LCDC_LYC)
                     updateLYC_EQ_LY();
             }
         }
@@ -162,7 +175,7 @@ public final class LcdController implements Component, Clocked {
     //TODO call in setReg for case LY and LYC
    private void updateLYC_EQ_LY() {
        setBitSTAT(STAT_Bits.LYC_EQ_LY, reg(Reg.LYC) == reg(Reg.LY));
-       interrupt();
+       requestPotentialInterrupt();
    }
    
    public LcdImage currentImage() {
@@ -237,11 +250,11 @@ public final class LcdController implements Component, Clocked {
         registerFile.set(r, newV);
     }
     
-    private int readRegAtAddress(int address) {
+    private int readRegAt(int address) {
         return reg(Reg.values()[address - AddressMap.REG_LCDC]);
     }
     
-    private void setRegAtAddress(int address, int newV) {
+    private void setRegAt(int address, int newV) {
         setReg(Reg.values()[address - AddressMap.REG_LCDC], newV);
     }
     
