@@ -9,6 +9,7 @@ import ch.epfl.gameboj.bits.Bits;
 import ch.epfl.gameboj.component.Clocked;
 import ch.epfl.gameboj.component.Component;
 import ch.epfl.gameboj.component.cpu.Cpu;
+import ch.epfl.gameboj.component.cpu.Opcode;
 import ch.epfl.gameboj.component.memory.Ram;
 import ch.epfl.gameboj.component.memory.RamController;
 
@@ -25,7 +26,7 @@ public final class LcdController implements Component, Clocked {
                 WY   = 0, WX   = 0;
     
     private enum LcdMode {H_BLANK , V_BLANK, MODE_2, MODE_3 };
-    private enum LcdInterrupts {INT_MODE0, INT_MODE1, INT_MODE2, INT_LYC};
+    private enum LcdInterrupts {VBLANK};
     
     private final Cpu cpu;
     private final Bus bus;
@@ -67,7 +68,24 @@ public final class LcdController implements Component, Clocked {
     }
     
     private void reallyCycle() {
-        //TODO implement
+        interrupt();
+        
+        //from cpu
+//        if (IME && pendingInterrupt()) {
+//            handleInterrupt();
+//        } else {
+//            Opcode opcode = getOpcode();
+//            dispatch(opcode);
+//
+//            nextNonIdleCycle += opcode.cycles;
+//        }
+    }
+        
+    private void interrupt() {
+        if(mode() == LcdMode.V_BLANK)
+            cpu.requestInterrupt(Cpu.Interrupt.VBLANK);
+        else if (Bits.extract(STAT, 3, 3) != 0)
+                cpu.requestInterrupt(Cpu.Interrupt.LCD_STAT);
     }
 
     @Override
@@ -156,18 +174,21 @@ public final class LcdController implements Component, Clocked {
                 break; 
             case AddressMap.REG_LCDC_LYC:
                 LYC = data;
-                Bits.set(STAT, 2, LYC == LY);
-                
                 break; 
             case AddressMap.REG_LCDC_BGP:
+                BGP = data;
                 break; 
             case AddressMap.REG_LCDC_OBP0:
+                OBP0 = data;
                 break; 
             case AddressMap.REG_LCDC_OBP1:
+                OBP1 = data;
                 break; 
             case AddressMap.REG_LCDC_WY:
+                WY = data;
                 break; 
             case AddressMap.REG_LCDC_WX:
+                WX = data;
                 break;
                 //            default: return NO_DATA;
             }
@@ -179,7 +200,14 @@ public final class LcdController implements Component, Clocked {
         //TODO : again, switch seems baaadddd ?
     }
 
-    public LcdImage currentImage() {
+   
+    //TODO call in setReg for case LY and LYC
+   private void updateLYC_EQ_LY() {
+       setBitSTAT(STAT_Bits.LYC_EQ_LY, (LYC == LY));
+       interrupt();
+   }
+   
+ public LcdImage currentImage() {
         // TODO : implement
         return null;
     }
