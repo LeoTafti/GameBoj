@@ -85,7 +85,7 @@ public final class LcdController implements Component, Clocked {
             nextNonIdleCycle += 43;
             break;
         case MODE_3:
-            setMode(LcdMode.H_BLANK); 
+            setMode(LcdMode.H_BLANK);
             nextNonIdleCycle += 51;
             break;
         case H_BLANK:
@@ -167,7 +167,7 @@ public final class LcdController implements Component, Clocked {
         }
         //TODO does write depend on LCDC modes?
         else if(address >= AddressMap.VIDEO_RAM_START && address < AddressMap.VIDEO_RAM_END) {
-                bus.write(address, data);
+                vRam.write(address - AddressMap.VIDEO_RAM_START, data);
         }
     }
 
