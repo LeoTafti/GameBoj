@@ -239,13 +239,8 @@ public final class LcdController implements Component, Clocked {
     }
     
     private void setMode(LcdMode mode) {
-//        Bits.set(STAT, 0, Bits.test(mode.ordinal(), 0));
-//        Bits.set(STAT, 1, Bits.test(mode.ordinal(), 1));
-        
-        //TODO : Bits.test(mode.ordinal(), 0) makes no sense ?
-        
-        setBitSTAT(STAT_Bits.MODE0, newValue);
-        setBitSTAT(STAT_Bits.MODE1, newValue);
+        setReg(Reg.STAT,
+                reg(Reg.STAT) << 2 | mode.ordinal());
     }
     
     /**
