@@ -85,7 +85,7 @@ public final class LcdController implements Component, Clocked {
             nextNonIdleCycle += 43;
             break;
         case MODE_3:
-            setMode(LcdMode.H_BLANK);
+            setMode(LcdMode.H_BLANK); 
             nextNonIdleCycle += 51;
             break;
         case H_BLANK:
