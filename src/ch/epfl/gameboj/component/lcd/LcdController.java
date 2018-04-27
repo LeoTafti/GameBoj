@@ -13,14 +13,13 @@ import ch.epfl.gameboj.component.Clocked;
 import ch.epfl.gameboj.component.Component;
 import ch.epfl.gameboj.component.cpu.Cpu;
 import ch.epfl.gameboj.component.memory.Ram;
-import ch.epfl.gameboj.component.memory.RamController;
 
 public final class LcdController implements Component, Clocked {
 
     public static final int LCD_WIDTH = 160, LCD_HEIGHT = 144;
     private static final int IMAGE_CYCLES = 17556;
     private static final int LINE_CYCLES= 114;
-    private static final int VBLANK_CYCLES = LINE_CYCLES * 10;
+    private static final int V_BLANK_LINES = 10;
 
     // 8-bit registers
     private enum Reg implements Register {
@@ -74,31 +73,36 @@ public final class LcdController implements Component, Clocked {
     
     private void reallyCycle(long cycle) {
         
-        int imageCycle = (int) (cycle - lcdOnCycle) % IMAGE_CYCLES;
-        int line = imageCycle / LINE_CYCLES;
-        int lineCycle = imageCycle % LINE_CYCLES;
-
         switch(mode()) {
         case MODE_2:
             // TODO DRAW
             setMode(LcdMode.MODE_3);
             nextNonIdleCycle += 43;
             break;
+            
         case MODE_3:
             setMode(LcdMode.H_BLANK);
             nextNonIdleCycle += 51;
             break;
+            
         case H_BLANK:
-            if(line != LCD_HEIGHT)
+            if(reg(Reg.LY) != LCD_HEIGHT) {
                 setMode(LcdMode.MODE_2);
-            else setMode(LcdMode.V_BLANK);
-            setReg(Reg.LY, reg(Reg.LY) + 1);
+                nextNonIdleCycle += 20;
+            }
+            else {
+                setMode(LcdMode.V_BLANK);
+                nextNonIdleCycle += LINE_CYCLES;
+            }
+            incLY();
             break;
+            
         case V_BLANK:
-            if(line == 0)
+            if(reg(Reg.LY) == LCD_HEIGHT + V_BLANK_LINES - 1) 
                 setMode(LcdMode.MODE_2);
-            else nextNonIdleCycle += LINE_CYCLES;
-            setReg(Reg.LY, reg(Reg.LY) + 1);
+            else 
+                nextNonIdleCycle += LINE_CYCLES;
+            incLY();
             break;
         }
         
@@ -106,6 +110,15 @@ public final class LcdController implements Component, Clocked {
         
     }
         
+    private void incLY() {
+        int LY = reg(Reg.LY);
+        if( LY == 153) 
+            setReg(Reg.LY, 0);
+        else
+            setReg(Reg.LY, ++LY);
+        updateLYC_EQ_LY();
+    }
+
     private void requestPotentialInterrupt() {
         if(mode() == LcdMode.V_BLANK)
             cpu.requestInterrupt(Cpu.Interrupt.VBLANK);
