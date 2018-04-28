@@ -15,18 +15,19 @@ public final class DebugMain2 {
     };
     
     private static String[] paths = new String[] {
-            "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/01-special.gb",
-            "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/02-interrupts.gb",
-            "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/03-op sp,hl.gb",
-            "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/04-op r,imm.gb",
-            "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/05-op rp.gb",
-            "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/06-ld r,r.gb",
-            "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/07-jr,jp,call,ret,rst.gb",
-            "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/08-misc instrs.gb",
-            "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/09-op r,r.gb",
-            "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/10-bit ops.gb",
-            "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/11-op a,(hl).gb",
-            "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/instr_timing.gb" };
+            "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/01-special.gb"};
+//            "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/02-interrupts.gb",
+//            "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/03-op sp,hl.gb",
+//            "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/04-op r,imm.gb",
+//            "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/05-op rp.gb",
+//            "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/06-ld r,r.gb",
+//            "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/07-jr,jp,call,ret,rst.gb",
+//            "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/08-misc instrs.gb",
+//            "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/09-op r,r.gb",
+//            "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/10-bit ops.gb",
+//            "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/11-op a,(hl).gb",
+//            "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/instr_timing.gb"};
+//             "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/flappyboy.gb"};
 
 //            "C:/Users/Paul Juillard/Documents/EPFL/BA2/POO/Projet/GameBoj/test/ch/epfl/gameboj/component/blaarg/01-special.gb",
 //            "C:/Users/Paul Juillard/Documents/EPFL/BA2/POO/Projet/GameBoj/test/ch/epfl/gameboj/component/blaarg/02-interrupts.gb",
@@ -60,15 +61,15 @@ public final class DebugMain2 {
           }
           System.out.println("+--------------------+");
     
-    //      LcdImage li = gb.lcdController().currentImage();
-    //      BufferedImage i =
-    //        new BufferedImage(li.width(),
-    //              li.height(),
-    //              BufferedImage.TYPE_INT_RGB);
-    //      for (int y = 0; y < li.height(); ++y)
-    //        for (int x = 0; x < li.width(); ++x)
-    //      i.setRGB(x, y, COLOR_MAP[li.get(x, y)]);
-    //      ImageIO.write(i, "png", new File("gb.png"));
+          LcdImage li = gb.lcdController().currentImage();
+          BufferedImage i =
+            new BufferedImage(li.width(),
+                  li.height(),
+                  BufferedImage.TYPE_INT_RGB);
+          for (int y = 0; y < li.height(); ++y)
+            for (int x = 0; x < li.width(); ++x)
+          i.setRGB(x, y, COLOR_MAP[li.get(x, y)]);
+          ImageIO.write(i, "png", new File("gb.png"));
         }
     }
   }

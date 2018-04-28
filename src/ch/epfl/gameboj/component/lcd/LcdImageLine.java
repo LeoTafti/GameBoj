@@ -71,6 +71,7 @@ public final class LcdImageLine {
          */
         public Builder setBytes(int index, int mb, int lb) {
             Objects.checkIndex(index, size());
+
             Preconditions.checkBits8(mb);
             Preconditions.checkBits8(lb);
 

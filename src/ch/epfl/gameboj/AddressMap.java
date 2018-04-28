@@ -13,7 +13,7 @@ public interface AddressMap {
 
     // Video RAM
     int[] TILE_SOURCE = new int[] { 0x8800, 0x8000 };
-    
+    int[] BG_DISPLAY_DATA = new int[] { 0x9800, 0x9C00 };
     
     //TODO : remove ?
 //    // TILE DATA
@@ -36,6 +36,8 @@ public interface AddressMap {
     int REG_IF = 0xFF0F;
     int REGS_LCDC_START = 0xFF40, REGS_LCDC_END = 0xFF4C;
     //Memory-mapped "LCD" registers
+    
+    //TODO : remove unused
     int REG_LCDC = 0xFF40;
     int REG_LCDC_STAT = 0xFF41;
     int REG_LCDC_SCY = 0xFF42;
