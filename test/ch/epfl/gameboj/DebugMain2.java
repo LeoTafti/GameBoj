@@ -15,20 +15,22 @@ public final class DebugMain2 {
     };
     
     private static String[] paths = new String[] {
-            "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/01-special.gb"};
-//            "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/02-interrupts.gb",
-//            "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/03-op sp,hl.gb",
-//            "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/04-op r,imm.gb",
-//            "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/05-op rp.gb",
-//            "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/06-ld r,r.gb",
-//            "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/07-jr,jp,call,ret,rst.gb",
-//            "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/08-misc instrs.gb",
-//            "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/09-op r,r.gb",
-//            "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/10-bit ops.gb",
-//            "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/11-op a,(hl).gb",
-//            "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/instr_timing.gb"};
-//             "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/flappyboy.gb"};
+//    "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/01-special.gb"};
+//    "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/02-interrupts.gb",
+//    "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/03-op sp,hl.gb",
+//    "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/04-op r,imm.gb",
+//    "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/05-op rp.gb",
+//    "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/06-ld r,r.gb",
+//    "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/07-jr,jp,call,ret,rst.gb",
+//    "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/08-misc instrs.gb",
+//    "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/09-op r,r.gb",
+//    "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/10-bit ops.gb",
+//    "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/11-op a,(hl).gb",
+//    "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/instr_timing.gb"};
+//    "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/flappyboy.gb"};
+    "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/Tetris.gb"};
 
+    
 //            "C:/Users/Paul Juillard/Documents/EPFL/BA2/POO/Projet/GameBoj/test/ch/epfl/gameboj/component/blaarg/01-special.gb",
 //            "C:/Users/Paul Juillard/Documents/EPFL/BA2/POO/Projet/GameBoj/test/ch/epfl/gameboj/component/blaarg/02-interrupts.gb",
 //            "C:/Users/Paul Juillard/Documents/EPFL/BA2/POO/Projet/GameBoj/test/ch/epfl/gameboj/component/blaarg/03-op sp,hl.gb",
