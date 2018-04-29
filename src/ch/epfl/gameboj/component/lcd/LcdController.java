@@ -1,5 +1,6 @@
 package ch.epfl.gameboj.component.lcd;
 
+import java.io.ObjectStreamClass;
 import java.util.Objects;
 
 import ch.epfl.gameboj.AddressMap;
@@ -45,6 +46,8 @@ public final class LcdController implements Component, Clocked {
     }
     
     private enum LcdMode { H_BLANK , V_BLANK, MODE_2, MODE_3 };
+    
+    private int winY = 0;
     
     private final Cpu cpu;
     private final RegisterFile<Reg> registerFile;
@@ -154,6 +157,7 @@ public final class LcdController implements Component, Clocked {
                 setMode(LcdMode.MODE_2);
                 nextImageBuilder = new LcdImage.Builder(LCD_WIDTH, LCD_HEIGHT);
                 nextNonIdleCycle++;
+                winY = 0;
             }
             else 
                 nextNonIdleCycle += LINE_CYCLES;
@@ -192,36 +196,83 @@ public final class LcdController implements Component, Clocked {
        }
 
     private LcdImageLine computeLine(int index) {
-        LcdImageLine.Builder lineb = new LcdImageLine.Builder(IMAGE_TILE_SIZE * TILE_SIZE);
+        LcdImageLine.Builder bgLineBuilder = new LcdImageLine.Builder(IMAGE_TILE_SIZE * TILE_SIZE);
+        LcdImageLine.Builder winLineBuilder = new LcdImageLine.Builder(IMAGE_TILE_SIZE * TILE_SIZE);
         
-        int tileLine = index / TILE_SIZE;
-        int line = index % TILE_SIZE;
+        int bgTileLine = index / TILE_SIZE;
+        int bgLine = index % TILE_SIZE;
+        int winTileLine = winY / TILE_SIZE;
+        int winLine = winY % TILE_SIZE;
         
         int bg_area = AddressMap.BG_DISPLAY_DATA[testBitLCDC(LCDC_Bits.BG_AREA) ? 1 : 0];
-        int tileSource = AddressMap.TILE_SOURCE[testBitLCDC(LCDC_Bits.TILE_SOURCE) ? 1 : 0];
+        int win_area = AddressMap.BG_DISPLAY_DATA[testBitLCDC(LCDC_Bits.WIN_AREA) ? 1 : 0];
+//        int tileSource = AddressMap.TILE_SOURCE[testBitLCDC(LCDC_Bits.TILE_SOURCE) ? 1 : 0];
+        
+        boolean windowOnScreen = testBitLCDC(LCDC_Bits.WIN)  //window is on
+                && reg(Reg.WX) >= 0 &&   reg(Reg.WX) < 167 //WX in range //TODO static
+                && reg(Reg.WY) >= reg(Reg.LY); //WY in range
         
         for(int tile = 0; tile < IMAGE_TILE_SIZE; tile++) { 
-            int tileIndex = read(bg_area + tileLine * IMAGE_TILE_SIZE + tile);
+            int bgTileIndex = read(bg_area + bgTileLine * IMAGE_TILE_SIZE + tile);
+            int winTileIndex = read(win_area + winTileLine * IMAGE_TILE_SIZE + tile);
 
             if(testBitLCDC(LCDC_Bits.TILE_SOURCE) == false) {
-                tileIndex += tileIndex <= 0x7f ? 0x80 : -0x80;
+                bgTileIndex += bgTileIndex <= 0x7f ? 0x80 : -0x80;
+                winTileIndex += winTileIndex <= 0x7f ? 0x80 : -0x80;
+            }
+            addTileLine(bgLineBuilder, tile, bgTileIndex, bgLine);
+            
+            if( windowOnScreen ) {
+//                System.out.println("coucou");
+                addTileLine(winLineBuilder, tile, winTileIndex, winLine); 
             }
             
-            int address = tileSource + tileIndex * 16 + 2*line;
             
-            int lb = read(address);
-            int mb = read(address + 1);
             
-            /*
-             * TODO "Une manière simple de rétablir la correspondance est d'inverser
-             * l'ordre des octets lus depuis la mémoire graphique avant de les
-             * placer dans les vecteurs représentant les lignes, et c'est ce que
-             * nous ferons dans le simulateur."
-             */
-            //TODO : trooooooooooop lent
-            lineb.setBytes(tile, Bits.reverse8(mb), Bits.reverse8(lb));
+            
+//            int address = tileSource + tileIndex * 16 + 2*line;
+//            
+//            int lb = read(address);
+//            int mb = read(address + 1);
+//            
+//            /*
+//             * TODO "Une manière simple de rétablir la correspondance est d'inverser
+//             * l'ordre des octets lus depuis la mémoire graphique avant de les
+//             * placer dans les vecteurs représentant les lignes, et c'est ce que
+//             * nous ferons dans le simulateur."
+//             */
+//            //TODO : trooooooooooop lent
+//            bgLineBuilder.setBytes(tile, Bits.reverse8(mb), Bits.reverse8(lb));
         }
-        return lineb.build().extractWrapped(reg(Reg.SCX), LCD_WIDTH).mapColors(reg(Reg.BGP));
+        
+        LcdImageLine bg = bgLineBuilder.build().extractWrapped(reg(Reg.SCX), LCD_WIDTH);
+        LcdImageLine win = winLineBuilder.build().extractWrapped(0, LCD_WIDTH).mapColors(reg(Reg.BGP));
+        
+        LcdImageLine imageLine = windowOnScreen?
+                    bg.join(win, reg(Reg.WX)-7).mapColors(reg(Reg.BGP)) :
+                    bg;
+        
+        
+//        System.out.println("line " + index + " windowL line " + winY);
+//        System.out.println(win.size());
+//        System.out.println(win.lsb());
+//        System.out.println(win.msb());
+        
+        
+        ++winY;
+//        return bgLineBuilder.build().extractWrapped(reg(Reg.SCX), LCD_WIDTH).mapColors(reg(Reg.BGP));
+        return imageLine;
+    }
+    
+    private void addTileLine(LcdImageLine.Builder b, int tile, int tileIndex, int lineIndex) {
+        int tileSource = AddressMap.TILE_SOURCE[testBitLCDC(LCDC_Bits.TILE_SOURCE) ? 1 : 0];
+        
+        int address = tileSource + tileIndex * 16 + 2*lineIndex;
+        
+        int lb = read(address);
+        int mb = read(address + 1);
+        
+        b.setBytes(tile, Bits.reverse8(mb), Bits.reverse8(lb));
     }
 
     private void requestPotentialInterrupt() {
