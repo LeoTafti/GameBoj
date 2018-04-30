@@ -200,51 +200,98 @@ public final class LcdController implements Component, Clocked {
        }
 
     private LcdImageLine computeLine(int index) {
-        LcdImageLine.Builder bgLineBuilder = new LcdImageLine.Builder(IMAGE_SIZE);
-        LcdImageLine.Builder winLineBuilder = new LcdImageLine.Builder(IMAGE_SIZE);
-        
-        int bgTileLine = index / TILE_SIZE;
-        int bgLine = index % TILE_SIZE;
-        int winTileLine = winY / TILE_SIZE;
-        int winLine = winY % TILE_SIZE;
-        
+//        LcdImageLine.Builder bgLineBuilder = new LcdImageLine.Builder(IMAGE_SIZE);
+//        LcdImageLine.Builder winLineBuilder = new LcdImageLine.Builder(IMAGE_SIZE);
+//        
+//        int bgTileLine = index / TILE_SIZE;
+//        int bgLine = index % TILE_SIZE;
+//        int winTileLine = winY / TILE_SIZE;
+//        int winLine = winY % TILE_SIZE;
+//        
         int WX_prime = reg(Reg.WX) - WX_CORRECTION;
-        
-        int bg_area = AddressMap.BG_DISPLAY_DATA[testBitLCDC(LCDC_Bits.BG_AREA) ? 1 : 0];
-        int win_area = AddressMap.BG_DISPLAY_DATA[testBitLCDC(LCDC_Bits.WIN_AREA) ? 1 : 0];
-        
+//        
+//        int bg_area = AddressMap.BG_DISPLAY_DATA[testBitLCDC(LCDC_Bits.BG_AREA) ? 1 : 0];
+//        int win_area = AddressMap.BG_DISPLAY_DATA[testBitLCDC(LCDC_Bits.WIN_AREA) ? 1 : 0];
+//        
         boolean windowOnLine = testBitLCDC(LCDC_Bits.WIN)
                 && WX_prime >= 0 &&   WX_prime < LCD_WIDTH
                 && reg(Reg.LY) >= reg(Reg.WY);
-                
-        for(int tile = 0; tile < IMAGE_TILE_SIZE; tile++) { 
-            int bgTileIndex = read(bg_area + bgTileLine * IMAGE_TILE_SIZE + tile);
-            int winTileIndex = read(win_area + winTileLine * IMAGE_TILE_SIZE + tile);
-
-            if(testBitLCDC(LCDC_Bits.TILE_SOURCE) == false) {
-                bgTileIndex += bgTileIndex <= 0x7f ? 0x80 : -0x80;
-                winTileIndex += winTileIndex <= 0x7f ? 0x80 : -0x80;
-            }
-            addTileLine(bgLineBuilder, tile, bgTileIndex, bgLine);
-            
-                    
-            if(windowOnLine) {
-                addTileLine(winLineBuilder, tile, winTileIndex, winLine); 
-            }
-        }
+//                
+//        for(int tile = 0; tile < IMAGE_TILE_SIZE; tile++) { 
+//            int bgTileIndex = read(bg_area + bgTileLine * IMAGE_TILE_SIZE + tile);
+//            int winTileIndex = read(win_area + winTileLine * IMAGE_TILE_SIZE + tile);
+//
+//            if(testBitLCDC(LCDC_Bits.TILE_SOURCE) == false) {
+//                bgTileIndex += bgTileIndex <= 0x7f ? 0x80 : -0x80;
+//                winTileIndex += winTileIndex <= 0x7f ? 0x80 : -0x80;
+//            }
+//            addTileLine(bgLineBuilder, tile, bgTileIndex, bgLine);
+//            
+//                    
+//            if(windowOnLine) {
+//                addTileLine(winLineBuilder, tile, winTileIndex, winLine); 
+//            }
+//        }
+//        
+//        LcdImageLine bg = bgLineBuilder.build().extractWrapped(reg(Reg.SCX), LCD_WIDTH);
+//        LcdImageLine win = winLineBuilder.build().extractWrapped(0, LCD_WIDTH);
         
-        LcdImageLine bg = bgLineBuilder.build().extractWrapped(reg(Reg.SCX), LCD_WIDTH);
-        LcdImageLine win = winLineBuilder.build().extractWrapped(0, LCD_WIDTH);
+        LcdImageLine bg = computeBGLine(index).extractWrapped(reg(Reg.SCX), LCD_WIDTH);
         
         if(windowOnLine) {
+            LcdImageLine win = computeWinLine().extractWrapped(0, LCD_WIDTH).shift(WX_prime);
             winY++;
             return bg.join(win, WX_prime).mapColors(reg(Reg.BGP));
         }
         return bg.mapColors(reg(Reg.BGP));
     }
     
-    private LcdImageLine computeLine(Area area, int index) {
-        return null;
+    private LcdImageLine computeBGLine(int index) {
+        
+        LcdImageLine.Builder b = new LcdImageLine.Builder(IMAGE_SIZE);
+        int tileLine = index / TILE_SIZE;
+        int line = index % TILE_SIZE;
+
+        int bg_area = AddressMap.BG_DISPLAY_DATA[
+                        testBitLCDC(LCDC_Bits.BG_AREA)
+                        ? 1
+                        : 0];
+        
+        for (int tile = 0; tile < IMAGE_TILE_SIZE; tile++) {
+            
+            int tileIndex = read(bg_area + tileLine * IMAGE_TILE_SIZE + tile);
+            
+            if (testBitLCDC(LCDC_Bits.TILE_SOURCE) == false) {
+                tileIndex += tileIndex <= 0x7f ? 0x80 : -0x80;
+            }
+            addTileLine(b, tile, tileIndex, line);
+        }
+        return b.build();
+    }
+    
+    private LcdImageLine computeWinLine() {
+        
+        LcdImageLine.Builder b = new LcdImageLine.Builder(IMAGE_SIZE);
+        int tileLine = winY / TILE_SIZE;
+        int line = winY % TILE_SIZE;
+
+        int win_area = AddressMap.BG_DISPLAY_DATA[
+                        testBitLCDC(LCDC_Bits.WIN_AREA) 
+                        ? 1
+                        : 0];
+        
+        for (int tile = 0; tile < IMAGE_TILE_SIZE; tile++) {
+            
+            int tileIndex = read(win_area + tileLine * IMAGE_TILE_SIZE + tile);
+            
+            if (testBitLCDC(LCDC_Bits.TILE_SOURCE) == false) {
+                tileIndex += tileIndex <= 0x7f ? 0x80 : -0x80;
+            }
+            
+            addTileLine(b, tile, tileIndex, line);
+        }
+        
+        return b.build();
     }
     
     private void addTileLine(LcdImageLine.Builder b, int tile, int tileIndex, int lineIndex) {
