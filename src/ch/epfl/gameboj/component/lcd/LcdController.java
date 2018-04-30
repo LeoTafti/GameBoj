@@ -220,7 +220,6 @@ public final class LcdController implements Component, Clocked {
                 bgTileIndex += bgTileIndex <= 0x7f ? 0x80 : -0x80;
                 winTileIndex += winTileIndex <= 0x7f ? 0x80 : -0x80;
             }
-            System.out.println("tile index"  + bgTileIndex);
             addTileLine(bgLineBuilder, tile, bgTileIndex, bgLine);
             
             if( windowOnScreen ) {
@@ -272,7 +271,6 @@ public final class LcdController implements Component, Clocked {
         
         int lb = read(address);
         int mb = read(address + 1);
-        System.out.println("tile source   " + Integer.toHexString(tileSource) + "  address   " + Integer.toHexString(address));
         
         b.setBytes(tile, Bits.reverse8(mb), Bits.reverse8(lb));
     }
