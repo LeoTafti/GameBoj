@@ -208,10 +208,12 @@ public final class LcdController implements Component, Clocked {
         int win_area = AddressMap.BG_DISPLAY_DATA[testBitLCDC(LCDC_Bits.WIN_AREA) ? 1 : 0];
 //        int tileSource = AddressMap.TILE_SOURCE[testBitLCDC(LCDC_Bits.TILE_SOURCE) ? 1 : 0];
         
-        boolean windowOnScreen = testBitLCDC(LCDC_Bits.WIN)  //window is on
-                && reg(Reg.WX) >= 0 &&   reg(Reg.WX) < 167 //WX in range //TODO static
-                && reg(Reg.WY) >= reg(Reg.LY); //WY in range
-        
+        boolean windowActive = testBitLCDC(LCDC_Bits.WIN)  //window is on
+                && reg(Reg.WX) >= 7 &&   reg(Reg.WX) < 167; //WX in range //TODO static
+//                && reg(Reg.WY) >= reg(Reg.LY); //WY in range
+        boolean windowOnLine = windowActive && reg(Reg.LY) >= reg(Reg.WY);
+//        System.out.println("LY : " + reg(Reg.LY) + " , WY : " + reg(Reg.WY) + ", onScreen : " + windowOnScreen);
+                
         for(int tile = 0; tile < IMAGE_TILE_SIZE; tile++) { 
             int bgTileIndex = read(bg_area + bgTileLine * IMAGE_TILE_SIZE + tile);
             int winTileIndex = read(win_area + winTileLine * IMAGE_TILE_SIZE + tile);
@@ -222,45 +224,20 @@ public final class LcdController implements Component, Clocked {
             }
             addTileLine(bgLineBuilder, tile, bgTileIndex, bgLine);
             
-            if( windowOnScreen ) {
-//                System.out.println("coucou");
+                    
+            if( windowOnLine ) {
                 addTileLine(winLineBuilder, tile, winTileIndex, winLine); 
             }
-            
-            
-            
-            
-//            int address = tileSource + tileIndex * 16 + 2*line;
-//            
-//            int lb = read(address);
-//            int mb = read(address + 1);
-//            
-//            /*
-//             * TODO "Une manière simple de rétablir la correspondance est d'inverser
-//             * l'ordre des octets lus depuis la mémoire graphique avant de les
-//             * placer dans les vecteurs représentant les lignes, et c'est ce que
-//             * nous ferons dans le simulateur."
-//             */
-//            //TODO : trooooooooooop lent
-//            bgLineBuilder.setBytes(tile, Bits.reverse8(mb), Bits.reverse8(lb));
         }
         
         LcdImageLine bg = bgLineBuilder.build().extractWrapped(reg(Reg.SCX), LCD_WIDTH);
-        LcdImageLine win = winLineBuilder.build().extractWrapped(0, LCD_WIDTH).mapColors(reg(Reg.BGP));
+        LcdImageLine win = winLineBuilder.build().extractWrapped(0, LCD_WIDTH);
         
-        LcdImageLine imageLine = windowOnScreen?
+        LcdImageLine imageLine = windowOnLine?
                     bg.join(win, reg(Reg.WX)-7).mapColors(reg(Reg.BGP)) :
                     bg;
         
-        
-//        System.out.println("line " + index + " windowL line " + winY);
-//        System.out.println(win.size());
-//        System.out.println(win.lsb());
-//        System.out.println(win.msb());
-        
-        
         ++winY;
-//        return bgLineBuilder.build().extractWrapped(reg(Reg.SCX), LCD_WIDTH).mapColors(reg(Reg.BGP));
         return imageLine;
     }
     
