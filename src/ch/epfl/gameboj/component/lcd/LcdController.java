@@ -214,13 +214,13 @@ public final class LcdController implements Component, Clocked {
         
         for(int tile = 0; tile < IMAGE_TILE_SIZE; tile++) { 
             int bgTileIndex = read(bg_area + bgTileLine * IMAGE_TILE_SIZE + tile);
-            System.out.println(bgTileIndex);
             int winTileIndex = read(win_area + winTileLine * IMAGE_TILE_SIZE + tile);
 
             if(testBitLCDC(LCDC_Bits.TILE_SOURCE) == false) {
                 bgTileIndex += bgTileIndex <= 0x7f ? 0x80 : -0x80;
                 winTileIndex += winTileIndex <= 0x7f ? 0x80 : -0x80;
             }
+            System.out.println("tile index"  + bgTileIndex);
             addTileLine(bgLineBuilder, tile, bgTileIndex, bgLine);
             
             if( windowOnScreen ) {
@@ -272,6 +272,7 @@ public final class LcdController implements Component, Clocked {
         
         int lb = read(address);
         int mb = read(address + 1);
+        System.out.println("tile source   " + Integer.toHexString(tileSource) + "  address   " + Integer.toHexString(address));
         
         b.setBytes(tile, Bits.reverse8(mb), Bits.reverse8(lb));
     }
