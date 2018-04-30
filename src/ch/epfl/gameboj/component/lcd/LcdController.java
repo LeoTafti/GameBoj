@@ -3,6 +3,8 @@ package ch.epfl.gameboj.component.lcd;
 import java.io.ObjectStreamClass;
 import java.util.Objects;
 
+import com.sun.tools.javac.util.List;
+
 import ch.epfl.gameboj.AddressMap;
 import ch.epfl.gameboj.Bus;
 import ch.epfl.gameboj.Preconditions;
@@ -70,6 +72,9 @@ public final class LcdController implements Component, Clocked {
         
         registerFile = new RegisterFile<>(Reg.values());
         vRam = new Ram(AddressMap.VIDEO_RAM_SIZE);
+        
+        currentImage = new LcdImage(List.of(new LcdImageLine.Builder(160).build()));
+        //TODO : just so that DebugMainLive works, BUT still shows that maybe we should give it a value and not let it be null before building first image ?
         
         nextImageBuilder = new LcdImage.Builder(LCD_WIDTH, LCD_HEIGHT);
   
@@ -235,11 +240,11 @@ public final class LcdController implements Component, Clocked {
             winY++;
             return bg.join(win, WX_prime).mapColors(reg(Reg.BGP));
         }
-        return bg;
+        return bg.mapColors(reg(Reg.BGP));
     }
     
     private LcdImageLine computeLine(Area area, int index) {
-        
+        return null;
     }
     
     private void addTileLine(LcdImageLine.Builder b, int tile, int tileIndex, int lineIndex) {
