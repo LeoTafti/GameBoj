@@ -214,6 +214,7 @@ public final class LcdController implements Component, Clocked {
         
         for(int tile = 0; tile < IMAGE_TILE_SIZE; tile++) { 
             int bgTileIndex = read(bg_area + bgTileLine * IMAGE_TILE_SIZE + tile);
+            System.out.println(bgTileIndex);
             int winTileIndex = read(win_area + winTileLine * IMAGE_TILE_SIZE + tile);
 
             if(testBitLCDC(LCDC_Bits.TILE_SOURCE) == false) {
