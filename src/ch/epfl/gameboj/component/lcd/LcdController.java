@@ -31,7 +31,6 @@ public final class LcdController implements Component, Clocked {
     private static final int V_BLANK_LINES = 10;
 
     private static final int H_BLANK_CYCLES = 51;
-    private static final int V_BLANK_CYCLES = 1140;
     private static final int MODE_2_CYCLES = 20;
     private static final int MODE_3_CYCLES = 43;
 
@@ -52,12 +51,6 @@ public final class LcdController implements Component, Clocked {
         H_BLANK, V_BLANK, MODE_2, MODE_3
     };
 
-    private enum Area {
-        BG, WIN
-    }
-
-    private int winY = 0;
-
     private final Cpu cpu;
     private final RegisterFile<Reg> registerFile;
     private final Ram vRam;
@@ -66,9 +59,9 @@ public final class LcdController implements Component, Clocked {
     private LcdImage currentImage;
     private LcdImage.Builder nextImageBuilder;
 
-    // TODO : should be 0 or what ? we didn't give it an initial value in
-    // cpu.java…
     private long nextNonIdleCycle;
+    
+    private int winY;
 
     public LcdController(Cpu cpu) {
         this.cpu = Objects.requireNonNull(cpu);
@@ -85,16 +78,20 @@ public final class LcdController implements Component, Clocked {
         nextImageBuilder = new LcdImage.Builder(LCD_WIDTH, LCD_HEIGHT);
 
         nextNonIdleCycle = Long.MAX_VALUE;
+        
+        winY = 0;
     }
 
+    /* (non-Javadoc)
+     * @see ch.epfl.gameboj.component.Component#read(int)
+     */
     @Override
     public int read(int address) {
         Preconditions.checkBits16(address);
 
         if (address >= AddressMap.REGS_LCDC_START
                 && address < AddressMap.REGS_LCDC_END) {
-            return readRegAt(address); // TODO : we had forgot the return, but
-                                       // now it fails miserably haha
+            return readRegAt(address);
         } else if (address >= AddressMap.VIDEO_RAM_START
                 && address < AddressMap.VIDEO_RAM_END) {
             return vRam.read(address - AddressMap.VIDEO_RAM_START);
@@ -102,6 +99,9 @@ public final class LcdController implements Component, Clocked {
         return NO_DATA;
     }
 
+    /* (non-Javadoc)
+     * @see ch.epfl.gameboj.component.Component#write(int, int)
+     */
     @Override
     public void write(int address, int data) {
         Preconditions.checkBits16(address);
@@ -123,13 +123,15 @@ public final class LcdController implements Component, Clocked {
                     updateLYC_EQ_LY();
             }
         }
-        // TODO does write depend on LCDC modes?
         else if (address >= AddressMap.VIDEO_RAM_START
                 && address < AddressMap.VIDEO_RAM_END) {
             vRam.write(address - AddressMap.VIDEO_RAM_START, data);
         }
     }
 
+    /* (non-Javadoc)
+     * @see ch.epfl.gameboj.component.Component#attachTo(ch.epfl.gameboj.Bus)
+     */
     @Override
     public void attachTo(Bus bus) {
         Component.super.attachTo(bus);
@@ -137,10 +139,10 @@ public final class LcdController implements Component, Clocked {
         this.bus = bus;
     }
 
-    public LcdImage currentImage() {
-        return currentImage;
-    }
 
+    /* (non-Javadoc)
+     * @see ch.epfl.gameboj.component.Clocked#cycle(long)
+     */
     @Override
     public void cycle(long cycle) {
         if (nextNonIdleCycle == Long.MAX_VALUE && screenIsOn()) {
@@ -195,6 +197,10 @@ public final class LcdController implements Component, Clocked {
         requestPotentialInterrupt();
     }
 
+    public LcdImage currentImage() {
+        return currentImage;
+    }
+    
     private void incLY() {
         int LY = reg(Reg.LY);
         setReg(Reg.LY, ++LY % (LCD_HEIGHT + V_BLANK_LINES));
@@ -207,48 +213,11 @@ public final class LcdController implements Component, Clocked {
     }
 
     private LcdImageLine computeLine(int index) {
-        // LcdImageLine.Builder bgLineBuilder = new
-        // LcdImageLine.Builder(IMAGE_SIZE);
-        // LcdImageLine.Builder winLineBuilder = new
-        // LcdImageLine.Builder(IMAGE_SIZE);
-        //
-        // int bgTileLine = index / TILE_SIZE;
-        // int bgLine = index % TILE_SIZE;
-        // int winTileLine = winY / TILE_SIZE;
-        // int winLine = winY % TILE_SIZE;
-        //
         int WX_prime = reg(Reg.WX) - WX_CORRECTION;
-        //
-        // int bg_area =
-        // AddressMap.BG_DISPLAY_DATA[testBitLCDC(LCDC_Bits.BG_AREA) ? 1 : 0];
-        // int win_area =
-        // AddressMap.BG_DISPLAY_DATA[testBitLCDC(LCDC_Bits.WIN_AREA) ? 1 : 0];
-        //
-        boolean windowOnLine = testBitLCDC(LCDC_Bits.WIN) && WX_prime >= 0
-                && WX_prime < LCD_WIDTH && reg(Reg.LY) >= reg(Reg.WY);
-        //
-        // for(int tile = 0; tile < IMAGE_TILE_SIZE; tile++) {
-        // int bgTileIndex = read(bg_area + bgTileLine * IMAGE_TILE_SIZE +
-        // tile);
-        // int winTileIndex = read(win_area + winTileLine * IMAGE_TILE_SIZE +
-        // tile);
-        //
-        // if(testBitLCDC(LCDC_Bits.TILE_SOURCE) == false) {
-        // bgTileIndex += bgTileIndex <= 0x7f ? 0x80 : -0x80;
-        // winTileIndex += winTileIndex <= 0x7f ? 0x80 : -0x80;
-        // }
-        // addTileToLine(bgLineBuilder, tile, bgTileIndex, bgLine);
-        //
-        //
-        // if(windowOnLine) {
-        // addTileToLine(winLineBuilder, tile, winTileIndex, winLine);
-        // }
-        // }
-        //
-        // LcdImageLine bg = bgLineBuilder.build().extractWrapped(reg(Reg.SCX),
-        // LCD_WIDTH);
-        // LcdImageLine win = winLineBuilder.build().extractWrapped(0,
-        // LCD_WIDTH);
+        
+        boolean windowOnLine = testBitLCDC(LCDC_Bits.WIN)
+                && WX_prime >= 0 && WX_prime < LCD_WIDTH
+                && reg(Reg.LY) >= reg(Reg.WY);
 
         LcdImageLine bg = computeLine(index, LCDC_Bits.BG_AREA)
                 .extractWrapped(reg(Reg.SCX), LCD_WIDTH);
@@ -287,60 +256,12 @@ public final class LcdController implements Component, Clocked {
         return b.build();
     }
 
-    // private LcdImageLine computeBGLine(int index) {
-    //
-    // LcdImageLine.Builder b = new LcdImageLine.Builder(IMAGE_SIZE);
-    // int tileLine = index / TILE_SIZE;
-    // int line = index % TILE_SIZE;
-    //
-    // int bg_area = AddressMap.BG_DISPLAY_DATA[
-    // testBitLCDC(LCDC_Bits.BG_AREA)
-    // ? 1
-    // : 0];
-    //
-    // for (int tile = 0; tile < IMAGE_TILE_SIZE; tile++) {
-    //
-    // int tileIndex = read(bg_area + tileLine * IMAGE_TILE_SIZE + tile);
-    //
-    // if (testBitLCDC(LCDC_Bits.TILE_SOURCE) == false) {
-    // tileIndex += tileIndex <= 0x7f ? 0x80 : -0x80;
-    // }
-    // addTileToLine(b, tile, tileIndex, line);
-    // }
-    // return b.build();
-    // }
-    //
-    // private LcdImageLine computeWinLine() {
-    //
-    // LcdImageLine.Builder b = new LcdImageLine.Builder(IMAGE_SIZE);
-    // int tileLine = winY / TILE_SIZE;
-    // int line = winY % TILE_SIZE;
-    //
-    // int win_area = AddressMap.BG_DISPLAY_DATA[
-    // testBitLCDC(LCDC_Bits.WIN_AREA)
-    // ? 1
-    // : 0];
-    //
-    // for (int tile = 0; tile < IMAGE_TILE_SIZE; tile++) {
-    //
-    // int tileIndex = read(win_area + tileLine * IMAGE_TILE_SIZE + tile);
-    //
-    // if (testBitLCDC(LCDC_Bits.TILE_SOURCE) == false) {
-    // tileIndex += tileIndex <= 0x7f ? 0x80 : -0x80;
-    // }
-    //
-    // addTileToLine(b, tile, tileIndex, line);
-    // }
-    //
-    // return b.build();
-    // }
-
     private void addTileToLine(LcdImageLine.Builder b, int tile, int tileIndex,
             int lineIndex) {
         int tileSource = AddressMap.TILE_SOURCE[testBitLCDC(
                 LCDC_Bits.TILE_SOURCE) ? 1 : 0];
 
-        int address = tileSource + tileIndex * 16 + 2 * lineIndex; // TODO :
+        int address = tileSource + tileIndex * 2 * Byte.SIZE + 2 * lineIndex; // TODO :
                                                                    // static var
 
         int lb = read(address);
@@ -417,6 +338,7 @@ public final class LcdController implements Component, Clocked {
         return testBit(Reg.LCDC, bit.index());
     }
 
+    //TODO : remove if still unused
     private boolean testBitSTAT(STAT_Bits bit) {
         return testBit(Reg.STAT, bit.index());
     }
@@ -425,6 +347,7 @@ public final class LcdController implements Component, Clocked {
         setReg(r, Bits.set(reg(r), index, newValue));
     }
 
+    //TODO : remove if still unused
     private void setBitLCDC(LCDC_Bits bit, boolean newValue) {
         setBit(Reg.LCDC, bit.index(), newValue);
     }
