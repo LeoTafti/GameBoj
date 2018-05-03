@@ -51,7 +51,14 @@ public final class Alu {
      * @return mask of flags, packed in a int
      */
     public static int maskZNHC(boolean z, boolean n, boolean h, boolean c) {
-        return packValueZNHC(0, z, n, h, c);
+        int packed = 0;
+        
+        packed = Bits.set(packed, Flag.Z.index(), z);
+        packed = Bits.set(packed, Flag.N.index(), n);
+        packed = Bits.set(packed, Flag.H.index(), h);
+        packed = Bits.set(packed, Flag.C.index(), c);
+
+        return packed;
     }
 
     /**
@@ -451,11 +458,13 @@ public final class Alu {
     public static int swap(int v) {
         Preconditions.checkBits8(v);
 
-        int vL = Bits.clip(4, v);
-        int vH = Bits.extract(v, 4, 4);
-
-        int vSwapped = (vL << 4) + vH;
-
+        //TODO : remove
+//        int vL = Bits.clip(4, v);
+//        int vH = Bits.extract(v, 4, 4);
+//
+//        int vSwapped = (vL << 4) + vH;
+        int vSwapped = Bits.rotate(8, v, 4);
+        
         return packValueZNHC(vSwapped, getZFlag(vSwapped), false, false, false);
     }
 
@@ -503,13 +512,8 @@ public final class Alu {
      */
     private static int packValueZNHC(int v, boolean z, boolean n, boolean h, boolean c) {
         Preconditions.checkBits16(v);
-        int packed = v << 8;
-        packed = Bits.set(packed, Flag.Z.index(), z);
-        packed = Bits.set(packed, Flag.N.index(), n);
-        packed = Bits.set(packed, Flag.H.index(), h);
-        packed = Bits.set(packed, Flag.C.index(), c);
-
-        return packed;
+        
+        return (v << 8) | maskZNHC(z, n, h, c);
     }
 
     /**

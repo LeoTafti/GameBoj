@@ -27,6 +27,6 @@ public interface Bit {
      *         defined in enumerated type
      */
     default int mask() {
-        return 1<<ordinal();
+        return Bits.mask(ordinal());
     }
 }

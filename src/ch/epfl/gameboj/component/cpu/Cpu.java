@@ -24,6 +24,10 @@ public final class Cpu implements Component, Clocked {
             Opcode.Kind.DIRECT);
     private static final Opcode[] PREFIXED_OPCODE_TABLE = buildOpcodeTable(
             Opcode.Kind.PREFIXED);
+    
+    private static final Reg[] REGS_8 = Reg.values();
+    private static final Reg16[] REGS_16 = Reg16.values();
+    
     private static final int INTERRUPT_HANDLING_CYCLES = 5;
     private static final int OPCODE_PREFIX = 0xCB;
 
@@ -34,14 +38,15 @@ public final class Cpu implements Component, Clocked {
     
 
     private enum Reg implements Register {
-        A, F, B, C, D, E, H, L
+        B, C, D, E, H, L, A, F
     }
     private enum Reg16 implements Register {
-        AF, BC, DE, HL
+        BC, DE, HL, AF
     }
     private enum FlagSrc {
         V0, V1, ALU, CPU
     }
+    
     
     
     private Bus bus;
@@ -844,24 +849,31 @@ public final class Cpu implements Component, Clocked {
     private int reg16(Reg16 r) {
         int highB = 0, lowB = 0;
 
-        switch (r) {
-        case AF:
-            highB = reg(Reg.A);
-            lowB = reg(Reg.F);
-            break;
-        case BC:
-            highB = reg(Reg.B);
-            lowB = reg(Reg.C);
-            break;
-        case DE:
-            highB = reg(Reg.D);
-            lowB = reg(Reg.E);
-            break;
-        case HL:
-            highB = reg(Reg.H);
-            lowB = reg(Reg.L);
-            break;
-        }
+        //TODO : remove
+//        switch (r) {
+//        case AF:
+//            highB = reg(Reg.A);
+//            lowB = reg(Reg.F);
+//            break;
+//        case BC:
+//            highB = reg(Reg.B);
+//            lowB = reg(Reg.C);
+//            break;
+//        case DE:
+//            highB = reg(Reg.D);
+//            lowB = reg(Reg.E);
+//            break;
+//        case HL:
+//            highB = reg(Reg.H);
+//            lowB = reg(Reg.L);
+//            break;
+//        }
+        
+        int index = r.index()*2;
+        
+        highB = reg(REGS_8[index]);
+        lowB = reg(REGS_8[index+1]);
+        
         return Bits.make16(highB, lowB);
     }
 
@@ -910,26 +922,41 @@ public final class Cpu implements Component, Clocked {
         int highB = Bits.extract(newV, 8, 8);
         int lowB = Bits.clip(8, newV);
         
-        switch (r) {
-        case AF:
-            setReg(Reg.A, highB);
+        int index = 2 * r.index();
+        Reg r1 = REGS_8[index];
+        Reg r2 = REGS_8[index+1];
+        
+        if(r2.equals(Reg.F)) {
+            //TODO : intermediate submission review says to make it a constant, but...
             int mask_4to7 = 0b1111_0000;
-            setReg(Reg.F, lowB & mask_4to7);
-            // takes only 4 msb of lowB (ie. the flags, rest is 0)
-            break;
-        case BC:
-            setReg(Reg.B, highB);
-            setReg(Reg.C, lowB);
-            break;
-        case DE:
-            setReg(Reg.D, highB);
-            setReg(Reg.E, lowB);
-            break;
-        case HL:
-            setReg(Reg.H, highB);
-            setReg(Reg.L, lowB);
-            break;
+            lowB &= mask_4to7;
         }
+        
+        setReg(r1, highB);
+        setReg(r2, lowB);
+        
+        //TODO : remove
+//        switch (r) {
+//        case AF:
+//            setReg(Reg.A, highB);
+//            //TODO : intermediate submission review says to make it a constant, but...
+//            int mask_4to7 = 0b1111_0000;
+//            setReg(Reg.F, lowB & mask_4to7);
+//            // takes only 4 msb of lowB (ie. the flags, rest is 0)
+//            break;
+//        case BC:
+//            setReg(Reg.B, highB);
+//            setReg(Reg.C, lowB);
+//            break;
+//        case DE:
+//            setReg(Reg.D, highB);
+//            setReg(Reg.E, lowB);
+//            break;
+//        case HL:
+//            setReg(Reg.H, highB);
+//            setReg(Reg.L, lowB);
+//            break;
+//        }
     }
     
     /**
@@ -1067,25 +1094,36 @@ public final class Cpu implements Component, Clocked {
      */
     private Reg extractReg(Opcode opcode, int startBit) {
         int regCode = Bits.extract(opcode.encoding, startBit, 3);
-        switch (regCode) {
-        case 0b000:
-            return Reg.B;
-        case 0b001:
-            return Reg.C;
-        case 0b010:
-            return Reg.D;
-        case 0b011:
-            return Reg.E;
-        case 0b100:
-            return Reg.H;
-        case 0b101:
-            return Reg.L;
-        case 0b111:
-            return Reg.A;
-
-        default:
+        
+        if(regCode == 0b110)
             throw new IllegalArgumentException("Unknown reg encoding");
-        }
+        else if(regCode == 0b111)
+            return Reg.A;
+        //TODO : above case seems ugly to me, but what can we do better ? (without changing A, F order in enum ?)
+        
+        return REGS_8[regCode];
+        
+        
+        //TODO : remove
+//        switch (regCode) {
+//        case 0b000:
+//            return Reg.B;
+//        case 0b001:
+//            return Reg.C;
+//        case 0b010:
+//            return Reg.D;
+//        case 0b011:
+//            return Reg.E;
+//        case 0b100:
+//            return Reg.H;
+//        case 0b101:
+//            return Reg.L;
+//        case 0b111:
+//            return Reg.A;
+//
+//        default:
+//            throw new IllegalArgumentException("Unknown reg encoding");
+//        }
     }
 
     /**
@@ -1097,18 +1135,20 @@ public final class Cpu implements Component, Clocked {
      */
     private Reg16 extractReg16(Opcode opcode) {
         int regsCode = Bits.extract(opcode.encoding, 4, 2);
-        switch (regsCode) {
-        case 0b00:
-            return Reg16.BC;
-        case 0b01:
-            return Reg16.DE;
-        case 0b10:
-            return Reg16.HL;
-        case 0b11:
-            return Reg16.AF;
-        default:
-            throw new IllegalArgumentException();
-        }
+        return REGS_16[regsCode];
+        //TODO : remove
+//        switch (regsCode) {
+//        case 0b00:
+//            return Reg16.BC;
+//        case 0b01:
+//            return Reg16.DE;
+//        case 0b10:
+//            return Reg16.HL;
+//        case 0b11:
+//            return Reg16.AF;
+//        default:
+//            throw new IllegalArgumentException();
+//        }
     }
 
     /**

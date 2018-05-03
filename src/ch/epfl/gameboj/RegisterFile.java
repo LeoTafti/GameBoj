@@ -4,7 +4,7 @@ import ch.epfl.gameboj.bits.Bit;
 import ch.epfl.gameboj.bits.Bits;
 
 public final class RegisterFile<E extends Register> {
-    private byte[] regs;
+    private final byte[] regs;
 
     /**
      * Constructs a RegisterFile of 8-bit registers (1 byte each)
@@ -54,7 +54,10 @@ public final class RegisterFile<E extends Register> {
      * @return true if given bit of register is 1, false if 0
      */
     public boolean testBit(E reg, Bit b) {
-        return Bits.test(regs[reg.index()], b);
+        //TODO : remove
+//        return Bits.test(regs[reg.index()], b);
+        
+        return Bits.test(get(reg), b);
     }
 
     /**
@@ -68,6 +71,9 @@ public final class RegisterFile<E extends Register> {
      *            value to assign to bit
      */
     public void setBit(E reg, Bit bit, boolean newValue) {
-        regs[reg.index()] = (byte) Bits.set(regs[reg.index()], bit.index(), newValue);
+        //TODO : remove
+//        regs[reg.index()] = (byte) Bits.set(regs[reg.index()], bit.index(), newValue);
+        
+        set(reg, Bits.set(get(reg), bit.index(), newValue));
     }
 }

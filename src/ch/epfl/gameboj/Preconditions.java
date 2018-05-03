@@ -30,10 +30,13 @@ public interface Preconditions {
      *             if given value is bigger than 8 bits
      */
     static int checkBits8(int v) {
-        if (v > 0xFF || v < 0x00)
-            throw new IllegalArgumentException();
-        else
-            return v;
+        checkArgument(v >= 0x00 && v <= 0xFF);
+        return v;
+        //TODO : remove
+//        if (v > 0xFF || v < 0x00)
+//            throw new IllegalArgumentException();
+//        else
+//            return v;
     }
 
     /**
@@ -46,10 +49,13 @@ public interface Preconditions {
      *             if given value is bigger than 16 bits
      */
     static int checkBits16(int v) {
-        if (v > 0xFFFF || v < 0x0000)
-            throw new IllegalArgumentException();
-        else
-            return v;
+        checkArgument(v >= 0x0000 && v <= 0xFFFF);
+        return v;
+        //TODO : remove
+//        if (v > 0xFFFF || v < 0x0000)
+//            throw new IllegalArgumentException();
+//        else
+//            return v;
     }
 
 }

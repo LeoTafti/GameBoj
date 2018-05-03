@@ -15,6 +15,8 @@ import ch.epfl.gameboj.component.memory.Rom;
 
 public final class Cartridge implements Component {
 
+    private static final int MBC_TYPE_ADDRESS = 0x147;
+    
     private final Component mbc;
 
     /**
@@ -45,7 +47,7 @@ public final class Cartridge implements Component {
     public static Cartridge ofFile(File romFile) throws IOException {
         try (FileInputStream s = new FileInputStream(romFile)) {
             byte[] data = s.readAllBytes();
-            Preconditions.checkArgument(data[0x147] == 0);
+            Preconditions.checkArgument(data[MBC_TYPE_ADDRESS] == 0);
 
             return new Cartridge(new MBC0(new Rom(data)));
         }
