@@ -1,6 +1,7 @@
 package ch.epfl.gameboj.component.lcd;
 
 import java.io.ObjectStreamClass;
+import java.util.ArrayList;
 import java.util.Objects;
 
 import com.sun.tools.javac.util.List;
@@ -26,6 +27,8 @@ public final class LcdController implements Component, Clocked {
     private static final int IMAGE_SIZE = TILE_SIZE * IMAGE_TILE_SIZE;
 
     private static final int WX_CORRECTION = 7;
+    private static final int SPRITE_X_CORRECTION = 8;
+    private static final int SPRITE_Y_CORRECTION = 16;
 
     private static final int LINE_CYCLES = 114;
     private static final int V_BLANK_LINES = 10;
@@ -33,7 +36,10 @@ public final class LcdController implements Component, Clocked {
     private static final int H_BLANK_CYCLES = 51;
     private static final int MODE_2_CYCLES = 20;
     private static final int MODE_3_CYCLES = 43;
-
+    
+    private static final int TOTAL_SPRITES = 40;
+    private static final int TOTAL_DMA_CYCLES = 160;
+    //TODO no registerFiles?
     // 8-bit registers
     private enum Reg implements Register {
         LCDC, STAT, SCY, SCX, LY, LYC, DMA, BGP, OBP0, OBP1, WY, WX
@@ -50,16 +56,23 @@ public final class LcdController implements Component, Clocked {
     private enum LcdMode {
         H_BLANK, V_BLANK, MODE_2, MODE_3
     };
+    
+    private enum SpriteCarac {
+        UNUSED0, UNUSED1, UNUSED2, UNUSED3, PALETTE, FLIP_H, FLIP_V, BEHIND_BG 
+        //TODO add null values so that PALETTE.ordinal() = 4?
+    };
 
     private final Cpu cpu;
     private final RegisterFile<Reg> registerFile;
     private final Ram vRam;
+    private final Ram oam;
     private Bus bus;
 
     private LcdImage currentImage;
     private LcdImage.Builder nextImageBuilder;
 
     private long nextNonIdleCycle;
+    private int remainingDMACycles;
     
     private int winY;
 
@@ -68,6 +81,7 @@ public final class LcdController implements Component, Clocked {
 
         registerFile = new RegisterFile<>(Reg.values());
         vRam = new Ram(AddressMap.VIDEO_RAM_SIZE);
+        oam = new Ram(AddressMap.OAM_RAM_SIZE);
 
         currentImage = new LcdImage(
                 List.of(new LcdImageLine.Builder(160).build()));
@@ -95,6 +109,9 @@ public final class LcdController implements Component, Clocked {
         } else if (address >= AddressMap.VIDEO_RAM_START
                 && address < AddressMap.VIDEO_RAM_END) {
             return vRam.read(address - AddressMap.VIDEO_RAM_START);
+        } else if (address >= AddressMap.OAM_START
+                && address < AddressMap.OAM_END) {
+            oam.read(address - AddressMap.OAM_START);
         }
         return NO_DATA;
     }
@@ -119,13 +136,28 @@ public final class LcdController implements Component, Clocked {
                     setMode(LcdMode.H_BLANK);
                     setReg(Reg.LY, 0);
                     nextNonIdleCycle = Long.MAX_VALUE;
-                } else if (address == AddressMap.REG_LCDC_LYC)
+                } 
+                else if (address == AddressMap.REG_LCDC_LYC)
                     updateLYC_EQ_LY();
+                else if (address == AddressMap.REG_LCDC_DMA) {
+                    remainingDMACycles = TOTAL_DMA_CYCLES;
+                    //TODO if not necessary to reproduce incremental copying
+//                    for (int i = 0; i < TOTAL_DMA_CYCLES; i++) {
+//                        write(AddressMap.OAM_END - remainingDMACycles,
+//                                read(reg(Reg.DMA) << 8 + 
+//                                        (TOTAL_DMA_CYCLES - remainingDMACycles)));
+//                    }
+//                    nextNonIdleCycle += TOTAL_DMA_CYCLES;
+                }
             }
         }
         else if (address >= AddressMap.VIDEO_RAM_START
                 && address < AddressMap.VIDEO_RAM_END) {
             vRam.write(address - AddressMap.VIDEO_RAM_START, data);
+        }
+        else if (address >= AddressMap.OAM_START
+                && address < AddressMap.OAM_END) {
+            oam.write(address - AddressMap.OAM_START, data);
         }
     }
 
@@ -135,7 +167,6 @@ public final class LcdController implements Component, Clocked {
     @Override
     public void attachTo(Bus bus) {
         Component.super.attachTo(bus);
-
         this.bus = bus;
     }
 
@@ -148,7 +179,14 @@ public final class LcdController implements Component, Clocked {
         if (nextNonIdleCycle == Long.MAX_VALUE && screenIsOn()) {
             nextNonIdleCycle = cycle;
         }
-
+        //TODO do we need to simulate the incremental process of the DMA state?
+        else if(remainingDMACycles != 0) {
+            this.write(AddressMap.OAM_END - remainingDMACycles,
+                    read(reg(Reg.DMA) << 8 + (TOTAL_DMA_CYCLES - remainingDMACycles)));
+            //TODO which is better?
+//            oam.write(TOTAL_DMA_CYCLES - remainingDMACycles,
+//                    read(reg(Reg.DMA) << 8 + (TOTAL_DMA_CYCLES - remainingDMACycles)));
+        }
         else if (cycle != nextNonIdleCycle)
             return;
 
@@ -269,6 +307,17 @@ public final class LcdController implements Component, Clocked {
 
         b.setBytes(tile, Bits.reverse8(mb), Bits.reverse8(lb));
     }
+    
+    private int[] spritesIntersectingLine(int line) {
+        //TODO implement
+        //super easy with a Sprite class
+//        List<Integer> spriteIndex = new ArrayList<>();
+//        for(int i = 0; i <= TOTAL_SPRITES; i++) {
+//            spriteY = read(address) 
+//            if(spriteIndex == 10) break; BEURGK
+//        }
+        return null;
+    }
 
     private void requestPotentialInterrupt() {
         if (Bits.extract(reg(Reg.STAT), 3, 3) != 0)
@@ -341,6 +390,10 @@ public final class LcdController implements Component, Clocked {
     //TODO : remove if still unused
     private boolean testBitSTAT(STAT_Bits bit) {
         return testBit(Reg.STAT, bit.index());
+    }
+    
+    private boolean testBitsSprite(SpriteCarac bit, int caracs) {
+        return Bits.test(caracs, bit.ordinal());
     }
 
     private void setBit(Reg r, int index, boolean newValue) {
