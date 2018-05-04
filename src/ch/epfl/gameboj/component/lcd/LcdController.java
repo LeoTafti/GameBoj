@@ -67,14 +67,14 @@ public final class LcdController implements Component, Clocked {
     private enum SpriteAttributes {
         Y, X, TILE_INDEX, INFOS
     }
+    private enum SpriteInfos implements Bit {
+        UNUSED_0, UNUSED_1, UNUSED_2, UNUSED_3, PALETTE, FLIP_H, FLIP_V, BEHIND_BG
+    };
 
     private enum LcdMode {
         H_BLANK, V_BLANK, MODE_2, MODE_3
     };
 
-    private enum SpriteCarac implements Bit {
-        UNUSED_0, UNUSED_1, UNUSED_2, UNUSED_3, PALETTE, FLIP_H, FLIP_V, BEHIND_BG
-    };
 
     private final Cpu cpu;
     private final RegisterFile<Reg> registerFile;
@@ -361,12 +361,12 @@ public final class LcdController implements Component, Clocked {
             int tileIndex = areaStart + sprite * TILE_SIZE;
             int[] lineBytes = getLineBytes(tileIndex, tileLine);
             
-            if(testBitsSprite(SpriteCarac.FLIP_H, spriteCarac))
+            if(testBitsSprite(SpriteInfos.FLIP_H, spriteCarac))
                 for( int b : lineBytes) Bits.reverse8(b);
             
             spriteLineBuilder.setBytes(0, lineBytes[1], lineBytes[0]);
             LcdImageLine spriteLine = spriteLineBuilder.build().shift(-spriteX);
-            if(testBitsSprite(SpriteCarac.BEHIND_BG, spriteCarac))
+            if(testBitsSprite(SpriteInfos.BEHIND_BG, spriteCarac))
                     bgLine = spriteLine.below(bgLine);
             else fgLine = spriteLine.below(fgLine);
         }
