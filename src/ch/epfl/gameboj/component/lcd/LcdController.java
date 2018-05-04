@@ -64,9 +64,9 @@ public final class LcdController implements Component, Clocked {
         MODE0, MODE1, LYC_EQ_LY, INT_MODE0, INT_MODE1, INT_MODE2, INT_LYC, UNUSED_7
     }
     
-    private enum SpriteAttributes {
-        Y, X, TILE_INDEX, INFOS
-    }
+//    private enum SpriteAttributes {
+//        Y, X, TILE_INDEX, INFOS
+//    }
     private enum SpriteInfos implements Bit {
         UNUSED_0, UNUSED_1, UNUSED_2, UNUSED_3, PALETTE, FLIP_H, FLIP_V, BEHIND_BG
     };
@@ -331,32 +331,33 @@ public final class LcdController implements Component, Clocked {
         LcdImageLine bgLine = new LcdImageLine.Builder(IMAGE_SIZE).build();
         LcdImageLine fgLine = new LcdImageLine.Builder(IMAGE_SIZE).build();
         
-        int areaStart = AddressMap.TILE_SOURCE[1]; //TODO : static ?
-        
         int[] sprites = spritesIntersectingLine(index);
         
         for (int sprite = 0; sprite < sprites.length; sprite++) {
             
             LcdImageLine.Builder spriteLineBuilder = new LcdImageLine.Builder(LCD_WIDTH);
             
+            //TODO : specific method ?
             int address = AddressMap.OAM_START + sprite * SPRITE_BYTE_SIZE;
-            int spriteX = read(address) - SPRITE_X_CORRECTION;
-            int spriteY = read(address + 1) - SPRITE_Y_CORRECTION;
-            int spriteCarac = read(address + 3);
             
-            //TODO : I don't see anywhere getting the address of the tile ? it's given by read(address + 2);
+            int x = read(address) - SPRITE_X_CORRECTION;
+            int y = read(address + 1) - SPRITE_Y_CORRECTION;
+            int tileIndex = read(address + 2);
+            int infos = read(address + 3);
             
             //TODO if(v-flip) else and 16-line height
-            int tileLine = index - spriteY;
-            int tileIndex = areaStart + sprite * TILE_SIZE;
-            int[] lineBytes = getLineBytes(tileIndex, tileLine);
+            int tileLine = index - y;
+            int[] lineBytes = getLineBytes(tileIndex, tileLine, AddressMap.TILE_SOURCE[1]);
             
-            if(testBitsSprite(SpriteInfos.FLIP_H, spriteCarac))
-                for( int b : lineBytes) Bits.reverse8(b);
+            if(testBitsSprite(SpriteInfos.FLIP_H, infos)) {
+                lineBytes[0] = Bits.reverse8(lineBytes[0]);
+                lineBytes[1] = Bits.reverse8(lineBytes[1]);
+            }
             
             spriteLineBuilder.setBytes(0, lineBytes[1], lineBytes[0]);
-            LcdImageLine spriteLine = spriteLineBuilder.build().shift(-spriteX);
-            if(testBitsSprite(SpriteInfos.BEHIND_BG, spriteCarac))
+            
+            LcdImageLine spriteLine = spriteLineBuilder.build().shift(-x); //TODO : - or + (not trivial :p)
+            if(testBitsSprite(SpriteInfos.BEHIND_BG, infos))
                     bgLine = spriteLine.below(bgLine);
             else fgLine = spriteLine.below(fgLine);
         }
@@ -378,17 +379,15 @@ public final class LcdController implements Component, Clocked {
      *            line of the designated tile to be added
      */
     private void addTileToLine(LcdImageLine.Builder lb, int tile, int tileIndex, int tileLineIndex) {
-
-        int[] lineBytes = getLineBytes(tileIndex, tileLineIndex);
+        int startAddress = AddressMap.TILE_SOURCE[testBitLCDC(LCDC_Bits.TILE_SOURCE) ? 1 : 0];
+        
+        int[] lineBytes = getLineBytes(tileIndex, tileLineIndex, startAddress);
 
         lb.setBytes(tile, Bits.reverse8(lineBytes[0]), Bits.reverse8(lineBytes[1]));
     }
 
-    private int[] getLineBytes(int tileIndex, int tileLine) {
-
-        int tileSource = AddressMap.TILE_SOURCE[testBitLCDC(LCDC_Bits.TILE_SOURCE) ? 1 : 0];
-
-        int address = tileSource + tileIndex * 2 * Byte.SIZE + 2 * tileLine;
+    private int[] getLineBytes(int tileIndex, int tileLine, int startAddress) {
+        int address = startAddress + tileIndex * 2 * Byte.SIZE + 2 * tileLine;
 
         return new int[] { read(address), read(address + 1) };
     }
@@ -402,8 +401,7 @@ public final class LcdController implements Component, Clocked {
                     + sprite * SPRITE_BYTE_SIZE;
             int spriteY = read(spriteAddress + 1) - SPRITE_Y_CORRECTION;
 
-            int range = testBitLCDC(LCDC_Bits.OBJ_SIZE) ? BIG_SPRITE_LINES
-                    : SPRITE_LINES;
+            int range = testBitLCDC(LCDC_Bits.OBJ_SIZE) ? BIG_SPRITE_LINES : SPRITE_LINES;
 
             if (line >= spriteY && line <= spriteY + range) {
                 int spriteX = read(spriteAddress); // don't need to correct x
