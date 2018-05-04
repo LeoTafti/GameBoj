@@ -310,9 +310,16 @@ public final class LcdController implements Component, Clocked {
         return b.build();
     }
     
-    private LcdImageLine computeSpriteLine(int index) {
+    /**
+     * makes background sprite line and foreground sprite line
+     * @param index line being drawn
+     * @return table with background sprite line first and foreground sprite line second
+     */
+    private LcdImageLine[] computeSpriteLine(int index) {
         LcdImageLine.Builder slB;
-        LcdImageLine line = new LcdImageLine.Builder(IMAGE_SIZE).build();
+        LcdImageLine bgLine = new LcdImageLine.Builder(IMAGE_SIZE).build();
+        LcdImageLine fgLine = new LcdImageLine.Builder(IMAGE_SIZE).build();
+        
         
         int areaStart = AddressMap.BG_DISPLAY_DATA[1];
         
@@ -334,10 +341,12 @@ public final class LcdController implements Component, Clocked {
             
             slB.setBytes(0, lineBytes[1], lineBytes[0]);
             LcdImageLine spriteLine = slB.build().shift(-spriteX);
-            line = spriteLine.below(line);
+            if(testBitsSprite(SpriteCarac.BEHIND_BG, spriteCarac))
+                    bgLine = spriteLine.below(bgLine);
+            else fgLine = spriteLine.below(fgLine);
         }
         
-        return line;
+        return new LcdImageLine[] {bgLine, fgLine};
         
     }
     
