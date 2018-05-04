@@ -5,12 +5,9 @@
 
 package ch.epfl.gameboj.component.lcd;
 
-import java.io.ObjectStreamClass;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Objects;
 import java.util.List;
+import java.util.Objects;
 
 import ch.epfl.gameboj.AddressMap;
 import ch.epfl.gameboj.Bus;
@@ -18,6 +15,7 @@ import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.Register;
 import ch.epfl.gameboj.RegisterFile;
 import ch.epfl.gameboj.bits.Bit;
+import ch.epfl.gameboj.bits.BitVector;
 import ch.epfl.gameboj.bits.Bits;
 import ch.epfl.gameboj.component.Clocked;
 import ch.epfl.gameboj.component.Component;
@@ -354,9 +352,13 @@ public final class LcdController implements Component, Clocked {
                 lineBytes[1] = Bits.reverse8(lineBytes[1]);
             }
             
+            
+            
             spriteLineBuilder.setBytes(0, lineBytes[1], lineBytes[0]);
             
-            LcdImageLine spriteLine = spriteLineBuilder.build().shift(-x); //TODO : - or + (not trivial :p)
+            int palette = testBitsSprite(SpriteInfos.PALETTE, infos) ? reg(Reg.OBP1) : reg(Reg.OBP0);
+            LcdImageLine spriteLine = spriteLineBuilder.build().shift(-x).mapColors(palette); //TODO : - or + (not trivial :p)
+            
             if(testBitsSprite(SpriteInfos.BEHIND_BG, infos))
                     bgLine = spriteLine.below(bgLine);
             else fgLine = spriteLine.below(fgLine);
@@ -397,8 +399,7 @@ public final class LcdController implements Component, Clocked {
         int spriteCount = 0;
         for (int sprite = 0; sprite <= TOTAL_SPRITES && spriteCount < MAX_SPRITES_PER_LINE; sprite++) {
 
-            int spriteAddress = AddressMap.OAM_START
-                    + sprite * SPRITE_BYTE_SIZE;
+            int spriteAddress = AddressMap.OAM_START + sprite * SPRITE_BYTE_SIZE;
             int spriteY = read(spriteAddress + 1) - SPRITE_Y_CORRECTION;
 
             int range = testBitLCDC(LCDC_Bits.OBJ_SIZE) ? BIG_SPRITE_LINES : SPRITE_LINES;
@@ -418,6 +419,11 @@ public final class LcdController implements Component, Clocked {
         }
 
         return spritesIndex;
+    }
+    
+    private LcdImageLine composeSpritesAndBG(LcdImageLine bgSprites, LcdImageLine fgSprites, LcdImageLine bg) {
+        BitVector newOpacity = bgSprites.opacity().and(bg.opacity().not());
+        return bgSprites.below(bg, newOpacity).below(fgSprites);
     }
 
     private void requestPotentialInterrupt() {
