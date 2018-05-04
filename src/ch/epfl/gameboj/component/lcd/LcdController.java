@@ -331,17 +331,7 @@ public final class LcdController implements Component, Clocked {
         LcdImageLine bgLine = new LcdImageLine.Builder(IMAGE_SIZE).build();
         LcdImageLine fgLine = new LcdImageLine.Builder(IMAGE_SIZE).build();
         
-        int areaStart = AddressMap.BG_DISPLAY_DATA[1];
-        /*
-         * Notez que l'interface AddressMap définit les tableaux
-         * TILE_SOURCE et BG_DISPLAY_DATA qui contiennent respectivement
-         * les adresses de début des plages contenant les images des tuiles
-         * et celles des plages contenant la description des images de
-         * l'image de fond et de la fenêtre. Pensez à les utiliser pour
-         * clarifier votre code !
-         * 
-         * -> Why BG_DISPLAY_DATA ?
-         */
+        int areaStart = AddressMap.TILE_SOURCE[1]; //TODO : static ?
         
         int[] sprites = spritesIntersectingLine(index);
         
@@ -387,19 +377,16 @@ public final class LcdController implements Component, Clocked {
      * @param tileLineIndex
      *            line of the designated tile to be added
      */
-    private void addTileToLine(LcdImageLine.Builder lb, int tile, int tileIndex,
-            int tileLineIndex) {
+    private void addTileToLine(LcdImageLine.Builder lb, int tile, int tileIndex, int tileLineIndex) {
 
         int[] lineBytes = getLineBytes(tileIndex, tileLineIndex);
 
-        lb.setBytes(tile, Bits.reverse8(lineBytes[0]),
-                Bits.reverse8(lineBytes[1]));
+        lb.setBytes(tile, Bits.reverse8(lineBytes[0]), Bits.reverse8(lineBytes[1]));
     }
 
     private int[] getLineBytes(int tileIndex, int tileLine) {
 
-        int tileSource = AddressMap.TILE_SOURCE[testBitLCDC(
-                LCDC_Bits.TILE_SOURCE) ? 1 : 0];
+        int tileSource = AddressMap.TILE_SOURCE[testBitLCDC(LCDC_Bits.TILE_SOURCE) ? 1 : 0];
 
         int address = tileSource + tileIndex * 2 * Byte.SIZE + 2 * tileLine;
 
@@ -409,10 +396,7 @@ public final class LcdController implements Component, Clocked {
     private int[] spritesIntersectingLine(int line) {
         int[] sprites = new int[10];
         int spriteCount = 0;
-        // for(int sprite = 0; sprite <= TOTAL_SPRITES; sprite++) {
-        // TODO : allows for no break, but may seem strange to corrector ?
-        for (int sprite = 0; sprite <= TOTAL_SPRITES
-                && spriteCount < MAX_SPRITES_PER_LINE; sprite++) {
+        for (int sprite = 0; sprite <= TOTAL_SPRITES && spriteCount < MAX_SPRITES_PER_LINE; sprite++) {
 
             int spriteAddress = AddressMap.OAM_START
                     + sprite * SPRITE_BYTE_SIZE;
@@ -427,9 +411,6 @@ public final class LcdController implements Component, Clocked {
                 sprites[spriteCount] = (spriteX << Byte.SIZE) | sprite;
                 spriteCount++;
             }
-
-            // if(spriteCount == MAX_SPRITES_PER_LINE) break; //TODO : remove ?
-            // see other TODO just above
         }
         Arrays.sort(sprites, 0, spriteCount);
 
@@ -514,7 +495,7 @@ public final class LcdController implements Component, Clocked {
         return testBit(Reg.STAT, bit.index());
     }
 
-    private boolean testBitsSprite(SpriteCarac bit, int caracs) {
+    private boolean testBitsSprite(SpriteInfos bit, int caracs) {
         return Bits.test(caracs, bit.ordinal());
     }
 
