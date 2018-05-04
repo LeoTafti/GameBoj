@@ -391,10 +391,6 @@ public final class LcdController implements Component, Clocked {
         return spritesIndex;
     }
 
-    private void salut() {
-        
-    }
-    
     private void requestPotentialInterrupt() {
         if (Bits.extract(reg(Reg.STAT), 3, 3) != 0)
             cpu.requestInterrupt(Cpu.Interrupt.LCD_STAT);
