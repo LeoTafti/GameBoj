@@ -1,10 +1,16 @@
+/*
+ *  @Author : Paul Juillard (288519)
+ *  @Author : Leo Tafti (285418)
+*/
+
 package ch.epfl.gameboj.component.lcd;
 
 import java.io.ObjectStreamClass;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Objects;
-
-import com.sun.tools.javac.util.List;
+import java.util.List;
 
 import ch.epfl.gameboj.AddressMap;
 import ch.epfl.gameboj.Bus;
@@ -25,6 +31,8 @@ public final class LcdController implements Component, Clocked {
     private static final int TILE_SIZE = 8;
     private static final int IMAGE_TILE_SIZE = 32;
     private static final int IMAGE_SIZE = TILE_SIZE * IMAGE_TILE_SIZE;
+    private static final int SPRITE_LINES = 8, BIG_SPRITE_LINES = 16;
+    private static final int SPRITE_BYTE_SIZE = 4;
 
     private static final int WX_CORRECTION = 7;
     private static final int SPRITE_X_CORRECTION = 8;
@@ -301,30 +309,86 @@ public final class LcdController implements Component, Clocked {
         }
         return b.build();
     }
-
+    
+    private LcdImageLine computeSpriteLine(int index) {
+        LcdImageLine.Builder slB;
+        LcdImageLine.Builder lB = new LcdImageLine.Builder(IMAGE_SIZE);
+        
+        int areaStart = AddressMap.BG_DISPLAY_DATA[1];
+        
+        int[] sprites = spritesIntersectingLine(index);
+        
+        for (int sprite = 0; sprite < sprites.length; sprite++) {
+            
+            slB = new LcdImageLine.Builder(IMAGE_SIZE);
+            int spriteY = read(AddressMap.OAM_START + sprite * SPRITE_BYTE_SIZE + 1) - SPRITE_Y_CORRECTION;
+            int spriteCarac = read(AddressMap.OAM_START + sprite * SPRITE_BYTE_SIZE + 3);
+            //TODO if(v-flip) else and 16-line height
+            int tileLine = index - spriteY;
+            int tileIndex = areaStart + sprite * TILE_SIZE;
+            int[] lineBytes = getLineBytes(tileIndex, tileLine);
+            if(testBitsSprite(SpriteCarac.FLIP_H, spriteCarac))
+                for( int b : lineBytes) Bits.reverse8(b);
+            slB.;
+        }
+        
+        return null;
+        
+    }
+    
+    /**
+     * get tile-line from memory and adds it to currently building line
+     * @param b current line builder
+     * @param tile number of the tile being draw in its respective line
+     * @param tileIndex index of line in memory
+     * @param tileLineIndex line of the designated tile to be added
+     */
     private void addTileToLine(LcdImageLine.Builder b, int tile, int tileIndex,
-            int lineIndex) {
+            int tileLineIndex) {
+        
+        int[] lineBytes = getLineBytes(tileIndex, tileLineIndex);
+        
+        b.setBytes(tile, Bits.reverse8(lineBytes[0]), Bits.reverse8(lineBytes[1]));
+    }
+    
+    private int[] getLineBytes(int tileIndex, int tileLine) {
+        
         int tileSource = AddressMap.TILE_SOURCE[testBitLCDC(
                 LCDC_Bits.TILE_SOURCE) ? 1 : 0];
 
-        int address = tileSource + tileIndex * 2 * Byte.SIZE + 2 * lineIndex; // TODO :
-                                                                   // static var
+        int address = tileSource + tileIndex * 2 * Byte.SIZE + 2 * tileLine;
 
-        int lb = read(address);
-        int mb = read(address + 1);
-
-        b.setBytes(tile, Bits.reverse8(mb), Bits.reverse8(lb));
+        return new int[] { read(address), read(address + 1) };
     }
+       
     
     private int[] spritesIntersectingLine(int line) {
-        //TODO implement
-        //super easy with a Sprite class
-//        List<Integer> spriteIndex = new ArrayList<>();
-//        for(int i = 0; i <= TOTAL_SPRITES; i++) {
-//            spriteY = read(address) 
-//            if(spriteIndex == 10) break; BEURGK
-//        }
-        return null;
+        int[] sprites = new int[10];
+        int spriteCount = 0;
+        for(int sprite = 0; sprite <= TOTAL_SPRITES; sprite++) {
+            
+            int spriteAddress = AddressMap.OAM_START+sprite*SPRITE_BYTE_SIZE;
+            int spriteY = read(spriteAddress + 1) - SPRITE_Y_CORRECTION;
+            
+            boolean spriteInRange = reg(Reg.LY) >= spriteY && reg(Reg.LY) <= spriteY + SPRITE_LINES;
+            boolean bigSpriteInRange = testBitLCDC(LCDC_Bits.OBJ_SIZE)
+                                && reg(Reg.LY) >= spriteY && reg(Reg.LY) <= spriteY + BIG_SPRITE_LINES;
+                    
+            if( spriteInRange || bigSpriteInRange) { //dont need to correct x coordinate here
+                int spriteX = read(spriteAddress);
+                sprites[spriteCount] = (spriteX << Byte.SIZE) | sprite;
+                spriteCount++ ;
+            }
+            
+            if(spriteCount == 10) break;
+        }
+        
+        Arrays.sort(sprites, 0, spriteCount);
+        int[] spritesIndex = new int[spriteCount];
+        for (int i = 0; i < spritesIndex.length; i++) {
+            spritesIndex[i] = Bits.clip(8, sprites[i]);
+        }
+        return spritesIndex;
     }
 
     private void salut() {
