@@ -312,7 +312,7 @@ public final class LcdController implements Component, Clocked {
     
     private LcdImageLine computeSpriteLine(int index) {
         LcdImageLine.Builder slB;
-        LcdImageLine.Builder lB = new LcdImageLine.Builder(IMAGE_SIZE);
+        LcdImageLine line = new LcdImageLine.Builder(IMAGE_SIZE).build();
         
         int areaStart = AddressMap.BG_DISPLAY_DATA[1];
         
@@ -321,18 +321,23 @@ public final class LcdController implements Component, Clocked {
         for (int sprite = 0; sprite < sprites.length; sprite++) {
             
             slB = new LcdImageLine.Builder(IMAGE_SIZE);
+            int spriteX = read(AddressMap.OAM_START + sprite * SPRITE_BYTE_SIZE);
             int spriteY = read(AddressMap.OAM_START + sprite * SPRITE_BYTE_SIZE + 1) - SPRITE_Y_CORRECTION;
             int spriteCarac = read(AddressMap.OAM_START + sprite * SPRITE_BYTE_SIZE + 3);
             //TODO if(v-flip) else and 16-line height
             int tileLine = index - spriteY;
             int tileIndex = areaStart + sprite * TILE_SIZE;
             int[] lineBytes = getLineBytes(tileIndex, tileLine);
+            
             if(testBitsSprite(SpriteCarac.FLIP_H, spriteCarac))
                 for( int b : lineBytes) Bits.reverse8(b);
-            slB.;
+            
+            slB.setBytes(0, lineBytes[1], lineBytes[0]);
+            LcdImageLine spriteLine = slB.build().shift(-spriteX);
+            line = spriteLine.below(line);
         }
         
-        return null;
+        return line;
         
     }
     
