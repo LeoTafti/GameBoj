@@ -8,5 +8,5 @@ public interface Clocked {
      * @param cycle
      *            the cycle index
      */
-    abstract void cycle(long cycle);
+    public abstract void cycle(long cycle);
 }

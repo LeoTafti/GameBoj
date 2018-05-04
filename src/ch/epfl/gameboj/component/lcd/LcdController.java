@@ -39,7 +39,9 @@ public final class LcdController implements Component, Clocked {
     
     private static final int TOTAL_SPRITES = 40;
     private static final int TOTAL_DMA_CYCLES = 160;
-    //TODO no registerFiles?
+    
+    //TODO : less modifiers ? :D
+    
     // 8-bit registers
     private enum Reg implements Register {
         LCDC, STAT, SCY, SCX, LY, LYC, DMA, BGP, OBP0, OBP1, WY, WX
@@ -57,9 +59,8 @@ public final class LcdController implements Component, Clocked {
         H_BLANK, V_BLANK, MODE_2, MODE_3
     };
     
-    private enum SpriteCarac {
-        UNUSED0, UNUSED1, UNUSED2, UNUSED3, PALETTE, FLIP_H, FLIP_V, BEHIND_BG 
-        //TODO add null values so that PALETTE.ordinal() = 4?
+    private enum SpriteCarac implements Bit {
+        UNUSED_0, UNUSED_1, UNUSED_2, UNUSED_3, PALETTE, FLIP_H, FLIP_V, BEHIND_BG 
     };
 
     private final Cpu cpu;
@@ -104,15 +105,17 @@ public final class LcdController implements Component, Clocked {
         Preconditions.checkBits16(address);
 
         if (address >= AddressMap.REGS_LCDC_START
-                && address < AddressMap.REGS_LCDC_END) {
+                && address < AddressMap.REGS_LCDC_END)
             return readRegAt(address);
-        } else if (address >= AddressMap.VIDEO_RAM_START
-                && address < AddressMap.VIDEO_RAM_END) {
+
+        else if (address >= AddressMap.VIDEO_RAM_START
+                && address < AddressMap.VIDEO_RAM_END)
             return vRam.read(address - AddressMap.VIDEO_RAM_START);
-        } else if (address >= AddressMap.OAM_START
-                && address < AddressMap.OAM_END) {
+
+        else if (address >= AddressMap.OAM_START
+                && address < AddressMap.OAM_END)
             oam.read(address - AddressMap.OAM_START);
-        }
+
         return NO_DATA;
     }
 
@@ -180,9 +183,14 @@ public final class LcdController implements Component, Clocked {
             nextNonIdleCycle = cycle;
         }
         //TODO do we need to simulate the incremental process of the DMA state?
+        //      Yes, probably : "la méthode cycle doit être augmentée pour copier
+        //                      le prochain octet vers la mémoire d'attributs d'objets […]"
         else if(remainingDMACycles != 0) {
-            this.write(AddressMap.OAM_END - remainingDMACycles,
+            write(AddressMap.OAM_END - remainingDMACycles,
                     read(reg(Reg.DMA) << 8 + (TOTAL_DMA_CYCLES - remainingDMACycles)));
+            //TODO : reaminingDMACycles decrementation somewhere ?
+            //TODO : compute reg(Reg.DMA) only once and not 160 times ?
+            
             //TODO which is better?
 //            oam.write(TOTAL_DMA_CYCLES - remainingDMACycles,
 //                    read(reg(Reg.DMA) << 8 + (TOTAL_DMA_CYCLES - remainingDMACycles)));

@@ -15,13 +15,13 @@ import ch.epfl.gameboj.component.cpu.Cpu.Interrupt;
 
 public final class Timer implements Clocked, Component {
 
-    private final Cpu cpu;
-
-    private int DIV = 0, TIMA = 0, TMA = 0, TAC = 0;
-
-    private static final int[] tacValues = { 9, 3, 5, 7 };
-    
     private static final int MAIN_TIMER_INCREMENT = 4;
+    
+    private final Cpu cpu;
+    
+    private int DIV = 0, TIMA = 0, TMA = 0, TAC = 0;
+    
+    private static final int[] tacValues = { 9, 3, 5, 7 };
 
     /**
      * Constructs Timer for given cpu

@@ -43,7 +43,7 @@ public final class Alu {
      * @param z
      *            true if operation result is 0
      * @param n
-     *            true if operation was a substraction
+     *            true if operation was a subtraction
      * @param h
      *            true if operation on 4 LSB produced a carry/borrow
      * @param c

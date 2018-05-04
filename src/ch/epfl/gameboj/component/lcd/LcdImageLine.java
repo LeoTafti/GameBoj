@@ -24,6 +24,7 @@ public final class LcdImageLine {
      * @param opacity vector of line's pixels' opacity
      */
     public LcdImageLine(BitVector msb, BitVector lsb, BitVector opacity) {
+        //TODO : requireNonNull ?
         Preconditions.checkArgument(
                 msb.size() == lsb.size() && msb.size() == opacity.size());
 

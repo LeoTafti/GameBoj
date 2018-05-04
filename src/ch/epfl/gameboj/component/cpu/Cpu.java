@@ -772,9 +772,6 @@ public final class Cpu implements Component, Clocked {
     private void write16(int address, int v) {
         assert address != 0xFFFF;
 
-        Preconditions.checkBits16(address);
-        Preconditions.checkBits16(v);
-
         write8(address, Bits.clip(8, v)); // writes 8 lsb first
         write8(address + 1, Bits.extract(v, 8, 8)); // then 8 msb
     }
@@ -1099,7 +1096,6 @@ public final class Cpu implements Component, Clocked {
             throw new IllegalArgumentException("Unknown reg encoding");
         else if(regCode == 0b111)
             return Reg.A;
-        //TODO : above case seems ugly to me, but what can we do better ? (without changing A, F order in enum ?)
         
         return REGS_8[regCode];
         

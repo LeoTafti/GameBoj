@@ -31,6 +31,7 @@ public final class LcdImage {
      *             or if lines are not of width-length
      */
     public LcdImage(List<LcdImageLine> lines) {
+        Objects.requireNonNull(lines);
         Preconditions.checkArgument(lines.get(0).size()% Integer.SIZE == 0);
         Preconditions.checkArgument(lines.get(0).size() > 0 && lines.size() > 0);
 

@@ -13,12 +13,12 @@ public interface Bit {
      * @returns the ordinal of this enumeration constant
      * @see java.lang.Enum#ordinal()
      */
-    abstract int ordinal();
+    public abstract int ordinal();
 
     /**
      * @return index as defined by ordinal()
      */
-    default int index() {
+    public default int index() {
         return ordinal();
     }
 
@@ -26,7 +26,7 @@ public interface Bit {
      * @return bit-string with single 1 in position of index of object as
      *         defined in enumerated type
      */
-    default int mask() {
+    public default int mask() {
         return Bits.mask(ordinal());
     }
 }

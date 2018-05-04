@@ -20,7 +20,7 @@ public interface Component {
      * @throws IllegalArgumentException
      *             if address isn't a 16-bit value
      */
-    abstract int read(int address);
+    public abstract int read(int address);
 
     /**
      * Writes given value (data) at given address or does nothing if component
@@ -33,7 +33,7 @@ public interface Component {
      * @throws IllegalArgumentException
      *             if address isn't a 16-bit value or data isn't an 8-bit value
      */
-    abstract void write(int address, int data);
+    public abstract void write(int address, int data);
 
     /**
      * Attaches component to given bus

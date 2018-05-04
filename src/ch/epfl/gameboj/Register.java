@@ -8,12 +8,12 @@ public interface Register {
      * @returns the ordinal of this enumeration constant
      * @see java.lang.Enum#ordinal()
      */
-    abstract int ordinal();
+    public abstract int ordinal();
 
     /**
      * @return index as defined by ordinal()
      */
-    default int index() {
+    public default int index() {
         return ordinal();
     }
 }

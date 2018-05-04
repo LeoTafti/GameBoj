@@ -15,17 +15,6 @@ public interface AddressMap {
     int[] TILE_SOURCE = new int[] { 0x8800, 0x8000 };
     int[] BG_DISPLAY_DATA = new int[] { 0x9800, 0x9C00 };
     
-    //TODO : remove ?
-//    // TILE DATA
-//    int TILE_SOURCE_START = 0x8000 , TILE_SOURCE_END = 0x97FF;     //end bound is inclusive
-//    int TILE_SOURCE_0_START = 0x8800 , TILE_SOURCE_0_END = 0x97FF; //end bound is inclusive
-//    int TILE_SOURCE_1_START = 0x8000, TILE_SOURCE_1_END = 0x8FFF;  //end bound is inclusive
-//    
-//    // TILE INDEX
-//    int TILE_AREA_START =   0x9800, TILE_AREA_END = 0xA000;   //end bound is exclusive
-//    int TILE_AREA_0_START = 0x9800, TILE_AREA_0_END = 0x9C00; //end bound is exclusive
-//    int TILE_AREA_1_START = 0x9C00, TILE_AREA_1_END = 0xA000; //end bound is exclusive
-
     // Memory-mapped "IO" registers
     int REGS_START = 0xFF00;
     int REG_P1 = 0xFF00;
@@ -44,12 +33,12 @@ public interface AddressMap {
     int REG_LCDC_SCX = 0xFF43;
     int REG_LCDC_LY = 0xFF44;
     int REG_LCDC_LYC = 0xFF45;
-    int REG_LCDC_DMA = 0xFF6;
-    int REG_LCDC_BGP = 0xFF7;
-    int REG_LCDC_OBP0 = 0xFF8;
-    int REG_LCDC_OBP1 = 0xFF9;
-    int REG_LCDC_WY = 0xFFA;
-    int REG_LCDC_WX = 0xFFB;
+    int REG_LCDC_DMA = 0xFF46;
+    int REG_LCDC_BGP = 0xFF47;
+    int REG_LCDC_OBP0 = 0xFF48;
+    int REG_LCDC_OBP1 = 0xFF49;
+    int REG_LCDC_WY = 0xFF4A;
+    int REG_LCDC_WX = 0xFF4B;
     //other mapped registers
     int REG_BOOT_ROM_DISABLE = 0xFF50;
     int REG_IE = 0xFFFF;
