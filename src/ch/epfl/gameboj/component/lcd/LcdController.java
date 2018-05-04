@@ -275,22 +275,25 @@ public final class LcdController implements Component, Clocked {
     }
 
     private LcdImageLine computeLine(int index) {
-        int WX_prime = reg(Reg.WX) - WX_CORRECTION;
-
-        boolean windowOnLine = testBitLCDC(LCDC_Bits.WIN) && WX_prime >= 0
-                && WX_prime < LCD_WIDTH && reg(Reg.LY) >= reg(Reg.WY);
-
         LcdImageLine bg = computeLine(index, LCDC_Bits.BG_AREA)
                 .extractWrapped(reg(Reg.SCX), LCD_WIDTH);
+        
+        int WX_prime = reg(Reg.WX) - WX_CORRECTION;
+        
+        boolean windowOnLine = testBitLCDC(LCDC_Bits.WIN)
+                && WX_prime >= 0 && WX_prime < LCD_WIDTH
+                && reg(Reg.LY) >= reg(Reg.WY);
 
         if (windowOnLine) {
             LcdImageLine win = computeLine(winY, LCDC_Bits.WIN_AREA)
                     .extractWrapped(0, LCD_WIDTH);
             winY++;
-            return bg.join(win.shift(WX_prime), WX_prime)
-                    .mapColors(reg(Reg.BGP));
+            bg.join(win.shift(WX_prime), WX_prime);
         }
+        
         return bg.mapColors(reg(Reg.BGP));
+        
+        //TODO : modify to add sprites
     }
 
     private LcdImageLine computeLine(int index, LCDC_Bits area) {
@@ -351,8 +354,6 @@ public final class LcdController implements Component, Clocked {
                 lineBytes[0] = Bits.reverse8(lineBytes[0]);
                 lineBytes[1] = Bits.reverse8(lineBytes[1]);
             }
-            
-            
             
             spriteLineBuilder.setBytes(0, lineBytes[1], lineBytes[0]);
             
