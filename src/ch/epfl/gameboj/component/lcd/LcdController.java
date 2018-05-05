@@ -256,17 +256,6 @@ public final class LcdController implements Component, Clocked {
         return currentImage;
     }
 
-    private void incLY() {
-        int LY = reg(Reg.LY);
-        setReg(Reg.LY, ++LY % (LCD_HEIGHT + V_BLANK_LINES));
-        updateLYC_EQ_LY();
-    }
-
-    private void updateLYC_EQ_LY() {
-        setBitSTAT(STAT_Bits.LYC_EQ_LY, reg(Reg.LYC) == reg(Reg.LY));
-        requestPotentialInterrupt();
-    }
-
     private LcdImageLine computeLine(int index) {
         //TODO : bg or sprites desactivés ??=?????
         
@@ -332,6 +321,7 @@ public final class LcdController implements Component, Clocked {
     private LcdImageLine[] computeSpriteLines(int index) {
         LcdImageLine bgLine = new LcdImageLine.Builder(LCD_WIDTH).build();
         LcdImageLine fgLine = new LcdImageLine.Builder(LCD_WIDTH).build();
+        boolean bigSprite = testBitLCDC(LCDC_Bits.OBJ_SIZE);
         
         int[] sprites = spritesIntersectingLine(index);
         
@@ -347,27 +337,38 @@ public final class LcdController implements Component, Clocked {
             int tileIndex = read(address + 2);
             int infos = read(address + 3);
             
-            //TODO if(v-flip) else and 16-line height
+            //determine line in tile
             int tileLine = index - y;
+            
+            boolean bigSpriteTile = bigSprite && (index - y > 7);
+            if(bigSpriteTile) tileIndex++;
+            //certical flip
+            if (testBitsSprite(SpriteInfos.FLIP_V, infos))
+                if (bigSprite) {
+                    tileLine = BIG_SPRITE_LINES - tileLine;
+                    if (bigSpriteTile)
+                        tileIndex--;
+                    else
+                        tileIndex++;
+                } else
+                    tileLine = SPRITE_LINES - tileLine;
+            
             int[] lineBytes = getLineBytes(tileIndex, tileLine, AddressMap.TILE_SOURCE[1]);
             
-            if(!testBitsSprite(SpriteInfos.FLIP_H, infos)) {
+            // vertical flip
+            if(!testBitsSprite(SpriteInfos.FLIP_H, infos)) { // v-flip is equivalent to reversing twice
                 lineBytes[0] = Bits.reverse8(lineBytes[0]);
                 lineBytes[1] = Bits.reverse8(lineBytes[1]);
             }
             
             spriteLineBuilder.setBytes(0, lineBytes[1], lineBytes[0]);
-//            spriteLineBuilder.setBytes(0, Bits.reverse8(lineBytes[1]), Bits.reverse8(lineBytes[0]));
             
             int palette = testBitsSprite(SpriteInfos.PALETTE, infos) ? reg(Reg.OBP1) : reg(Reg.OBP0);
             LcdImageLine spriteLine = spriteLineBuilder.build().shift(x).mapColors(palette); //TODO : - or + (not trivial :p)
-//            System.out.println(spriteLine.opacity().and(spriteLine.lsb().or(spriteLine.msb())));
             
-//            System.out.println(fgLine.opacity());
             if(testBitsSprite(SpriteInfos.BEHIND_BG, infos))
                     bgLine = spriteLine.below(bgLine);
             else fgLine = spriteLine.below(fgLine);
-//            System.out.println(fgLine.opacity());
         }
         
         return new LcdImageLine[] {bgLine, fgLine};
@@ -435,6 +436,17 @@ public final class LcdController implements Component, Clocked {
             cpu.requestInterrupt(Cpu.Interrupt.LCD_STAT);
     }
 
+    private void incLY() {
+        int LY = reg(Reg.LY);
+        setReg(Reg.LY, ++LY % (LCD_HEIGHT + V_BLANK_LINES));
+        updateLYC_EQ_LY();
+    }
+
+    private void updateLYC_EQ_LY() {
+        setBitSTAT(STAT_Bits.LYC_EQ_LY, reg(Reg.LYC) == reg(Reg.LY));
+        requestPotentialInterrupt();
+    }
+
     private boolean screenIsOn() {
         return testBitLCDC(LCDC_Bits.LCD_STATUS);
     }
@@ -498,22 +510,12 @@ public final class LcdController implements Component, Clocked {
         return testBit(Reg.LCDC, bit.index());
     }
 
-    // TODO : remove if still unused
-    private boolean testBitSTAT(STAT_Bits bit) {
-        return testBit(Reg.STAT, bit.index());
-    }
-
     private boolean testBitsSprite(SpriteInfos bit, int caracs) {
         return Bits.test(caracs, bit.ordinal());
     }
 
     private void setBit(Reg r, int index, boolean newValue) {
         setReg(r, Bits.set(reg(r), index, newValue));
-    }
-
-    // TODO : remove if still unused
-    private void setBitLCDC(LCDC_Bits bit, boolean newValue) {
-        setBit(Reg.LCDC, bit.index(), newValue);
     }
 
     private void setBitSTAT(STAT_Bits bit, boolean newValue) {
