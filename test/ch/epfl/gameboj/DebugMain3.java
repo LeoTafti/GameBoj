@@ -26,7 +26,7 @@ public class DebugMain3 {
 //          "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/instr_timing.gb"};
 //          "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/flappyboy.gb"};
 //          "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/Tetris.gb"};
-          "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/tasmaniaStory.gb"};
+//          "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/tasmaniaStory.gb"};
 
           
 //                  "C:/Users/Paul Juillard/Documents/EPFL/BA2/POO/Projet/GameBoj/test/ch/epfl/gameboj/component/blaarg/01-special.gb",
@@ -43,13 +43,13 @@ public class DebugMain3 {
 //                  "C:/Users/Paul Juillard/Documents/EPFL/BA2/POO/Projet/GameBoj/test/ch/epfl/gameboj/component/blaarg/instr_timing.gb",
 //                  "C:/Users/Paul Juillard/Documents/EPFL/BA2/POO/Projet/GameBoj/test/ch/epfl/gameboj/flappyboy.gb"};
 //               "C:/Users/Paul Juillard/Documents/EPFL/BA2/POO/Projet/GameBoj/test/ch/epfl/gameboj//Tetris.gb"};
-//          "C:/Users/Paul Juillard/Documents/EPFL/BA2/POO/Projet/GameBoj/test/ch/epfl/gameboj//tasmaniaStory.gb"};
+          "C:/Users/Paul Juillard/Documents/EPFL/BA2/POO/Projet/GameBoj/test/ch/epfl/gameboj//tasmaniaStory.gb"};
     
     private static final int[] COLOR_MAP = new int[] { 0xFF_FF_FF, 0xD3_D3_D3, 0xA9_A9_A9, 0x00_00_00 };
     
     public static void main(String[] args) throws IOException {
         File romFile = new File(paths[0]);
-        long cycles = 30_000_000;
+        long cycles = 10_000_000;
 
         GameBoy gb = new GameBoy(Cartridge.ofFile(romFile));
         gb.runUntil(cycles);

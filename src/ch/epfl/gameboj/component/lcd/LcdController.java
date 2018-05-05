@@ -288,7 +288,7 @@ public final class LcdController implements Component, Clocked {
                     .extractWrapped(0, LCD_WIDTH)
                     .mapColors(reg(Reg.BGP));
             winY++;
-            composed = composed.join(win.shift(WX_prime), WX_prime);
+            bg = composed.join(win.shift(WX_prime), WX_prime);
         }
         LcdImageLine[] spriteLines = computeSpriteLines(index);
         
@@ -351,7 +351,7 @@ public final class LcdController implements Component, Clocked {
             int tileLine = index - y;
             int[] lineBytes = getLineBytes(tileIndex, tileLine, AddressMap.TILE_SOURCE[1]);
             
-            if(testBitsSprite(SpriteInfos.FLIP_H, infos)) {
+            if(!testBitsSprite(SpriteInfos.FLIP_H, infos)) {
                 lineBytes[0] = Bits.reverse8(lineBytes[0]);
                 lineBytes[1] = Bits.reverse8(lineBytes[1]);
             }
@@ -395,7 +395,6 @@ public final class LcdController implements Component, Clocked {
 
     private int[] getLineBytes(int tileIndex, int lineIndex, int startAddress) {
         int address = startAddress + tileIndex * 2 * Byte.SIZE + 2 * lineIndex;
-
         return new int[] { read(address), read(address + 1) };
     }
 
@@ -405,12 +404,12 @@ public final class LcdController implements Component, Clocked {
         for (int sprite = 0; sprite <= TOTAL_SPRITES && spriteCount < MAX_SPRITES_PER_LINE; sprite++) {
 
             int spriteAddress = AddressMap.OAM_START + sprite * SPRITE_BYTE_SIZE;
-            int spriteY = read(spriteAddress + 1) - SPRITE_Y_CORRECTION;
+            int spriteY = read(spriteAddress) - SPRITE_Y_CORRECTION;
 
             int range = testBitLCDC(LCDC_Bits.OBJ_SIZE) ? BIG_SPRITE_LINES : SPRITE_LINES;
 
             if (line >= spriteY && line <= spriteY + range) {
-                int spriteX = read(spriteAddress); // don't need to correct x
+                int spriteX = read(spriteAddress+1); // don't need to correct x
                                                    // coordinate here
                 sprites[spriteCount] = (spriteX << Byte.SIZE) | sprite;
                 spriteCount++;
