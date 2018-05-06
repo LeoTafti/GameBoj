@@ -15,7 +15,7 @@ public final class DebugMain2 {
     };
     
     private static String[] paths = new String[] {
-//    "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/01-special.gb"};
+//    "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/01-special.gb",
 //    "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/02-interrupts.gb",
 //    "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/03-op sp,hl.gb",
 //    "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/04-op r,imm.gb",
