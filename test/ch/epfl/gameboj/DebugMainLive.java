@@ -23,8 +23,8 @@ public final class DebugMainLive extends Application {
 
     /** Configuration */
 
-    private static final String ROM_PATH = "C:/Users/Paul Juillard/Documents/EPFL/BA2/POO/Projet/GameBoj/test/ch/epfl/gameboj//sprite_priority.gb";
-//    private static final String ROM_PATH = "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/tasmaniaStory.gb";
+//    private static final String ROM_PATH = "C:/Users/Paul Juillard/Documents/EPFL/BA2/POO/Projet/GameBoj/test/ch/epfl/gameboj//sprite_priority.gb";
+    private static final String ROM_PATH = "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/tasmaniaStory.gb";
 
     private static final float EMULATION_SPEED = 2f;
     private static final int CYCLES_PER_ITERATION = (int)(17_556 * EMULATION_SPEED);

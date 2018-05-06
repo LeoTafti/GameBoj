@@ -88,6 +88,9 @@ public final class LcdController implements Component, Clocked {
     private int remainingDMACycles;
 
     private int winY;
+    
+    //TODO : remove
+    private long debugCycle = 0;
 
     public LcdController(Cpu cpu) {
         this.cpu = Objects.requireNonNull(cpu);
@@ -104,7 +107,7 @@ public final class LcdController implements Component, Clocked {
 
         nextImageBuilder = new LcdImage.Builder(LCD_WIDTH, LCD_HEIGHT);
 
-        nextNonIdleCycle = Long.MAX_VALUE;
+        nextNonIdleCycle = Long.MAX_VALUE; //TODO : still unsure about that
 
         winY = 0;
     }
@@ -218,8 +221,10 @@ public final class LcdController implements Component, Clocked {
                 nextNonIdleCycle += MODE_2_CYCLES;
             } else {
                 setMode(LcdMode.V_BLANK);
-                nextNonIdleCycle += LINE_CYCLES;
+                nextNonIdleCycle++;     //TODO : solves the bg "glitching" problem, but seems even stranger... and VBlank is requested not every 17556...
                 cpu.requestInterrupt(Cpu.Interrupt.VBLANK);
+                System.out.println(cycle-debugCycle);
+                debugCycle = cycle;
                 currentImage = nextImageBuilder.build();
             }
             incLY();
@@ -258,13 +263,13 @@ public final class LcdController implements Component, Clocked {
 
     private LcdImageLine computeLine(int index) {
         //TODO : bg or sprites desactivés ??=?????
-        
-                
-        LcdImageLine bg = computeLine(index, LCDC_Bits.BG_AREA)
-                .extractWrapped(reg(Reg.SCX), LCD_WIDTH)
-                .mapColors(reg(Reg.BGP));
-        
-        LcdImageLine composed = bg;
+        LcdImageLine bg;
+        if(testBitLCDC(LCDC_Bits.BG)) {
+            bg = computeLine(index, LCDC_Bits.BG_AREA)
+                    .extractWrapped(reg(Reg.SCX), LCD_WIDTH)
+                    .mapColors(reg(Reg.BGP));
+        }
+        else bg = new LcdImageLine.Builder(LCD_WIDTH).build();
         
         int WX_prime = reg(Reg.WX) - WX_CORRECTION;
         
@@ -277,13 +282,11 @@ public final class LcdController implements Component, Clocked {
                     .extractWrapped(0, LCD_WIDTH)
                     .mapColors(reg(Reg.BGP));
             winY++;
-            bg = composed.join(win.shift(WX_prime), WX_prime);
+            bg = bg.join(win.shift(WX_prime), WX_prime);
         }
+        
         LcdImageLine[] spriteLines = computeSpriteLines(index);
-        
-        composed = composeSpritesAndBG(spriteLines[0], spriteLines[1], bg);
-        
-        return composed;
+        return composeSpritesAndBG(spriteLines[0], spriteLines[1], bg);
     }
 
     private LcdImageLine computeLine(int index, LCDC_Bits area) {
@@ -316,61 +319,68 @@ public final class LcdController implements Component, Clocked {
     /**
      * makes background sprite line and foreground sprite line
      * @param index line being drawn
-     * @return table with background sprite line first and foreground sprite line second
+     * @return array with background sprite line first and foreground sprite line second
      */
     private LcdImageLine[] computeSpriteLines(int index) {
         LcdImageLine bgLine = new LcdImageLine.Builder(LCD_WIDTH).build();
         LcdImageLine fgLine = new LcdImageLine.Builder(LCD_WIDTH).build();
-        boolean bigSprite = testBitLCDC(LCDC_Bits.OBJ_SIZE);
         
-        int[] sprites = spritesIntersectingLine(index);
-        
-        for (int sp : sprites) {
+        if(testBitLCDC(LCDC_Bits.OBJ)) {
+            boolean bigSprites = testBitLCDC(LCDC_Bits.OBJ_SIZE);
             
-            LcdImageLine.Builder spriteLineBuilder = new LcdImageLine.Builder(LCD_WIDTH);
+            int[] sprites = spritesIntersectingLine(index, bigSprites);
             
-            //TODO : specific method ?
-            int address = AddressMap.OAM_START + sp * SPRITE_BYTE_SIZE;
-            
-            int y = read(address) - SPRITE_Y_CORRECTION;
-            int x = read(address + 1) - SPRITE_X_CORRECTION;
-            int tileIndex = read(address + 2);
-            int infos = read(address + 3);
-            
-            //determine line in tile
-            int tileLine = index - y;
-            
-            boolean bigSpriteTile = bigSprite && (index - y > 7);
-            if(bigSpriteTile) tileIndex++;
-            //certical flip
-            if (testBitsSprite(SpriteInfos.FLIP_V, infos))
-                if (bigSprite) {
-                    tileLine = BIG_SPRITE_LINES - tileLine;
-                    if (bigSpriteTile)
-                        tileIndex--;
-                    else
-                        tileIndex++;
-                } else
-                    tileLine = SPRITE_LINES - tileLine;
-            
-            int[] lineBytes = getLineBytes(tileIndex, tileLine, AddressMap.TILE_SOURCE[1]);
-            
-            // vertical flip
-            if(!testBitsSprite(SpriteInfos.FLIP_H, infos)) { // v-flip is equivalent to reversing twice
-                lineBytes[0] = Bits.reverse8(lineBytes[0]);
-                lineBytes[1] = Bits.reverse8(lineBytes[1]);
+            for (int spriteIndex : sprites) {
+                
+                LcdImageLine.Builder spriteLineBuilder = new LcdImageLine.Builder(LCD_WIDTH);
+                
+                //TODO : specific method ?
+                int address = AddressMap.OAM_START + spriteIndex * SPRITE_BYTE_SIZE;
+                
+                int y = read(address) - SPRITE_Y_CORRECTION;
+                int x = read(address + 1) - SPRITE_X_CORRECTION;
+                int tileIndex = read(address + 2);
+                int infos = read(address + 3);
+                
+                //determine line in tile
+                int tileLine = index - y;
+                
+    //            boolean bigSpriteTile = tileLine > 7;
+    //            if(bigSpriteTile) tileIndex++;
+                
+                //vertical flip
+    //            if (testBitsSprite(SpriteInfos.FLIP_V, infos))
+    //                if (bigSprite) {
+    //                    tileLine = BIG_SPRITE_LINES - tileLine;
+    //                    if (tileLine > 7)
+    //                        tileIndex--;
+    //                    else
+    //                        tileIndex++;
+    //                } else
+    //                    tileLine = SPRITE_LINES - tileLine;
+                
+                //TODO : normally, this should suffice
+                if (testBitsSprite(SpriteInfos.FLIP_V, infos))
+                    tileLine = bigSprites ? BIG_SPRITE_LINES - tileLine : SPRITE_LINES - tileLine;
+                
+                int[] lineBytes = getLineBytes(tileIndex, tileLine, AddressMap.TILE_SOURCE[1]);
+                
+                // Horizontal flip
+                if(!testBitsSprite(SpriteInfos.FLIP_H, infos)) { // v-flip is equivalent to reversing twice
+                    lineBytes[0] = Bits.reverse8(lineBytes[0]);
+                    lineBytes[1] = Bits.reverse8(lineBytes[1]);
+                }
+                
+                spriteLineBuilder.setBytes(0, lineBytes[1], lineBytes[0]);
+                
+                int palette = testBitsSprite(SpriteInfos.PALETTE, infos) ? reg(Reg.OBP1) : reg(Reg.OBP0);
+                LcdImageLine spriteLine = spriteLineBuilder.build().shift(x).mapColors(palette);
+                
+                if(testBitsSprite(SpriteInfos.BEHIND_BG, infos))
+                        bgLine = spriteLine.below(bgLine);
+                else fgLine = spriteLine.below(fgLine);
             }
-            
-            spriteLineBuilder.setBytes(0, lineBytes[1], lineBytes[0]);
-            
-            int palette = testBitsSprite(SpriteInfos.PALETTE, infos) ? reg(Reg.OBP1) : reg(Reg.OBP0);
-            LcdImageLine spriteLine = spriteLineBuilder.build().shift(x).mapColors(palette); //TODO : - or + (not trivial :p)
-            
-            if(testBitsSprite(SpriteInfos.BEHIND_BG, infos))
-                    bgLine = spriteLine.below(bgLine);
-            else fgLine = spriteLine.below(fgLine);
         }
-        
         return new LcdImageLine[] {bgLine, fgLine};
         
     }
@@ -399,7 +409,7 @@ public final class LcdController implements Component, Clocked {
         return new int[] { read(address), read(address + 1) };
     }
 
-    private int[] spritesIntersectingLine(int line) {
+    private int[] spritesIntersectingLine(int line, boolean bigSprites) {
         int[] sprites = new int[10];
         int spriteCount = 0;
         for (int sprite = 0; sprite <= TOTAL_SPRITES && spriteCount < MAX_SPRITES_PER_LINE; sprite++) {
@@ -407,7 +417,7 @@ public final class LcdController implements Component, Clocked {
             int spriteAddress = AddressMap.OAM_START + sprite * SPRITE_BYTE_SIZE;
             int spriteY = read(spriteAddress) - SPRITE_Y_CORRECTION;
 
-            int range = testBitLCDC(LCDC_Bits.OBJ_SIZE) ? BIG_SPRITE_LINES : SPRITE_LINES;
+            int range = bigSprites ? BIG_SPRITE_LINES : SPRITE_LINES;
 
             if (line >= spriteY && line <= spriteY + range) {
                 int spriteX = read(spriteAddress+1); // don't need to correct x
@@ -427,7 +437,9 @@ public final class LcdController implements Component, Clocked {
     }
     
     private LcdImageLine composeSpritesAndBG(LcdImageLine bgSprites, LcdImageLine fgSprites, LcdImageLine bg) {
-        BitVector newOpacity = bgSprites.opacity().and(bg.opacity()).not();
+        //TODO : remove (More efficient, using De Morgan :D)
+//        BitVector newOpacity = bgSprites.opacity().and(bg.opacity().not()).not();
+        BitVector newOpacity = bg.opacity().or(bgSprites.opacity().not());
         return bgSprites.below(bg, newOpacity).below(fgSprites);
     }
 
