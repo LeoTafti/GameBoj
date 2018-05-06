@@ -28,17 +28,17 @@ public interface AddressMap {
     
     //TODO : remove unused
     int REG_LCDC = 0xFF40;
-    int REG_LCDC_STAT = 0xFF41;
-    int REG_LCDC_SCY = 0xFF42;
-    int REG_LCDC_SCX = 0xFF43;
-    int REG_LCDC_LY = 0xFF44;
-    int REG_LCDC_LYC = 0xFF45;
-    int REG_LCDC_DMA = 0xFF46;
-    int REG_LCDC_BGP = 0xFF47;
-    int REG_LCDC_OBP0 = 0xFF48;
-    int REG_LCDC_OBP1 = 0xFF49;
-    int REG_LCDC_WY = 0xFF4A;
-    int REG_LCDC_WX = 0xFF4B;
+    int REG_STAT = 0xFF41;
+    int REG_SCY = 0xFF42;
+    int REG_SCX = 0xFF43;
+    int REG_LY = 0xFF44;
+    int REG_LYC = 0xFF45;
+    int REG_DMA = 0xFF46;
+    int REG_BGP = 0xFF47;
+    int REG_OBP0 = 0xFF48;
+    int REG_OBP1 = 0xFF49;
+    int REG_WY = 0xFF4A;
+    int REG_WX = 0xFF4B;
     //other mapped registers
     int REG_BOOT_ROM_DISABLE = 0xFF50;
     int REG_IE = 0xFFFF;

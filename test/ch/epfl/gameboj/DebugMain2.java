@@ -28,8 +28,8 @@ public final class DebugMain2 {
 //    "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/11-op a,(hl).gb",
 //    "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/instr_timing.gb"};
 //    "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/flappyboy.gb"};
-//    "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/Tetris.gb"};
-    "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/tasmaniaStory.gb"};
+    "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/Tetris.gb"};
+//    "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/tasmaniaStory.gb"};
 
     
 //            "C:/Users/Paul Juillard/Documents/EPFL/BA2/POO/Projet/GameBoj/test/ch/epfl/gameboj/component/blaarg/01-special.gb",

@@ -63,9 +63,6 @@ public final class LcdController implements Component, Clocked {
         MODE0, MODE1, LYC_EQ_LY, INT_MODE0, INT_MODE1, INT_MODE2, INT_LYC, UNUSED_7
     }
     
-//    private enum SpriteAttributes {
-//        Y, X, TILE_INDEX, INFOS
-//    }
     private enum SpriteInfos implements Bit {
         UNUSED_0, UNUSED_1, UNUSED_2, UNUSED_3, PALETTE, FLIP_H, FLIP_V, BEHIND_BG
     };
@@ -125,6 +122,7 @@ public final class LcdController implements Component, Clocked {
             return readRegAt(address);
 
         else if (address >= AddressMap.VIDEO_RAM_START && address < AddressMap.VIDEO_RAM_END) {
+            System.out.println("vRam read at : " + address + " absolute, " + (address - AddressMap.VIDEO_RAM_START) + " relative");
             return vRam.read(address - AddressMap.VIDEO_RAM_START);
         }
         else if (address >= AddressMap.OAM_START && address < AddressMap.OAM_END)
@@ -142,30 +140,34 @@ public final class LcdController implements Component, Clocked {
     public void write(int address, int data) {
         Preconditions.checkBits16(address);
         Preconditions.checkBits8(data);
-
-        if (address >= AddressMap.REGS_LCDC_START
-                && address < AddressMap.REGS_LCDC_END) {
-            if (address == AddressMap.REG_LCDC_STAT) {
-                setReg(Reg.STAT, Bits.extract(data, 3, 5) << 3
-                        | Bits.clip(3, reg(Reg.STAT)));
+        
+        if (address >= AddressMap.REGS_LCDC_START && address < AddressMap.REGS_LCDC_END) {
+            if (address == AddressMap.REG_STAT) {
+                setReg(Reg.STAT,
+                        Bits.extract(data, 3, 5) << 3 | Bits.clip(3, reg(Reg.STAT)));
             }
-            else {
+            else if (address == AddressMap.REG_LCDC) {
+                boolean oldScreenState = screenIsOn();
                 setRegAt(address, data);
-
-                if (address == AddressMap.REG_LCDC && !screenIsOn()) {
+                if (address == AddressMap.REG_LCDC && oldScreenState != screenIsOn()) {
                     setMode(LcdMode.H_BLANK);
                     setReg(Reg.LY, 0);
                     nextNonIdleCycle = Long.MAX_VALUE;
                 }
-                else if (address == AddressMap.REG_LCDC_LYC)
+            }
+            else {
+                setRegAt(address, data);
+
+                if (address == AddressMap.REG_LYC)
                     updateLYC_EQ_LY();
-                else if (address == AddressMap.REG_LCDC_DMA) {
+                else if (address == AddressMap.REG_DMA) {
                     remainingDMACycles = TOTAL_DMA_CYCLES;
                 }
             }
         }
         else if (address >= AddressMap.VIDEO_RAM_START
                 && address < AddressMap.VIDEO_RAM_END) {
+            System.out.println("vRam written at : " + address + " absolute, " + (address - AddressMap.VIDEO_RAM_START) + " relative");
             vRam.write(address - AddressMap.VIDEO_RAM_START, data);
         }
         else if (address >= AddressMap.OAM_START
@@ -192,23 +194,20 @@ public final class LcdController implements Component, Clocked {
      */
     @Override
     public void cycle(long cycle) {
-        if (nextNonIdleCycle == Long.MAX_VALUE && screenIsOn()) {
-            nextNonIdleCycle = cycle;
-        }
-        // TODO do we need to simulate the incremental process of the DMA state?
-        // Yes, probably : "la méthode cycle doit être augmentée pour copier
-        // le prochain octet vers la mémoire d'attributs d'objets […]"
-        else if (remainingDMACycles > 0) {
+        if (remainingDMACycles > 0) {
             write(AddressMap.OAM_END - remainingDMACycles,
                     bus.read((reg(Reg.DMA) << 8) + (TOTAL_DMA_CYCLES - remainingDMACycles)));
             remainingDMACycles -= 1;
-            nextNonIdleCycle++;
-            return;
             // TODO : compute reg(Reg.DMA) only once and not 160 times
-            }
+        }
+        
+        if (nextNonIdleCycle == Long.MAX_VALUE && screenIsOn()) {
+            nextNonIdleCycle = cycle;
+        }
         else if (cycle != nextNonIdleCycle) {
             return;
         }
+        
         
         reallyCycle(cycle);
     }
@@ -221,9 +220,10 @@ public final class LcdController implements Component, Clocked {
                 nextNonIdleCycle += MODE_2_CYCLES;
             } else {
                 setMode(LcdMode.V_BLANK);
-                nextNonIdleCycle++;     //TODO : solves the bg "glitching" problem, but seems even stranger... and VBlank is requested not every 17556...
+                nextNonIdleCycle += LINE_CYCLES;
                 cpu.requestInterrupt(Cpu.Interrupt.VBLANK);
-                System.out.println(cycle-debugCycle);
+                if(cycle-debugCycle != 17556)
+                    System.out.println(cycle-debugCycle);
                 debugCycle = cycle;
                 currentImage = nextImageBuilder.build();
             }
@@ -234,7 +234,7 @@ public final class LcdController implements Component, Clocked {
             if (reg(Reg.LY) == LCD_HEIGHT + V_BLANK_LINES - 1) {
                 setMode(LcdMode.MODE_2);
                 nextImageBuilder = new LcdImage.Builder(LCD_WIDTH, LCD_HEIGHT);
-                nextNonIdleCycle++;
+                nextNonIdleCycle += MODE_2_CYCLES;      //TODO : changed from ++ to that, "solves" the 17556 problem but seems strange ?
                 winY = 0;
             } else
                 nextNonIdleCycle += LINE_CYCLES;
@@ -254,7 +254,7 @@ public final class LcdController implements Component, Clocked {
                     computeLine((reg(Reg.LY) + reg(Reg.SCY)) % IMAGE_SIZE));
             break;
         }
-        requestPotentialInterrupt();
+        requestPotentialInterrupt(mode());
     }
 
     public LcdImage currentImage() {
@@ -262,7 +262,7 @@ public final class LcdController implements Component, Clocked {
     }
 
     private LcdImageLine computeLine(int index) {
-        //TODO : bg or sprites desactivés ??=?????
+        //TODO : bg ou sprites désactivés : make it cleaner
         LcdImageLine bg;
         if(testBitLCDC(LCDC_Bits.BG)) {
             bg = computeLine(index, LCDC_Bits.BG_AREA)
@@ -344,6 +344,8 @@ public final class LcdController implements Component, Clocked {
                 
                 //determine line in tile
                 int tileLine = index - y;
+                if(tileLine > 7)
+                    System.out.println(tileLine + ", " + index + ", " + y);
                 
     //            boolean bigSpriteTile = tileLine > 7;
     //            if(bigSpriteTile) tileIndex++;
@@ -419,7 +421,7 @@ public final class LcdController implements Component, Clocked {
 
             int range = bigSprites ? BIG_SPRITE_LINES : SPRITE_LINES;
 
-            if (line >= spriteY && line <= spriteY + range) {
+            if (line >= spriteY && line <= spriteY + range - 1) {   //TODO : yeahhhh, the added -1 corrects "black spots" problem 
                 int spriteX = read(spriteAddress+1); // don't need to correct x
                                                    // coordinate here
                 sprites[spriteCount] = (spriteX << Byte.SIZE) | sprite;
@@ -443,9 +445,12 @@ public final class LcdController implements Component, Clocked {
         return bgSprites.below(bg, newOpacity).below(fgSprites);
     }
 
-    private void requestPotentialInterrupt() {
-        if (Bits.extract(reg(Reg.STAT), 3, 3) != 0)
-            cpu.requestInterrupt(Cpu.Interrupt.LCD_STAT);
+    private void requestPotentialInterrupt(LcdMode mode) {
+//        if (Bits.extract(reg(Reg.STAT), 3, 3) != 0)
+//            cpu.requestInterrupt(Cpu.Interrupt.LCD_STAT);
+        if(!mode.equals(LcdMode.MODE_3)
+                && testBit(Reg.STAT, mode.ordinal() + 3)) //TODO : static var
+                cpu.requestInterrupt(Cpu.Interrupt.LCD_STAT);
     }
 
     private void incLY() {
@@ -455,8 +460,12 @@ public final class LcdController implements Component, Clocked {
     }
 
     private void updateLYC_EQ_LY() {
-        setBitSTAT(STAT_Bits.LYC_EQ_LY, reg(Reg.LYC) == reg(Reg.LY));
-        requestPotentialInterrupt();
+        boolean newValue = reg(Reg.LYC) == reg(Reg.LY);
+        setBitSTAT(STAT_Bits.LYC_EQ_LY, newValue);
+        //TODO : modularize
+        if(testBitSTAT(STAT_Bits.INT_LYC) && newValue)
+            cpu.requestInterrupt(Cpu.Interrupt.LCD_STAT);
+//        requestPotentialInterrupt();
     }
 
     private boolean screenIsOn() {
@@ -532,5 +541,9 @@ public final class LcdController implements Component, Clocked {
 
     private void setBitSTAT(STAT_Bits bit, boolean newValue) {
         setBit(Reg.STAT, bit.index(), newValue);
+    }
+    
+    private boolean testBitSTAT(STAT_Bits bit) {
+        return testBit(Reg.STAT, bit.index());
     }
 }
