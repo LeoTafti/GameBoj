@@ -122,7 +122,7 @@ public final class LcdController implements Component, Clocked {
             return readRegAt(address);
 
         else if (address >= AddressMap.VIDEO_RAM_START && address < AddressMap.VIDEO_RAM_END) {
-            System.out.println("vRam read at : " + address + " absolute, " + (address - AddressMap.VIDEO_RAM_START) + " relative");
+//            System.out.println("vRam read at : " + address + " absolute, " + (address - AddressMap.VIDEO_RAM_START) + " relative");
             return vRam.read(address - AddressMap.VIDEO_RAM_START);
         }
         else if (address >= AddressMap.OAM_START && address < AddressMap.OAM_END)
@@ -167,7 +167,7 @@ public final class LcdController implements Component, Clocked {
         }
         else if (address >= AddressMap.VIDEO_RAM_START
                 && address < AddressMap.VIDEO_RAM_END) {
-            System.out.println("vRam written at : " + address + " absolute, " + (address - AddressMap.VIDEO_RAM_START) + " relative");
+//            System.out.println("vRam written at : " + address + " absolute, " + (address - AddressMap.VIDEO_RAM_START) + " relative");
             vRam.write(address - AddressMap.VIDEO_RAM_START, data);
         }
         else if (address >= AddressMap.OAM_START
@@ -344,8 +344,6 @@ public final class LcdController implements Component, Clocked {
                 
                 //determine line in tile
                 int tileLine = index - y;
-                if(tileLine > 7)
-                    System.out.println(tileLine + ", " + index + ", " + y);
                 
     //            boolean bigSpriteTile = tileLine > 7;
     //            if(bigSpriteTile) tileIndex++;
