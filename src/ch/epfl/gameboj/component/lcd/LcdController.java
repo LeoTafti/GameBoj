@@ -138,6 +138,7 @@ public final class LcdController implements Component, Clocked {
      */
     @Override
     public void write(int address, int data) {
+//        new Exception().printStackTrace();
         Preconditions.checkBits16(address);
         Preconditions.checkBits8(data);
         

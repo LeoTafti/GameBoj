@@ -50,17 +50,21 @@ public final class Joypad implements Component {
         Preconditions.checkBits8(data);
 
         if (address == AddressMap.REG_P1) {
+            //TODO : very strange but functions better without it...
+//            data = Bits.complement8(data);
             P1 = Bits.set(P1, 4, Bits.test(data, 4));
             P1 = Bits.set(P1, 5, Bits.test(data, 5));
-            P1 = Bits.complement8(data);
+//            System.out.println("p1 : " + Integer.toBinaryString(P1));
         }
     }
 
     public void keyPressed(Key key) {
+        System.out.println("pressed : " + key);
         update(key, true);
     }
 
     public void keyReleased(Key key) {
+        System.out.println("released : " + key);
         update(key, false);
     }
 
@@ -69,7 +73,7 @@ public final class Joypad implements Component {
         int line = keyIndex / LINE_SIZE;
 
         // update key pressed
-        lines[line] = Bits.set(lines[line], keyIndex % LINE_SIZE, true);
+        lines[line] = Bits.set(lines[line], keyIndex % LINE_SIZE, newValue);
 
         // update P1
         int line0 = Bits.test(P1, 4) ? lines[0] : 0;

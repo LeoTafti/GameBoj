@@ -24,10 +24,10 @@ public class DebugMain3 {
 //          "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/10-bit ops.gb",
 //          "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/11-op a,(hl).gb",
 //          "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/instr_timing.gb"};
-//          "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/flappyboy.gb"};
+          "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/flappyboy.gb"};
 //          "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/Tetris.gb"};
 //          "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/tasmaniaStory.gb"};
-            "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/sprite_priority.gb"};
+//            "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/sprite_priority.gb"};
 
           
 //                  "C:/Users/Paul Juillard/Documents/EPFL/BA2/POO/Projet/GameBoj/test/ch/epfl/gameboj/component/blaarg/01-special.gb",
@@ -61,11 +61,14 @@ public class DebugMain3 {
         gb.runUntil(cycles + 2 * (1L << 20));
 
         LcdImage li = gb.lcdController().currentImage();
-        BufferedImage i = new BufferedImage(li.width(), li.height(),
-                BufferedImage.TYPE_INT_RGB);
+        BufferedImage i =
+                new BufferedImage(li.width(),
+                        li.height(),
+                        BufferedImage.TYPE_INT_RGB);
         for (int y = 0; y < li.height(); ++y)
             for (int x = 0; x < li.width(); ++x)
                 i.setRGB(x, y, COLOR_MAP[li.get(x, y)]);
         ImageIO.write(i, "png", new File("gb.png"));
+        System.out.println("done");
     }
 }
