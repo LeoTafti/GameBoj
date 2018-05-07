@@ -122,7 +122,6 @@ public final class LcdController implements Component, Clocked {
             return readRegAt(address);
 
         else if (address >= AddressMap.VIDEO_RAM_START && address < AddressMap.VIDEO_RAM_END) {
-//            System.out.println("vRam read at : " + address + " absolute, " + (address - AddressMap.VIDEO_RAM_START) + " relative");
             return vRam.read(address - AddressMap.VIDEO_RAM_START);
         }
         else if (address >= AddressMap.OAM_START && address < AddressMap.OAM_END)
@@ -138,7 +137,6 @@ public final class LcdController implements Component, Clocked {
      */
     @Override
     public void write(int address, int data) {
-//        new Exception().printStackTrace();
         Preconditions.checkBits16(address);
         Preconditions.checkBits8(data);
         
@@ -168,7 +166,6 @@ public final class LcdController implements Component, Clocked {
         }
         else if (address >= AddressMap.VIDEO_RAM_START
                 && address < AddressMap.VIDEO_RAM_END) {
-//            System.out.println("vRam written at : " + address + " absolute, " + (address - AddressMap.VIDEO_RAM_START) + " relative");
             vRam.write(address - AddressMap.VIDEO_RAM_START, data);
         }
         else if (address >= AddressMap.OAM_START
@@ -235,7 +232,6 @@ public final class LcdController implements Component, Clocked {
             if (reg(Reg.LY) == LCD_HEIGHT + V_BLANK_LINES - 1) {
                 setMode(LcdMode.MODE_2);
                 nextImageBuilder = new LcdImage.Builder(LCD_WIDTH, LCD_HEIGHT);
-                nextNonIdleCycle += MODE_2_CYCLES;      //TODO : changed from ++ to that, "solves" the 17556 problem but seems strange ?
                 winY = 0;
             } else
                 nextNonIdleCycle += LINE_CYCLES;
