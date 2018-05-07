@@ -212,8 +212,7 @@ public final class LcdController implements Component, Clocked {
     /**
      * Changes mode, potentially request adequate interrupts and updates
      * nextNonIdleCycle accordingly
-     */
-    
+     **/
     //TODO : remove cycle
     private void reallyCycle(long cycle) {
         switch (mode()) {
