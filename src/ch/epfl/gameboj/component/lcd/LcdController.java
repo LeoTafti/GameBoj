@@ -27,34 +27,31 @@ public final class LcdController implements Component, Clocked {
 
     public static final int LCD_WIDTH = 160, LCD_HEIGHT = 144;
 
-    private static final int TILE_SIZE = 8;
-    private static final int IMAGE_TILE_SIZE = 32;
-    private static final int IMAGE_SIZE = TILE_SIZE * IMAGE_TILE_SIZE;
-    private static final int SPRITE_LINES = 8, BIG_SPRITE_LINES = 16;
-    private static final int SPRITE_BYTE_SIZE = 4;
+    private static final int TILE_SIZE = 8,
+            IMAGE_TILE_SIZE = 32,
+            IMAGE_SIZE = TILE_SIZE * IMAGE_TILE_SIZE,
+            SPRITE_LINES = 8, BIG_SPRITE_LINES = 16,
+            SPRITE_BYTE_SIZE = 4;
 
-    private static final int WX_CORRECTION = 7;
-    private static final int SPRITE_X_CORRECTION = 8;
-    private static final int SPRITE_Y_CORRECTION = 16;
+    private static final int WX_CORRECTION = 7,
+            SPRITE_X_CORRECTION = 8,
+            SPRITE_Y_CORRECTION = 16,
+            TILE_INDEX_CORRECTION = 0x80;
+
+    private static final int LINE_CYCLES = 114,
+            TOTAL_DMA_CYCLES = 160;
     
-    private static final int TILE_INDEX_CORRECTION = 0x80;
-
-    private static final int LINE_CYCLES = 114;
     private static final int V_BLANK_LINES = 10;
 
-    private static final int H_BLANK_CYCLES = 51;
-    private static final int MODE_2_CYCLES = 20;
-    private static final int MODE_3_CYCLES = 43;
+    private static final int H_BLANK_CYCLES = 51,
+            MODE_2_CYCLES = 20,
+            MODE_3_CYCLES = 43;
 
-    private static final int TOTAL_SPRITES = 40;
-    private static final int TOTAL_DMA_CYCLES = 160;
-    private static final int MAX_SPRITES_PER_LINE = 10;
+    private static final int TOTAL_SPRITES = 40,
+            MAX_SPRITES_PER_LINE = 10;
     
     private final LcdImage BLANK_IMAGE = new LcdImage(List.of(new LcdImageLine.Builder(32).build()));
 
-    // TODO : less modifiers ? :D
-
-    // 8-bit registers
     private enum Reg implements Register {
         LCDC, STAT, SCY, SCX, LY, LYC, DMA, BGP, OBP0, OBP1, WY, WX
     }
@@ -138,7 +135,6 @@ public final class LcdController implements Component, Clocked {
      */
     @Override
     public void write(int address, int data) {
-//        new Exception().printStackTrace();
         Preconditions.checkBits16(address);
         Preconditions.checkBits8(data);
         
@@ -195,9 +191,11 @@ public final class LcdController implements Component, Clocked {
     @Override
     public void cycle(long cycle) {
         if (remainingDMACycles > 0) {
-            write(AddressMap.OAM_END - remainingDMACycles,
-                    bus.read((reg(Reg.DMA) << 8) + (TOTAL_DMA_CYCLES - remainingDMACycles)));
-            remainingDMACycles -= 1;
+            int index = TOTAL_DMA_CYCLES - remainingDMACycles;
+            write(AddressMap.OAM_START + index,
+                    bus.read((reg(Reg.DMA) << 8) + index));
+            
+            remainingDMACycles--;
             // TODO : compute reg(Reg.DMA) only once and not 160 times
         }
         
@@ -208,10 +206,15 @@ public final class LcdController implements Component, Clocked {
             return;
         }
         
-        
         reallyCycle(cycle);
     }
 
+    /**
+     * Changes mode, potentially request adequate interrupts and updates
+     * nextNonIdleCycle accordingly
+     */
+    
+    //TODO : remove cycle
     private void reallyCycle(long cycle) {
         switch (mode()) {
         case H_BLANK:
@@ -238,10 +241,11 @@ public final class LcdController implements Component, Clocked {
         case V_BLANK:
             if (reg(Reg.LY) == LCD_HEIGHT + V_BLANK_LINES - 1) {
                 setMode(LcdMode.MODE_2);
-                nextImageBuilder = new LcdImage.Builder(LCD_WIDTH, LCD_HEIGHT);
                 nextNonIdleCycle += MODE_2_CYCLES;
+                nextImageBuilder = new LcdImage.Builder(LCD_WIDTH, LCD_HEIGHT);
                 winY = 0;
-            } else
+            }
+            else
                 nextNonIdleCycle += LINE_CYCLES;
             incLY();
             break;
@@ -262,6 +266,10 @@ public final class LcdController implements Component, Clocked {
         requestPotentialInterrupt(mode());
     }
 
+    /**
+     * Getter for currentImage
+     * @return current Lcd Image
+     */
     public LcdImage currentImage() {
         return currentImage;
     }
@@ -335,11 +343,10 @@ public final class LcdController implements Component, Clocked {
                 int tileIndex = read(address + 2);
                 int infos = read(address + 3);
                 
-                //determine line in tile
                 int tileLine = index - y;
                                 
                 //TODO : normally, this should suffice
-                if (testBitsSprite(SpriteInfos.FLIP_V, infos))
+                if (testBitSprite(SpriteInfos.FLIP_V, infos))
                     tileLine = bigSprites ? BIG_SPRITE_LINES - tileLine - 1 : SPRITE_LINES - tileLine - 1;
                     
                     
@@ -347,30 +354,29 @@ public final class LcdController implements Component, Clocked {
                 int[] lineBytes = getLineBytes(tileIndex, tileLine, AddressMap.TILE_SOURCE[1]);
                 
                 /* Horizontal flip
-                Since tiles read from the bus are stored as is in the vRam, we have to reverse them
+                Since tiles (bytes) read from the bus are stored as is in the vRam, we have to reverse them
                 when computing a NOT reversed sprite, and we don't have to reverse them when computing
                 a reversed one*/
-                if(!testBitsSprite(SpriteInfos.FLIP_H, infos)) {
+                if(!testBitSprite(SpriteInfos.FLIP_H, infos)) {
                     lineBytes[0] = Bits.reverse8(lineBytes[0]);
                     lineBytes[1] = Bits.reverse8(lineBytes[1]);
                 }
                 
                 spriteLineBuilder.setBytes(0, lineBytes[1], lineBytes[0]);
                 
-                int palette = testBitsSprite(SpriteInfos.PALETTE, infos) ? reg(Reg.OBP1) : reg(Reg.OBP0);
+                int palette = testBitSprite(SpriteInfos.PALETTE, infos) ? reg(Reg.OBP1) : reg(Reg.OBP0);
                 LcdImageLine spriteLine = spriteLineBuilder.build().shift(x).mapColors(palette);
                 
-                if(testBitsSprite(SpriteInfos.BEHIND_BG, infos))
+                if(testBitSprite(SpriteInfos.BEHIND_BG, infos))
                         bgLine = spriteLine.below(bgLine);
                 else fgLine = spriteLine.below(fgLine);
             }
         }
         return new LcdImageLine[] {bgLine, fgLine};
-        
     }
 
     /**
-     * get tile-line from memory and adds it to currently building line
+     * Get tile-line from memory and adds it to currently building line
      * 
      * @param b
      *            current line builder
@@ -449,7 +455,6 @@ public final class LcdController implements Component, Clocked {
     }
 
     private LcdMode mode() {
-
         switch (Bits.clip(2, reg(Reg.STAT))) {
         case 0:
             return LcdMode.H_BLANK;
@@ -479,6 +484,7 @@ public final class LcdController implements Component, Clocked {
         return registerFile.get(r);
     }
 
+    
     /**
      * Sets given reg with given value
      * 
@@ -491,10 +497,11 @@ public final class LcdController implements Component, Clocked {
         registerFile.set(r, newV);
     }
 
+
     private int readRegAt(int address) {
         return reg(Reg.values()[address - AddressMap.REG_LCDC]);
     }
-
+    
     private void setRegAt(int address, int newV) {
         setReg(Reg.values()[address - AddressMap.REG_LCDC], newV);
     }
@@ -506,9 +513,13 @@ public final class LcdController implements Component, Clocked {
     private boolean testBitLCDC(LCDC_Bits bit) {
         return testBit(Reg.LCDC, bit.index());
     }
+   
+    private boolean testBitSTAT(STAT_Bits bit) {
+        return testBit(Reg.STAT, bit.index());
+    }
 
-    private boolean testBitsSprite(SpriteInfos bit, int caracs) {
-        return Bits.test(caracs, bit.ordinal());
+    private boolean testBitSprite(SpriteInfos bit, int infos) {
+        return Bits.test(infos, bit.index());
     }
 
     private void setBit(Reg r, int index, boolean newValue) {
@@ -519,7 +530,4 @@ public final class LcdController implements Component, Clocked {
         setBit(Reg.STAT, bit.index(), newValue);
     }
     
-    private boolean testBitSTAT(STAT_Bits bit) {
-        return testBit(Reg.STAT, bit.index());
-    }
 }
