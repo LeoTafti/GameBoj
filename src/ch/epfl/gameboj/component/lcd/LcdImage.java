@@ -14,7 +14,7 @@ import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.bits.BitVector;
 
 public final class LcdImage {
-
+    
     private final List<LcdImageLine> lines;
 
     /**
