@@ -36,6 +36,8 @@ public final class LcdController implements Component, Clocked {
     private static final int WX_CORRECTION = 7;
     private static final int SPRITE_X_CORRECTION = 8;
     private static final int SPRITE_Y_CORRECTION = 16;
+    
+    private static final int TILE_INDEX_CORRECTION = 0x80;
 
     private static final int LINE_CYCLES = 114;
     private static final int V_BLANK_LINES = 10;
@@ -47,6 +49,8 @@ public final class LcdController implements Component, Clocked {
     private static final int TOTAL_SPRITES = 40;
     private static final int TOTAL_DMA_CYCLES = 160;
     private static final int MAX_SPRITES_PER_LINE = 10;
+    
+    private final LcdImage BLANK_IMAGE = new LcdImage(List.of(new LcdImageLine.Builder(32).build()));
 
     // TODO : less modifiers ? :D
 
@@ -89,6 +93,7 @@ public final class LcdController implements Component, Clocked {
     //TODO : remove
     private long debugCycle = 0;
 
+    
     public LcdController(Cpu cpu) {
         this.cpu = Objects.requireNonNull(cpu);
 
@@ -96,11 +101,7 @@ public final class LcdController implements Component, Clocked {
         vRam = new Ram(AddressMap.VIDEO_RAM_SIZE);
         oam = new Ram(AddressMap.OAM_RAM_SIZE);
 
-        currentImage = new LcdImage(
-                List.of(new LcdImageLine.Builder(160).build()));
-        // TODO : just so that DebugMainLive works, BUT still shows that maybe
-        // we should give it a value and not let it be null before building
-        // first image ?
+        currentImage = BLANK_IMAGE;
 
         nextImageBuilder = new LcdImage.Builder(LCD_WIDTH, LCD_HEIGHT);
 
@@ -137,6 +138,7 @@ public final class LcdController implements Component, Clocked {
      */
     @Override
     public void write(int address, int data) {
+//        new Exception().printStackTrace();
         Preconditions.checkBits16(address);
         Preconditions.checkBits8(data);
         
@@ -216,13 +218,18 @@ public final class LcdController implements Component, Clocked {
             if (reg(Reg.LY) < LCD_HEIGHT - 1) {
                 setMode(LcdMode.MODE_2);
                 nextNonIdleCycle += MODE_2_CYCLES;
-            } else {
+            }
+            else {
                 setMode(LcdMode.V_BLANK);
                 nextNonIdleCycle += LINE_CYCLES;
                 cpu.requestInterrupt(Cpu.Interrupt.VBLANK);
+                
+                //TODO : sometimes prints something (when changing screen) : normal ?
                 if(cycle-debugCycle != 17556)
                     System.out.println(cycle-debugCycle);
                 debugCycle = cycle;
+                
+                
                 currentImage = nextImageBuilder.build();
             }
             incLY();
@@ -232,6 +239,7 @@ public final class LcdController implements Component, Clocked {
             if (reg(Reg.LY) == LCD_HEIGHT + V_BLANK_LINES - 1) {
                 setMode(LcdMode.MODE_2);
                 nextImageBuilder = new LcdImage.Builder(LCD_WIDTH, LCD_HEIGHT);
+                nextNonIdleCycle += MODE_2_CYCLES;
                 winY = 0;
             } else
                 nextNonIdleCycle += LINE_CYCLES;
@@ -259,14 +267,9 @@ public final class LcdController implements Component, Clocked {
     }
 
     private LcdImageLine computeLine(int index) {
-        //TODO : bg ou sprites désactivés : make it cleaner
-        LcdImageLine bg;
-        if(testBitLCDC(LCDC_Bits.BG)) {
-            bg = computeLine(index, LCDC_Bits.BG_AREA)
+        LcdImageLine bg  = computeLine(index, LCDC_Bits.BG_AREA, testBitLCDC(LCDC_Bits.BG))
                     .extractWrapped(reg(Reg.SCX), LCD_WIDTH)
                     .mapColors(reg(Reg.BGP));
-        }
-        else bg = new LcdImageLine.Builder(LCD_WIDTH).build();
         
         int WX_prime = reg(Reg.WX) - WX_CORRECTION;
         
@@ -275,7 +278,7 @@ public final class LcdController implements Component, Clocked {
                 && reg(Reg.LY) >= reg(Reg.WY);
 
         if (windowOnLine) {
-            LcdImageLine win = computeLine(winY, LCDC_Bits.WIN_AREA)
+            LcdImageLine win = computeLine(winY, LCDC_Bits.WIN_AREA, true)
                     .extractWrapped(0, LCD_WIDTH)
                     .mapColors(reg(Reg.BGP));
             winY++;
@@ -286,35 +289,29 @@ public final class LcdController implements Component, Clocked {
         return composeSpritesAndBG(spriteLines[0], spriteLines[1], bg);
     }
 
-    private LcdImageLine computeLine(int index, LCDC_Bits area) {
-        // TODO : using LCDC_Bits even though we only expect to get WIN_AREA or
-        // BG_AREA is not nice, but it simplifies the code considerably compared
-        // to using another enum. Since private method, I'd say it's okay (?)
-
+    private LcdImageLine computeLine(int index, LCDC_Bits area, boolean active) {
         LcdImageLine.Builder b = new LcdImageLine.Builder(IMAGE_SIZE);
-        int tileLine = index / TILE_SIZE;
-        int line = index % TILE_SIZE;
-
-        int areaStart = AddressMap.BG_DISPLAY_DATA[testBitLCDC(area) ? 1 : 0];
-
-        for (int tile = 0; tile < IMAGE_TILE_SIZE; tile++) {
-
-            int tileIndex = read(areaStart + tileLine * IMAGE_TILE_SIZE + tile);
-
-            if (testBitLCDC(LCDC_Bits.TILE_SOURCE) == false) {
-                tileIndex += tileIndex <= 0x7f ? 0x80 : -0x80; // TODO : make
-                                                               // static + see
-                                                               // piazza "clip"
-                                                               // version
+        if(active) {
+            int tileLine = index / TILE_SIZE;
+            int line = index % TILE_SIZE;
+    
+            int areaStart = AddressMap.BG_DISPLAY_DATA[testBitLCDC(area) ? 1 : 0];
+    
+            for (int tile = 0; tile < IMAGE_TILE_SIZE; tile++) {
+    
+                int tileIndex = read(areaStart + tileLine * IMAGE_TILE_SIZE + tile);
+    
+                if (! testBitLCDC(LCDC_Bits.TILE_SOURCE)) {
+                    tileIndex = Bits.clip(8, tileIndex + TILE_INDEX_CORRECTION);
+                }
+                addTileToLine(b, tile, tileIndex, line);
             }
-            
-            addTileToLine(b, tile, tileIndex, line);
         }
         return b.build();
     }
 
     /**
-     * makes background sprite line and foreground sprite line
+     * Make background sprite line and foreground sprite line
      * @param index line being drawn
      * @return array with background sprite line first and foreground sprite line second
      */
@@ -331,7 +328,6 @@ public final class LcdController implements Component, Clocked {
                 
                 LcdImageLine.Builder spriteLineBuilder = new LcdImageLine.Builder(LCD_WIDTH);
                 
-                //TODO : specific method ?
                 int address = AddressMap.OAM_START + spriteIndex * SPRITE_BYTE_SIZE;
                 
                 int y = read(address) - SPRITE_Y_CORRECTION;
@@ -341,29 +337,20 @@ public final class LcdController implements Component, Clocked {
                 
                 //determine line in tile
                 int tileLine = index - y;
-                
-    //            boolean bigSpriteTile = tileLine > 7;
-    //            if(bigSpriteTile) tileIndex++;
-                
-                //vertical flip
-    //            if (testBitsSprite(SpriteInfos.FLIP_V, infos))
-    //                if (bigSprite) {
-    //                    tileLine = BIG_SPRITE_LINES - tileLine;
-    //                    if (tileLine > 7)
-    //                        tileIndex--;
-    //                    else
-    //                        tileIndex++;
-    //                } else
-    //                    tileLine = SPRITE_LINES - tileLine;
-                
+                                
                 //TODO : normally, this should suffice
                 if (testBitsSprite(SpriteInfos.FLIP_V, infos))
-                    tileLine = bigSprites ? BIG_SPRITE_LINES - tileLine : SPRITE_LINES - tileLine;
+                    tileLine = bigSprites ? BIG_SPRITE_LINES - tileLine - 1 : SPRITE_LINES - tileLine - 1;
+                    
+                    
                 
                 int[] lineBytes = getLineBytes(tileIndex, tileLine, AddressMap.TILE_SOURCE[1]);
                 
-                // Horizontal flip
-                if(!testBitsSprite(SpriteInfos.FLIP_H, infos)) { // v-flip is equivalent to reversing twice
+                /* Horizontal flip
+                Since tiles read from the bus are stored as is in the vRam, we have to reverse them
+                when computing a NOT reversed sprite, and we don't have to reverse them when computing
+                a reversed one*/
+                if(!testBitsSprite(SpriteInfos.FLIP_H, infos)) {
                     lineBytes[0] = Bits.reverse8(lineBytes[0]);
                     lineBytes[1] = Bits.reverse8(lineBytes[1]);
                 }
@@ -416,9 +403,8 @@ public final class LcdController implements Component, Clocked {
 
             int range = bigSprites ? BIG_SPRITE_LINES : SPRITE_LINES;
 
-            if (line >= spriteY && line <= spriteY + range - 1) {   //TODO : yeahhhh, the added -1 corrects "black spots" problem 
-                int spriteX = read(spriteAddress+1); // don't need to correct x
-                                                   // coordinate here
+            if (line >= spriteY && line <= spriteY + range - 1) {
+                int spriteX = read(spriteAddress + 1);
                 sprites[spriteCount] = (spriteX << Byte.SIZE) | sprite;
                 spriteCount++;
             }
@@ -434,17 +420,13 @@ public final class LcdController implements Component, Clocked {
     }
     
     private LcdImageLine composeSpritesAndBG(LcdImageLine bgSprites, LcdImageLine fgSprites, LcdImageLine bg) {
-        //TODO : remove (More efficient, using De Morgan :D)
-//        BitVector newOpacity = bgSprites.opacity().and(bg.opacity().not()).not();
         BitVector newOpacity = bg.opacity().or(bgSprites.opacity().not());
         return bgSprites.below(bg, newOpacity).below(fgSprites);
     }
 
     private void requestPotentialInterrupt(LcdMode mode) {
-//        if (Bits.extract(reg(Reg.STAT), 3, 3) != 0)
-//            cpu.requestInterrupt(Cpu.Interrupt.LCD_STAT);
         if(!mode.equals(LcdMode.MODE_3)
-                && testBit(Reg.STAT, mode.ordinal() + 3)) //TODO : static var
+                && testBit(Reg.STAT, mode.ordinal() + 3)) //corresponding STAT_Bits index is greater by 3 compared to LcdMode
                 cpu.requestInterrupt(Cpu.Interrupt.LCD_STAT);
     }
 
@@ -457,10 +439,9 @@ public final class LcdController implements Component, Clocked {
     private void updateLYC_EQ_LY() {
         boolean newValue = reg(Reg.LYC) == reg(Reg.LY);
         setBitSTAT(STAT_Bits.LYC_EQ_LY, newValue);
-        //TODO : modularize
+
         if(testBitSTAT(STAT_Bits.INT_LYC) && newValue)
             cpu.requestInterrupt(Cpu.Interrupt.LCD_STAT);
-//        requestPotentialInterrupt();
     }
 
     private boolean screenIsOn() {
