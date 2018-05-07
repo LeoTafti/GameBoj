@@ -75,7 +75,9 @@ public final class BitVector {
          * 
          * @param size
          *            number of bits, must be 0mod32
-         * @throws
+         * @throws IllegalArgumentException
+     *             if size is smaller or equals zero or size isn't a multiple of
+     *             Integer.SIZE (32)
          */
         public Builder(int size) {
             Preconditions.checkArgument(size > 0 && size % Integer.SIZE == 0);
@@ -85,30 +87,29 @@ public final class BitVector {
         /**
          * Builds BitVector of previously given elements (0 as default)
          * 
-         * TODO : complete javadoc
-         * @return
+         * @throws IlegalStateException if already built
+         * @return built vector from given bytes
          */
         public BitVector build() {
             if (elements == null)
                 throw new IllegalStateException("Already built");
             BitVector r = new BitVector(elements);
             elements = null;
+            
             return r;
-
         }
 
         /**
          * Sets byte at given index of pending BitVector
          * 
-         * TODO : complete javadoc
-         * 
          * @param index
          *            bitVector's Index in BYTES (i.e 8-th bit is index 1)
          * @param b
-         *            byte value
-         * @return
+         *            byte value to add
+         *            
+         * @return builder
          * 
-         * @throws
+         * @throws IlegalStateException if already built
          */
         public Builder setByte(int index, int b) {
             if (elements == null)
@@ -213,6 +214,9 @@ public final class BitVector {
      * 
      * @param that
      *            other BitVector
+     *            
+     * @throws IllegalArgumentException if vectors are not of the same length
+     * 
      * @return bitwise "and", as a new BitVector
      */
     public BitVector and(BitVector that) {
@@ -230,6 +234,9 @@ public final class BitVector {
      * 
      * @param that
      *            other bitVector
+     *            
+     * @throws IllegalArgumentException if vectors are not of the same length
+     * 
      * @return bitwise "or", as a new BitVector
      */
     public BitVector or(BitVector that) {
@@ -248,6 +255,8 @@ public final class BitVector {
      * 
      * @param that
      *            other bitVector
+     * 
+     * @throws IllegalArgumentException if vectors are not of the same length
      * @return bitwise "xor", as a new BitVector
      */
     public BitVector xor(BitVector that) {
@@ -304,6 +313,12 @@ public final class BitVector {
         return new BitVector(extracted);
     }
     
+    /**
+     * extracts 32 bits from index with given method (ZERO_EXT, WRAPPED)
+     * @param i index from wich to extract (positive for left, negative for right)
+     * @param type ZERO_EXT will add 0s if out of bounds, WRAPPED will start again if out of bounds
+     * @return 32-bit extraction
+     */
     private int combinedExtended32bits(int i, ExtractType type) {
         
         int bits = 0;
