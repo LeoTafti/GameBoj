@@ -12,13 +12,15 @@ import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
 
 public final class ImageConverter {
+    //TODO declare private final LcdController.LCD_...?
     //color associated to gameboy-colors by encoding
-    private final int[] argbColors = {0xff_ff_ff_ff,
+    private static final int[] argbColors = {0xff_ff_ff_ff,
                                       0xff_d3_d3_d3,
                                       0xff_a9_a9_a9,
                                       0xff_00_00_00};
     
-    public Image convert(LcdImage lcdImage) {
+    public static Image convert(LcdImage lcdImage) {
+        
         WritableImage fxImage = new WritableImage(LcdController.LCD_WIDTH,
                           LcdController.LCD_HEIGHT);
         

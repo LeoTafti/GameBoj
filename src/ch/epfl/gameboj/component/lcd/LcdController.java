@@ -50,7 +50,7 @@ public final class LcdController implements Component, Clocked {
     private static final int TOTAL_SPRITES = 40,
             MAX_SPRITES_PER_LINE = 10;
     
-    private final LcdImage BLANK_IMAGE = new LcdImage(List.of(new LcdImageLine.Builder(32).build()));
+    private final LcdImage BLANK_IMAGE = new LcdImage(List.of(new LcdImageLine.Builder(160).build()));
 
     private enum Reg implements Register {
         LCDC, STAT, SCY, SCX, LY, LYC, DMA, BGP, OBP0, OBP1, WY, WX
