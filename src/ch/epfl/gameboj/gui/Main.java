@@ -55,15 +55,19 @@ public class Main extends Application{
         mainPane.setCenter(imageView);
         //TODO should map from KeyEvent to Joypad.Key 
         //but couldnt implement distinction between keyEvent.getCode() and keyEvent.getText();
-        Map<String, Joypad.Key> keyMap = new HashMap<>();
-        keyMap.put("A", Joypad.Key.A);
-        keyMap.put("B", Joypad.Key.B);
-        keyMap.put("S", Joypad.Key.START);
-        keyMap.put("SPACE", Joypad.Key.SELECT);
-        keyMap.put(KeyCode.UP.name(), Joypad.Key.UP);
-        keyMap.put(KeyCode.DOWN.name(), Joypad.Key.DOWN);
-        keyMap.put(KeyCode.LEFT.name(), Joypad.Key.LEFT);
-        keyMap.put(KeyCode.RIGHT.name(), Joypad.Key.RIGHT);
+        // juliens made 2 maps and used 
+        
+        //TODO add keyreleased!!
+        Map<String, Joypad.Key> keyMap = new HashMap<>(Map.of(
+            "A", Joypad.Key.A,
+            "B", Joypad.Key.B,
+            "S", Joypad.Key.START,
+            "SPACE", Joypad.Key.SELECT,    
+            KeyCode.UP.name(), Joypad.Key.UP,
+            KeyCode.DOWN.name(), Joypad.Key.DOWN,
+            KeyCode.LEFT.name(), Joypad.Key.LEFT,
+            KeyCode.RIGHT.name(), Joypad.Key.RIGHT));
+        System.out.println(KeyCode.UP.name());
         
         imageView.setOnKeyPressed(e -> 
                 gameboj.joypad().keyPressed(
@@ -80,8 +84,8 @@ public class Main extends Application{
         AnimationTimer timer = new AnimationTimer() {
             @Override
             public void handle(long now) {
-                long elapsed = now - start;
-                long gameboyCycles = elapsed * (2 << 20);
+                long elapsed = now - start; //in nanosec
+                long gameboyCycles = (long) (elapsed * GameBoy.CYCLES_PER_NANOSEC);
                 gameboj.runUntil(gameboyCycles);
                 imageView.setImage(ImageConverter
                         .convert(gameboj.lcdController().currentImage()));

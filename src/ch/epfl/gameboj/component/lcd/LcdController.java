@@ -50,7 +50,7 @@ public final class LcdController implements Component, Clocked {
     private static final int TOTAL_SPRITES = 40,
             MAX_SPRITES_PER_LINE = 10;
     
-    private final LcdImage BLANK_IMAGE = new LcdImage(List.of(new LcdImageLine.Builder(160).build()));
+    private final LcdImage BLANK_IMAGE = new LcdImage.Builder(LCD_WIDTH, LCD_HEIGHT).build();
 
     private enum Reg implements Register {
         LCDC, STAT, SCY, SCX, LY, LYC, DMA, BGP, OBP0, OBP1, WY, WX
@@ -79,7 +79,7 @@ public final class LcdController implements Component, Clocked {
     private final Ram oam;
     private Bus bus;
 
-    private LcdImage currentImage;
+    private LcdImage currentImage = null;
     private LcdImage.Builder nextImageBuilder;
 
     private long nextNonIdleCycle;
@@ -97,8 +97,6 @@ public final class LcdController implements Component, Clocked {
         registerFile = new RegisterFile<>(Reg.values());
         vRam = new Ram(AddressMap.VIDEO_RAM_SIZE);
         oam = new Ram(AddressMap.OAM_RAM_SIZE);
-
-        currentImage = BLANK_IMAGE;
 
         nextImageBuilder = new LcdImage.Builder(LCD_WIDTH, LCD_HEIGHT);
 
@@ -228,7 +226,7 @@ public final class LcdController implements Component, Clocked {
                 
                 //TODO : sometimes prints something (when changing screen) : normal ?
                 if(cycle-debugCycle != 17556)
-                    System.out.println(cycle-debugCycle);
+//                    System.out.println(cycle-debugCycle);
                 debugCycle = cycle;
                 
                 
@@ -270,6 +268,8 @@ public final class LcdController implements Component, Clocked {
      * @return current Lcd Image
      */
     public LcdImage currentImage() {
+        if(currentImage == null)
+            return BLANK_IMAGE;
         return currentImage;
     }
 

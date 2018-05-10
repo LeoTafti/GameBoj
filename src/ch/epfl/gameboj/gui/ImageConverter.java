@@ -24,8 +24,8 @@ public final class ImageConverter {
         WritableImage fxImage = new WritableImage(LcdController.LCD_WIDTH,
                           LcdController.LCD_HEIGHT);
         
-        for (int x = 0; x < LcdController.LCD_WIDTH; x++)
-            for (int y = 0; y < LcdController.LCD_HEIGHT; y++)
+        for (int y = 0; y < LcdController.LCD_HEIGHT; y++)
+            for (int x = 0; x < LcdController.LCD_WIDTH; x++)
                 fxImage.getPixelWriter()
                 .setArgb(x, y, argbColors[lcdImage.get(x,  y)]);
         
