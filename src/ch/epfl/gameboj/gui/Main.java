@@ -26,7 +26,7 @@ import javafx.stage.Stage;
 
 public class Main extends Application{
 
-    private static final String ROM_PATH = "C:/Users/Paul Juillard/Documents/EPFL/BA2/POO/Projet/GameBoj/test/ch/epfl/gameboj/flappyBoy.gb";
+    private static final String ROM_PATH = "C:/Users/Paul Juillard/Documents/EPFL/BA2/POO/Projet/GameBoj/test/ch/epfl/gameboj/flappyboy.gb";
 //    private static final String ROM_PATH = "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/flappyboy.gb";
     
     public static void main(String[] args) {
@@ -58,24 +58,33 @@ public class Main extends Application{
         // juliens made 2 maps and used 
         
         //TODO add keyreleased!!
-        Map<String, Joypad.Key> keyMap = new HashMap<>(Map.of(
-            "A", Joypad.Key.A,
-            "B", Joypad.Key.B,
-            "S", Joypad.Key.START,
-            "SPACE", Joypad.Key.SELECT,    
-            KeyCode.UP.name(), Joypad.Key.UP,
-            KeyCode.DOWN.name(), Joypad.Key.DOWN,
-            KeyCode.LEFT.name(), Joypad.Key.LEFT,
-            KeyCode.RIGHT.name(), Joypad.Key.RIGHT));
+        Map<String, Joypad.Key> buttonMap = new HashMap<>(Map.of(
+            "a", Joypad.Key.A,
+            "b", Joypad.Key.B,
+            "s", Joypad.Key.START,
+            " ", Joypad.Key.SELECT));
+        Map<KeyCode, Joypad.Key> joystickMap = new HashMap<>(Map.of(
+            KeyCode.UP, Joypad.Key.UP,
+            KeyCode.DOWN, Joypad.Key.DOWN,
+            KeyCode.LEFT, Joypad.Key.LEFT,
+            KeyCode.RIGHT, Joypad.Key.RIGHT));
         System.out.println(KeyCode.UP.name());
         
-        imageView.setOnKeyPressed(e -> 
-                gameboj.joypad().keyPressed(
-                        keyMap.getOrDefault(e.getCode().getName(),
-                        keyMap.get(e.getText())
-                     )
-                )
-            ); 
+        //TODO use private method?
+        imageView.setOnKeyPressed(e -> {
+            Joypad.Key p = buttonMap.getOrDefault(e.getText(),
+                    joystickMap.get(e.getCode()));
+            if (p != null)
+                gameboj.joypad().keyPressed(p);
+        });
+
+        imageView.setOnKeyReleased(e -> {
+            Joypad.Key p = buttonMap.getOrDefault(e.getText(),
+                    joystickMap.get(e.getCode()));
+            if (p != null)
+                gameboj.joypad().keyReleased(p);
+        });
+        
         
         Scene scene = new Scene(mainPane);
         
