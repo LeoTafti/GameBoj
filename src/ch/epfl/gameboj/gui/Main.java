@@ -32,6 +32,7 @@ public class Main extends Application{
 //    private static final String ROM_PATH = "/Users/Leo/git/GameBoj/roms/Legend of Zelda, The - Link's Awakening.gb";
     private static final String ROM_PATH = "/Users/Leo/git/GameBoj/roms/Super Mario Land 2.gb";
     
+    
     public static void main(String[] args) {
        launch(args);
     }
