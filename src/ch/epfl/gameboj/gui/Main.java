@@ -27,6 +27,7 @@ import javafx.stage.Stage;
 
 public class Main extends Application{
 
+    private static final String[] ROM_PATHS = { "roms/SuperMarioLand.gb", };
     private static final String ROM_PATH = "roms/SuperMarioLand.gb";
 //    private static final String ROM_PATH = "/Users/Leo/git/GameBoj/roms/flappyboy.gb";
     
