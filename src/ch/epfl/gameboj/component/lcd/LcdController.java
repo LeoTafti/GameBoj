@@ -278,7 +278,7 @@ public final class LcdController implements Component, Clocked {
                     .extractWrapped(reg(Reg.SCX), LCD_WIDTH)
                     .mapColors(reg(Reg.BGP));
         
-        int WX_prime = reg(Reg.WX) - WX_CORRECTION;
+        int WX_prime = Math.max(reg(Reg.WX) - WX_CORRECTION, 0);
         
         boolean windowOnLine = testBitLCDC(LCDC_Bits.WIN)
                 && WX_prime >= 0 && WX_prime < LCD_WIDTH
@@ -366,8 +366,9 @@ public final class LcdController implements Component, Clocked {
                 int palette = testBitSprite(SpriteInfos.PALETTE, infos) ? reg(Reg.OBP1) : reg(Reg.OBP0);
                 LcdImageLine spriteLine = spriteLineBuilder.build().shift(x).mapColors(palette);
                 
-                if(testBitSprite(SpriteInfos.BEHIND_BG, infos))
-                        bgLine = spriteLine.below(bgLine);
+                if(testBitSprite(SpriteInfos.BEHIND_BG, infos)) {
+                    bgLine = spriteLine.below(bgLine);
+                }
                 else fgLine = spriteLine.below(fgLine);
             }
         }

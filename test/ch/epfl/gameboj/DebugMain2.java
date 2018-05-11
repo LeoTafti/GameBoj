@@ -27,7 +27,7 @@ public final class DebugMain2 {
 //    "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/10-bit ops.gb",
 //    "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/11-op a,(hl).gb",
 //    "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/component/blaarg/instr_timing.gb"};
-    "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/flappyboy.gb"};
+    "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/sprite_priority.gb"};
 //    "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/Tetris.gb"};
 //    "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/tasmaniaStory.gb"};
 
