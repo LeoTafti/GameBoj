@@ -27,10 +27,20 @@ import javafx.stage.Stage;
 
 public class Main extends Application{
 
-//    private static final String[] ROM_PATHS = { "roms/SuperMarioLand.gb", };
-//    private static final String ROM_PATH = "roms/SuperMarioLand.gb";
-//    private static final String ROM_PATH = "/Users/Leo/git/GameBoj/roms/Legend of Zelda, The - Link's Awakening.gb";
-    private static final String ROM_PATH = "/Users/Leo/git/GameBoj/roms/Super Mario Land 2.gb";
+    private static final String[] ROM_PATHS = { 
+            "roms/Tetris.gb", //0
+            "roms/2048.gb", //1
+            "roms/snake.gb", //2
+            "roms/tasmaniaStory.gb", //3
+            "roms/flappyboy.gb", //4
+            "roms/DonkeyKong.gb", //5
+            "roms/Bomberman.gb", //6
+            "roms/SuperMarioLand.gb", //7
+            "roms/SuperMarioLand2.gb", //8
+            "roms/LegendofZelda,TheLink'sAwakening.gb" }; //9
+    private static final String ROM_PATH = ROM_PATHS[8];
+    private static final float SIM_SPEED = 4f;
+//    private static final String ROM_PATH = "/Users/Leo/git/GameBoj/roms/Super Mario Land 2.gb";
     
     
     public static void main(String[] args) {
@@ -74,7 +84,7 @@ public class Main extends Application{
             KeyCode.DOWN, Joypad.Key.DOWN,
             KeyCode.LEFT, Joypad.Key.LEFT,
             KeyCode.RIGHT, Joypad.Key.RIGHT));
-        System.out.println(KeyCode.UP.name());
+        
         
         //TODO use private method?
         imageView.setOnKeyPressed(e -> {
@@ -113,7 +123,7 @@ public class Main extends Application{
             @Override
             public void handle(long now) {
                 long elapsed = now - start; //in nanosec
-                long gameboyCycles = (long) (elapsed * GameBoy.CYCLES_PER_NANOSEC);
+                long gameboyCycles = (long) (elapsed * GameBoy.CYCLES_PER_NANOSEC * SIM_SPEED);
                 gameboj.runUntil(gameboyCycles);
                 imageView.setImage(ImageConverter
                         .convert(gameboj.lcdController().currentImage()));
