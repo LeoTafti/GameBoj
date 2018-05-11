@@ -18,6 +18,7 @@ import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.event.EventType;
 import javafx.scene.Scene;
+import javafx.scene.control.SplitPane;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -52,6 +53,8 @@ public class Main extends Application{
                 gameboj.lcdController().currentImage()));
         
         BorderPane mainPane = new BorderPane();
+        
+        //------------------------------ CENTER -----------------------------
         mainPane.setCenter(imageView);
         //TODO should map from KeyEvent to Joypad.Key 
         //but couldnt implement distinction between keyEvent.getCode() and keyEvent.getText();
@@ -85,7 +88,19 @@ public class Main extends Application{
                 gameboj.joypad().keyReleased(p);
         });
         
+        //----------------------------- LEFT --------------------------------
+//        SplitPane menuPane = new SplitPane();
+//        menuPane.setMaxWidth(40);
+//        menuPane.setMinWidth(50);
         
+        
+        
+        
+        mainPane.setLeft(menuPane);
+        
+        //Redimensionning
+        imageView.fitWidthProperty().bind(mainPane.widthProperty());
+        imageView.fitHeightProperty().bind(mainPane.heightProperty());
         Scene scene = new Scene(mainPane);
         
         // simulate gameboj

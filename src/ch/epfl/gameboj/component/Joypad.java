@@ -51,17 +51,17 @@ public final class Joypad implements Component {
 
         if (address == AddressMap.REG_P1) {
             //TODO : very strange but functions better without it...
-            System.out.println("data: " + Integer.toBinaryString(data));
-            data = Bits.complement8(data);
+//            System.out.println("data: " + Integer.toBinaryString(data));
+//            data = Bits.complement8(data);
             P1 = Bits.set(P1, 4, Bits.test(data, 4));
             P1 = Bits.set(P1, 5, Bits.test(data, 5));
-            System.out.println("p1 written: " + Integer.toBinaryString(P1));
+//            System.out.println("p1 written: " + Integer.toBinaryString(P1));
         }
     }
 
     public void keyPressed(Key key) {
-        System.out.println("pressed : " + key);
-        System.out.println("p1 before : " + Integer.toBinaryString(P1));
+//        System.out.println("pressed : " + key);
+//        System.out.println("p1 before : " + Integer.toBinaryString(P1));
         update(key, true);
     }
 
@@ -85,7 +85,7 @@ public final class Joypad implements Component {
         int newStates = line0 | line1;
 //        P1 = (Bits.extract(P1, 4, 4) << 4) | newStates;
         P1 = (P1 & 0xf0) | newStates;
-        System.out.println("p1 after : " + Integer.toBinaryString(P1));
+//        System.out.println("p1 after : " + Integer.toBinaryString(P1));
         
         if(oldStates != newStates)
             cpu.requestInterrupt(Interrupt.JOYPAD);
