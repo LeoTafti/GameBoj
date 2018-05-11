@@ -6,7 +6,6 @@
 package ch.epfl.gameboj.component.lcd;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Objects;
 
 import ch.epfl.gameboj.AddressMap;
@@ -21,7 +20,6 @@ import ch.epfl.gameboj.component.Clocked;
 import ch.epfl.gameboj.component.Component;
 import ch.epfl.gameboj.component.cpu.Cpu;
 import ch.epfl.gameboj.component.memory.Ram;
-import javafx.collections.MapChangeListener;
 
 public final class LcdController implements Component, Clocked {
 
@@ -257,7 +255,8 @@ public final class LcdController implements Component, Clocked {
             nextNonIdleCycle += H_BLANK_CYCLES;
 
             nextImageBuilder.setLine(reg(Reg.LY),
-                    computeLine((reg(Reg.LY) + reg(Reg.SCY)) % IMAGE_SIZE));
+//                    computeLine(reg(Reg.LY) + reg(Reg.SCY) % IMAGE_SIZE));
+                    computeLine(reg(Reg.LY)));
             break;
         }
         requestPotentialInterrupt(mode());
@@ -274,7 +273,7 @@ public final class LcdController implements Component, Clocked {
     }
 
     private LcdImageLine computeLine(int index) {
-        LcdImageLine bg  = computeLine(index, LCDC_Bits.BG_AREA, testBitLCDC(LCDC_Bits.BG))
+        LcdImageLine bg  = computeLine(Math.floorMod(index + reg(Reg.SCY), IMAGE_SIZE), LCDC_Bits.BG_AREA, testBitLCDC(LCDC_Bits.BG))
                     .extractWrapped(reg(Reg.SCX), LCD_WIDTH)
                     .mapColors(reg(Reg.BGP));
         
@@ -288,11 +287,14 @@ public final class LcdController implements Component, Clocked {
             LcdImageLine win = computeLine(winY, LCDC_Bits.WIN_AREA, true)
                     .extractWrapped(0, LCD_WIDTH)
                     .mapColors(reg(Reg.BGP));
+//            LcdImageLine win = computeLine(winY, LCDC_Bits.WIN_AREA, true).extractWrapped(0, LCD_WIDTH);
+//            win = new LcdImageLine(win.msb(), win.lsb(), new BitVector(LCD_WIDTH, true));
+//            win.mapColors(reg(Reg.BGP));
             winY++;
             bg = bg.join(win.shift(WX_prime), WX_prime);
         }
         
-        LcdImageLine[] spriteLines = computeSpriteLines(index - reg(Reg.SCY)); //TODO : dégeu
+        LcdImageLine[] spriteLines = computeSpriteLines(index);
         return composeSpritesAndBG(spriteLines[0], spriteLines[1], bg);
     }
 

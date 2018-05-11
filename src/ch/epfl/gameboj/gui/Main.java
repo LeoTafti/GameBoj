@@ -10,37 +10,35 @@ import java.util.HashMap;
 import java.util.Map;
 
 import ch.epfl.gameboj.GameBoy;
-import ch.epfl.gameboj.Preconditions;
+import ch.epfl.gameboj.component.Joypad;
 import ch.epfl.gameboj.component.cartridge.Cartridge;
 import ch.epfl.gameboj.component.lcd.LcdController;
-import ch.epfl.gameboj.component.Joypad;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
-import javafx.event.EventType;
 import javafx.scene.Scene;
-import javafx.scene.control.SplitPane;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
 public class Main extends Application{
 
-    private static final String[] ROM_PATHS = { 
-            "roms/Tetris.gb", //0
-            "roms/2048.gb", //1
-            "roms/snake.gb", //2
-            "roms/tasmaniaStory.gb", //3
-            "roms/flappyboy.gb", //4
-            "roms/DonkeyKong.gb", //5
-            "roms/Bomberman.gb", //6
-            "roms/SuperMarioLand.gb", //7
-            "roms/SuperMarioLand2.gb", //8
-            "roms/LegendofZelda,TheLink'sAwakening.gb" }; //9
-    private static final String ROM_PATH = ROM_PATHS[8];
     private static final float SIM_SPEED = 4f;
-//    private static final String ROM_PATH = "/Users/Leo/git/GameBoj/roms/Super Mario Land 2.gb";
+    
+//    private static final String[] ROM_PATHS = { 
+//            "roms/Tetris.gb", //0
+//            "roms/2048.gb", //1
+//            "roms/snake.gb", //2
+//            "roms/tasmaniaStory.gb", //3
+//            "roms/flappyboy.gb", //4
+//            "roms/DonkeyKong.gb", //5
+//            "roms/Bomberman.gb", //6
+//            "roms/SuperMarioLand.gb", //7
+//            "roms/SuperMarioLand2.gb", //8
+//            "roms/LegendofZelda,TheLink'sAwakening.gb" }; //9
+//    private static final String ROM_PATH = ROM_PATHS[8];
+//    private static final String ROM_PATH = "/Users/Leo/git/GameBoj/roms/SuperMarioLand2.gb";
+    private static final String ROM_PATH = "/Users/Leo/git/GameBoj/roms/Bomberman.gb";
     
     
     public static void main(String[] args) {
@@ -60,8 +58,9 @@ public class Main extends Application{
         
         //create graphical interface
         ImageView imageView = new ImageView();
-        imageView.setFitWidth(LcdController.LCD_WIDTH*2);
-        imageView.setFitHeight(LcdController.LCD_HEIGHT*2);
+        //TODO : we don't need it, but prof says to use it
+//        imageView.setFitWidth(LcdController.LCD_WIDTH);
+//        imageView.setFitHeight(LcdController.LCD_HEIGHT);
         imageView.setImage(ImageConverter.convert(
                 gameboj.lcdController().currentImage()));
         
@@ -134,8 +133,8 @@ public class Main extends Application{
                 //image
                 //key press
         
-        primaryStage.setWidth(LcdController.LCD_WIDTH);
-        primaryStage.setHeight(LcdController.LCD_HEIGHT);
+        primaryStage.setWidth(LcdController.LCD_WIDTH * 2);
+        primaryStage.setHeight(LcdController.LCD_HEIGHT * 2);
         primaryStage.setScene(scene);
         primaryStage.sizeToScene();
         primaryStage.minWidthProperty().bind(scene.heightProperty());
