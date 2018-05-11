@@ -27,8 +27,8 @@ import javafx.stage.Stage;
 
 public class Main extends Application{
 
-    private static final String ROM_PATH = "C:/Users/Paul Juillard/Documents/EPFL/BA2/POO/Projet/GameBoj/test/ch/epfl/gameboj/flappyboy.gb";
-//    private static final String ROM_PATH = "/Users/Leo/git/GameBoj/test/ch/epfl/gameboj/flappyboy.gb";
+    private static final String ROM_PATH = "roms/SuperMarioLand.gb";
+//    private static final String ROM_PATH = "/Users/Leo/git/GameBoj/roms/flappyboy.gb";
     
     public static void main(String[] args) {
        launch(args);
@@ -93,6 +93,7 @@ public class Main extends Application{
 //        menuPane.setMaxWidth(40);
 //        menuPane.setMinWidth(50);
 //        mainPane.setLeft(menuPane);
+        
         
         
         
