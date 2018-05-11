@@ -92,11 +92,11 @@ public class Main extends Application{
 //        SplitPane menuPane = new SplitPane();
 //        menuPane.setMaxWidth(40);
 //        menuPane.setMinWidth(50);
+//        mainPane.setLeft(menuPane);
         
         
         
         
-        mainPane.setLeft(menuPane);
         
         //Redimensionning
         imageView.fitWidthProperty().bind(mainPane.widthProperty());
