@@ -80,7 +80,7 @@ public final class Joypad implements Component {
         lines[line] = Bits.set(lines[line], keyIndex % LINE_SIZE, newValue);
         
         int newP1 = computeP1();
-        if(oldP1 != newP1)
+        if(oldP1 != newP1) //TODO : ok to compare full P1 instead of just state ? test it
             cpu.requestInterrupt(Interrupt.JOYPAD);
     }
     

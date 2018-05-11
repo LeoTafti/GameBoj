@@ -292,7 +292,7 @@ public final class LcdController implements Component, Clocked {
             bg = bg.join(win.shift(WX_prime), WX_prime);
         }
         
-        LcdImageLine[] spriteLines = computeSpriteLines(index);
+        LcdImageLine[] spriteLines = computeSpriteLines(index - reg(Reg.SCY)); //TODO : dégeu
         return composeSpritesAndBG(spriteLines[0], spriteLines[1], bg);
     }
 
