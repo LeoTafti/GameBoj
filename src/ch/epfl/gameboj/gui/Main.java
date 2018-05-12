@@ -37,13 +37,12 @@ public class Main extends Application{
             "roms/SuperMarioLand2.gb", //8
             "roms/LegendofZelda,TheLink'sAwakening.gb", //9
             "roms/PokemonRedBlue.gb"}; //10
-    private static final String ROM_PATH = ROM_PATHS[4];
+    private static final String ROM_PATH = ROM_PATHS[9];
 //    private static final String ROM_PATH = "/Users/Leo/git/GameBoj/roms/SuperMarioLand2.gb";
-<<<<<<< HEAD
+
 //    private static final String ROM_PATH = "/Users/Leo/git/GameBoj/roms/Bomberman.gb";
-=======
-    private static final String ROM_PATH = "/Users/Leo/git/GameBoj/roms/Tetris.gb";
->>>>>>> branch 'master' of git@gitlab.com:Pjuillard/GameBoj.git
+
+//    private static final String ROM_PATH = "/Users/Leo/git/GameBoj/roms/Tetris.gb";
     
     
     public static void main(String[] args) {
