@@ -23,22 +23,23 @@ import javafx.stage.Stage;
 
 public class Main extends Application{
 
-    private static final float SIM_SPEED = 4f;
+    private static final float SIM_SPEED = 1f;
     
-//    private static final String[] ROM_PATHS = { 
-//            "roms/Tetris.gb", //0
-//            "roms/2048.gb", //1
-//            "roms/snake.gb", //2
-//            "roms/tasmaniaStory.gb", //3
-//            "roms/flappyboy.gb", //4
-//            "roms/DonkeyKong.gb", //5
-//            "roms/Bomberman.gb", //6
-//            "roms/SuperMarioLand.gb", //7
-//            "roms/SuperMarioLand2.gb", //8
-//            "roms/LegendofZelda,TheLink'sAwakening.gb" }; //9
-//    private static final String ROM_PATH = ROM_PATHS[8];
+    private static final String[] ROM_PATHS = { 
+            "roms/Tetris.gb", //0
+            "roms/2048.gb", //1
+            "roms/snake.gb", //2
+            "roms/tasmaniaStory.gb", //3
+            "roms/flappyboy.gb", //4
+            "roms/DonkeyKong.gb", //5
+            "roms/Bomberman.gb", //6
+            "roms/SuperMarioLand.gb", //7
+            "roms/SuperMarioLand2.gb", //8
+            "roms/LegendofZelda,TheLink'sAwakening.gb", //9
+            "roms/PokemonRedBlue.gb"}; //10
+    private static final String ROM_PATH = ROM_PATHS[4];
 //    private static final String ROM_PATH = "/Users/Leo/git/GameBoj/roms/SuperMarioLand2.gb";
-    private static final String ROM_PATH = "/Users/Leo/git/GameBoj/roms/Bomberman.gb";
+//    private static final String ROM_PATH = "/Users/Leo/git/GameBoj/roms/Bomberman.gb";
     
     
     public static void main(String[] args) {
