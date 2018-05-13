@@ -26,6 +26,7 @@ public final class BitVector {
      *             Integer.SIZE (32)
      */
     public BitVector(int size, boolean defaultValue) {
+        //TODO : we do "checkArgument(size > 0 && size % Integer.SIZE == 0)" : make a private method ?
         Preconditions.checkArgument(size > 0 && size % Integer.SIZE == 0);
 
         // TODO : should we absolutely call the private constructor ?
@@ -34,6 +35,8 @@ public final class BitVector {
         elements = new int[size/Integer.SIZE];
 
         Arrays.fill(elements, defaultValue ? -1 : 0); //since int -1 in two's complement representation is 32 bits to 1
+//        Arrays.fill(elements, defaultValue ? 0xFFFFFFFF : 0);
+        //TODO : choose which is most clean (-1 or F..F), and make static ?
     }
 
     /**
@@ -93,6 +96,7 @@ public final class BitVector {
         public BitVector build() {
             if (elements == null)
                 throw new IllegalStateException("Already built");
+            
             BitVector r = new BitVector(elements);
             elements = null;
             
@@ -191,7 +195,9 @@ public final class BitVector {
      *             bits
      */
     public boolean testBit(int index) {
-        Preconditions.checkArgument(index >= 0 && index < size());
+        //TODO : remove
+//        Preconditions.checkArgument(index >= 0 && index < size());
+        Objects.checkIndex(index, size());
         return Bits.test(elements[index / Integer.SIZE], index % Integer.SIZE);
     }
 
@@ -301,11 +307,24 @@ public final class BitVector {
     public BitVector extractWrapped(int fromIndex, int size) {
         return extract(fromIndex, size, ExtractType.WRAPPED);
     }
+    
+    /**
+     * Computes shifting by delta-bits
+     * 
+     * @param delta
+     *            number of bits to shift by (positive for a left shift,
+     *            negative for a right shift)
+     * @return new bitVector with shifted bits
+     */
+    public BitVector shift(int delta) {
+        return extract(-delta, size(), ExtractType.ZERO_EXT);
+    }
 
     private BitVector extract(int fromIndex, int size, ExtractType type) {
         Preconditions.checkArgument(size > 0 && size % Integer.SIZE == 0);
         int[] extracted = new int[size / Integer.SIZE];
         
+        //TODO : efficiency ? index is always the same, but we calculate it multiple times (maybe not too bad)
         for(int i = 0; i < extracted.length; i++) { //iterates on each 32-bit chunk
             extracted[i] = combinedExtended32bits(fromIndex + Integer.SIZE*i, type);
         }
@@ -314,9 +333,9 @@ public final class BitVector {
     }
     
     /**
-     * extracts 32 bits from index with given method (ZERO_EXT, WRAPPED)
-     * @param i index from wich to extract (positive for left, negative for right)
-     * @param type ZERO_EXT will add 0s if out of bounds, WRAPPED will start again if out of bounds
+     * Extracts 32 bits from index with given method (ZERO_EXT, WRAPPED)
+     * @param i index from which to extract (positive for left, negative for right)
+     * @param if i is out-of-bounds, ZERO_EXT will add 0s, WRAPPED will start from beginning (ie wrap around)
      * @return 32-bit extraction
      */
     private int combinedExtended32bits(int i, ExtractType type) {
@@ -344,12 +363,12 @@ public final class BitVector {
             case WRAPPED:
                 // MSBs of chunk starting from index as bits LSBs
                 bits = Bits.extract(
-                        elements[Math.floorMod(chunk, elements.length)], index,
+                        elements[Math.floorMod(chunk, elements.length)],
+                        index,
                         complIndex);
 
                 // LSBs of next chunk as bits MSBs
-                bits |= Bits.clip(index, elements[Math.floorMod(chunk + 1,
-                        elements.length)]) << complIndex;
+                bits |= Bits.clip(index, elements[Math.floorMod(chunk + 1, elements.length)]) << complIndex;
                 break;
 
             case ZERO_EXT:
@@ -366,15 +385,4 @@ public final class BitVector {
         return bits;
     }
 
-    /**
-     * Computes shifting by delta-bits
-     * 
-     * @param delta
-     *            number of bits to shift by (positive for a left shift,
-     *            negative for a right shift)
-     * @return new bitVector with shifted bits
-     */
-    public BitVector shift(int delta) {
-        return extract(-delta, size(), ExtractType.ZERO_EXT);
-    }
 }

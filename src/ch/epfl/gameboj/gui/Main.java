@@ -5,7 +5,6 @@
 
 package ch.epfl.gameboj.gui;
 
-import java.awt.Paint;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
@@ -18,10 +17,8 @@ import ch.epfl.gameboj.component.cartridge.Cartridge;
 import ch.epfl.gameboj.component.lcd.LcdController;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
-import javafx.geometry.Orientation;
 import javafx.scene.Scene;
 import javafx.scene.control.SplitPane;
-import javafx.scene.effect.BlendMode;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.BorderPane;
@@ -36,6 +33,7 @@ public class Main extends Application{
 
     private static final float SIM_SPEED = 4f;
     
+    //TODO : remove all of this
     private static final String[] ROM_PATHS = { 
             "roms/Tetris.gb", //0
             "roms/2048.gb", //1
@@ -62,8 +60,9 @@ public class Main extends Application{
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        if (getParameters().getRaw().size() != 1)
-            System.exit(1);
+        //TODO : uncomment
+//        if (getParameters().getRaw().size() != 1)
+//            System.exit(1);
         
         //construct gameboy with given ROM
         File romFile = new File(ROM_PATH);
