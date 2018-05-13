@@ -111,7 +111,7 @@ public class Main extends Application{
         
         List<Shape> joyShapes = List.of(up, down, left, right, a, b, start,
                 select);
-        joyShapes.forEach(s -> s.setFill(Color.DARKSLATEBLUE));
+        joyShapes.forEach(s -> s.setFill(Color.DARKSLATEBLUE));  
         
         joyPane.getChildren().addAll(joyShapes);
         
