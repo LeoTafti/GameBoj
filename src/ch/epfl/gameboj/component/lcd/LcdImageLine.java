@@ -13,6 +13,8 @@ import ch.epfl.gameboj.bits.Bits;
 
 public final class LcdImageLine {
 
+    private static final int IDENTITY_PALETTE = 0b11_10_01_00;
+    
     private final BitVector msb, lsb, opacity;
 
     /**
@@ -24,11 +26,8 @@ public final class LcdImageLine {
      * @param opacity vector of line's pixels' opacity
      */
     public LcdImageLine(BitVector msb, BitVector lsb, BitVector opacity) {
-        //TODO : requireNonNull ?
-        Preconditions.checkArgument(
-                msb.size() == lsb.size() && msb.size() == opacity.size());
-
-        // Since BitVector is immutable, no need to copy here
+        Preconditions.checkArgument(msb.size() == lsb.size() && msb.size() == opacity.size());
+        
         this.msb = msb;
         this.lsb = lsb;
         this.opacity = opacity;
@@ -43,27 +42,24 @@ public final class LcdImageLine {
          * 
          * @param size size of line, in pixels
          * 
-         * * @throws IllegalArgumentException
+         * @throws IllegalArgumentException
          *             if size isn't a multiple of 32
          */
         public Builder(int size) {
             Preconditions.checkArgument(size > 0 && size % Integer.SIZE == 0);
-            // TODO : Since BitVector.Builder are NOT immutable, should we copy
-            // them here ?
             msbB = new BitVector.Builder(size);
             lsbB = new BitVector.Builder(size);
         }
 
         /**
-         * Sets bytes at given index in msb (given byte mb) and lsb (given byte
-         * lb)
+         * Sets bytes at given index
          * 
          * @param index
          *            index bytes to set (in bytes)
          * @param mb
-         *            new byte in msb
+         *            new msb-byte
          * @param lb
-         *            new byte in lsb
+         *            new lsb-byte
          * @return this, allows method chaining
          * 
          * @throws IndexOutOfBoundsException
@@ -100,9 +96,8 @@ public final class LcdImageLine {
          * @return Builder's size in bits
          */
         public int size() {
-            return msbB.size(); // msbB and lsbB have the same size
-            // TODO : this size() method is (actually) only used in setBytes :
-            // may be not needed (remove ?)
+            // msbB and lsbB have the same size
+            return msbB.size(); 
         }
     }
 
@@ -112,7 +107,8 @@ public final class LcdImageLine {
      * @return size of line, in pixels
      */
     public int size() {
-        return msb.size(); // msb, lsb, and opacity all have same size
+        // msb, lsb, and opacity have the same size
+        return msb.size(); 
     }
 
     /**
@@ -173,6 +169,7 @@ public final class LcdImageLine {
      */
     public LcdImageLine extractWrapped(int fromIndex, int size) {
         Preconditions.checkArgument(size > 0 && size % Integer.SIZE == 0);
+        
         return new LcdImageLine(msb.extractWrapped(fromIndex, size),
                 lsb.extractWrapped(fromIndex, size),
                 opacity.extractWrapped(fromIndex, size));
@@ -190,7 +187,7 @@ public final class LcdImageLine {
     public LcdImageLine mapColors(int palette) {
         Preconditions.checkBits8(palette);
 
-        if (palette == 0b11_10_01_00) // identity palette
+        if (palette == IDENTITY_PALETTE)
             return this;
 
         BitVector newMsb = msb;
@@ -204,9 +201,9 @@ public final class LcdImageLine {
                 continue;
 
             int colorMsb = Bits.test(color, 1) ? 1 : 0;
-            int colorLsb = color & 0b01;
+            int colorLsb = Bits.test(color, 0) ? 1 : 0;
             int newColorMsb = Bits.test(newColor, 1) ? 1 : 0;
-            int newColorLsb = newColor & 0b01;
+            int newColorLsb = Bits.test(newColor, 0) ? 1 : 0;
 
 
             BitVector maskMsb = colorMsb == 1 ? msb : msb.not();
@@ -224,8 +221,7 @@ public final class LcdImageLine {
      * Composes a line by taking pixels from top if they are opaque, otherwise
      * pixels from this
      * 
-     * @param top
-     * @return
+     * @return new LcdImageLine composed from this and that according to top opacity
      */
     public LcdImageLine below(LcdImageLine top) {
         return below(top, top.opacity);
@@ -240,11 +236,12 @@ public final class LcdImageLine {
      * @param opacity
      *            opacity BitVector, allows to choose which pixel we want to
      *            take from each LcdImageLine
-     * @return
+     *            
+     * @return new LcdImageLine composed from this and that according to given opacity
      */
     public LcdImageLine below(LcdImageLine top, BitVector opacity) {
         Preconditions.checkArgument(top.size() == size());
-        // (opacity AND top.msb) OR (NOT(opacity) AND this.msb)
+        
         BitVector msb = opacity.and(top.msb).or(opacity.not().and(this.msb));
         BitVector lsb = opacity.and(top.lsb).or(opacity.not().and(this.lsb));
 
@@ -269,10 +266,8 @@ public final class LcdImageLine {
         Preconditions.checkArgument(other.size() == size());
         BitVector mask = new BitVector(size(), true).shift(fromIndex);
 
-        // (other.mbs AND mask) OR (this.msb AND (NOT mask))
-        //
-        // selects (fromIndex)-least significant bits of this.msb
-        // and concatenates (size-fromIndex)-most significant bits of other.msb
+        // selects (fromIndex)-lsb of this.msb
+        // and concatenates (size-fromIndex)-msb of other.msb
         BitVector joinedMsb = other.msb.and(mask).or(this.msb.and(mask.not()));
         BitVector joinedLsb = other.lsb.and(mask).or(this.lsb.and(mask.not()));
         BitVector joinedOpacity = other.opacity.and(mask)
