@@ -32,14 +32,14 @@ public final class LcdImage {
      */
     public LcdImage(List<LcdImageLine> lines) {
         Objects.requireNonNull(lines);
-        Preconditions.checkArgument(lines.get(0).size()% Integer.SIZE == 0);
+        Preconditions.checkArgument(lines.get(0).size() % Integer.SIZE == 0);
         Preconditions.checkArgument(lines.get(0).size() > 0 && lines.size() > 0);
 
         this.lines = Collections.unmodifiableList(new ArrayList<>(lines));
     }
 
     public static final class Builder {
-        private List<LcdImageLine> lines = new ArrayList<>();
+        private final List<LcdImageLine> lines = new ArrayList<>();
 
         /**
          * Creates LcdImage builder for and image of given width and given
@@ -61,7 +61,16 @@ public final class LcdImage {
                         new BitVector(width, false)));
         }
         
+        /**
+         * Gets Image Builder width in pixels
+         * @return builder width
+         */
         private int width() { return lines.get(0).size(); }
+        
+        /**
+         * Gets Image Builder height in pixels
+         * @return builder height
+         */
         private int height() { return lines.size(); }
 
         /**
@@ -94,14 +103,16 @@ public final class LcdImage {
     }
 
     /**
-     * @return number of pixels in a line
+     * Gets image width in pixels
+     * @return image width
      */
     public int width() {
         return lines.get(0).size();
     }
 
     /**
-     * @return number of lines of the image
+     * Gets image height in pixels
+     * @return image height
      */
     public int height() {
         return lines.size();
