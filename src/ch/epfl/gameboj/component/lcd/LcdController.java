@@ -192,7 +192,7 @@ public final class LcdController implements Component, Clocked {
                     bus.read((reg(Reg.DMA) << 8) + index));
             
             remainingDMACycles--;
-            // TODO : compute reg(Reg.DMA) only once and not 160 times
+            // TODO : compute reg(Reg.DMA) only once and not 160 times ?
         }
         
         if (nextNonIdleCycle == Long.MAX_VALUE && screenIsOn()) {
