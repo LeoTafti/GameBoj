@@ -26,17 +26,17 @@ public final class BitVector {
      *             Integer.SIZE (32)
      */
     public BitVector(int size, boolean defaultValue) {
-        //TODO : we do "checkArgument(size > 0 && size % Integer.SIZE == 0)" : make a private method ?
         Preconditions.checkArgument(size > 0 && size % Integer.SIZE == 0);
 
         // TODO : should we absolutely call the private constructor ?
         // means we have define a method like "initializeArray" or something of
         // the sort
-        elements = new int[size/Integer.SIZE];
+        elements = new int[size / Integer.SIZE];
 
-        Arrays.fill(elements, defaultValue ? -1 : 0); //since int -1 in two's complement representation is 32 bits to 1
-//        Arrays.fill(elements, defaultValue ? 0xFFFFFFFF : 0);
-        //TODO : choose which is most clean (-1 or F..F), and make static ?
+        // Arrays.fill(elements, defaultValue ? -1 : 0); //since int -1 in two's
+        // complement representation is 32 bits to 1
+        Arrays.fill(elements, defaultValue ? 0xFFFFFFFF : 0);
+        // TODO : choose which is most clean (-1 or F..F), and make static ?
     }
 
     /**
@@ -56,8 +56,8 @@ public final class BitVector {
     }
 
     /**
-     * Private constructor
-     * Constructs a BitVector from given bits array (no copy)
+     * Private constructor Constructs a BitVector from given bits array (no
+     * copy)
      * 
      * @param elements
      *            bits of BitVector
@@ -79,8 +79,8 @@ public final class BitVector {
          * @param size
          *            number of bits, must be 0mod32
          * @throws IllegalArgumentException
-     *             if size is smaller or equals zero or size isn't a multiple of
-     *             Integer.SIZE (32)
+         *             if size is smaller or equals zero or size isn't a
+         *             multiple of Integer.SIZE (32)
          */
         public Builder(int size) {
             Preconditions.checkArgument(size > 0 && size % Integer.SIZE == 0);
@@ -90,16 +90,17 @@ public final class BitVector {
         /**
          * Builds BitVector of previously given elements (0 as default)
          * 
-         * @throws IlegalStateException if already built
+         * @throws IlegalStateException
+         *             if already built
          * @return built vector from given bytes
          */
         public BitVector build() {
             if (elements == null)
                 throw new IllegalStateException("Already built");
-            
+
             BitVector r = new BitVector(elements);
             elements = null;
-            
+
             return r;
         }
 
@@ -110,24 +111,26 @@ public final class BitVector {
          *            bitVector's Index in BYTES (i.e 8-th bit is index 1)
          * @param b
          *            byte value to add
-         *            
+         * 
          * @return builder
          * 
-         * @throws IlegalStateException if already built
+         * @throws IlegalStateException
+         *             if already built
          */
         public Builder setByte(int index, int b) {
             if (elements == null)
                 throw new IllegalStateException("Already built");
-            
-            Objects.checkIndex(index, elements.length*Integer.BYTES);
+
+            Objects.checkIndex(index, elements.length * Integer.BYTES);
             Preconditions.checkBits8(b);
-            
-            elements[index / Integer.BYTES] += b << index*Byte.SIZE;
+
+            elements[index / Integer.BYTES] += b << index * Byte.SIZE;
             return this;
         }
-        
+
         /**
          * Getter for Builder's size
+         * 
          * @return Builder's size in bits
          */
         public int size() {
@@ -163,14 +166,14 @@ public final class BitVector {
      */
     @Override
     public String toString() {
-        //TODO : move it somewhere else ?
+        // TODO : move it somewhere else ?
         final String ZERO_32 = "00000000000000000000000000000000";
-        
+
         StringBuilder sb = new StringBuilder();
-        for (int i = elements.length-1 ; i >= 0 ; i--) {
+        for (int i = elements.length - 1; i >= 0; i--) {
             String binaryRep = Integer.toBinaryString(elements[i]);
             sb.append((ZERO_32 + binaryRep).substring(binaryRep.length()));
-            //TODO : do it with numberOfLeadingZeros instead ?
+            // TODO : do it with numberOfLeadingZeros instead ?
         }
         return sb.toString();
     }
@@ -195,13 +198,10 @@ public final class BitVector {
      *             bits
      */
     public boolean testBit(int index) {
-        //TODO : remove
-//        Preconditions.checkArgument(index >= 0 && index < size());
         Objects.checkIndex(index, size());
         return Bits.test(elements[index / Integer.SIZE], index % Integer.SIZE);
     }
 
-    
     /**
      * Computes bitwise "not" of this BitVector
      * 
@@ -209,19 +209,20 @@ public final class BitVector {
      */
     public BitVector not() {
         int[] notElements = new int[elements.length];
-        for(int i = 0; i < notElements.length; i++) {
-            notElements[i] = ~ elements[i];
+        for (int i = 0; i < notElements.length; i++) {
+            notElements[i] = ~elements[i];
         }
         return new BitVector(notElements);
     }
-    
+
     /**
      * Computes bitwise "and" of this BitVector and given BitVector
      * 
      * @param that
      *            other BitVector
-     *            
-     * @throws IllegalArgumentException if vectors are not of the same length
+     * 
+     * @throws IllegalArgumentException
+     *             if vectors are not of the same length
      * 
      * @return bitwise "and", as a new BitVector
      */
@@ -240,8 +241,9 @@ public final class BitVector {
      * 
      * @param that
      *            other bitVector
-     *            
-     * @throws IllegalArgumentException if vectors are not of the same length
+     * 
+     * @throws IllegalArgumentException
+     *             if vectors are not of the same length
      * 
      * @return bitwise "or", as a new BitVector
      */
@@ -255,14 +257,15 @@ public final class BitVector {
         }
         return new BitVector(res);
     }
-    
+
     /**
      * Computes bitwise "xor" of this BitVector and given BitVector
      * 
      * @param that
      *            other bitVector
      * 
-     * @throws IllegalArgumentException if vectors are not of the same length
+     * @throws IllegalArgumentException
+     *             if vectors are not of the same length
      * @return bitwise "xor", as a new BitVector
      */
     public BitVector xor(BitVector that) {
@@ -307,7 +310,7 @@ public final class BitVector {
     public BitVector extractWrapped(int fromIndex, int size) {
         return extract(fromIndex, size, ExtractType.WRAPPED);
     }
-    
+
     /**
      * Computes shifting by delta-bits
      * 
@@ -320,55 +323,73 @@ public final class BitVector {
         return extract(-delta, size(), ExtractType.ZERO_EXT);
     }
 
+    /**
+     * Extracts (size) bits from given index according to given method
+     * (ZERO_EXT, WRAPPED)
+     * 
+     * @param fromIndex
+     *            index from which to extract
+     * @param size
+     *            number of bits to extract
+     * @param type
+     *            extraction type (ZERO_EXT adds 0's, WRAPPED wraps around)
+     * @throws IllegalArgumentException
+     *             if size is smaller or equals zero or size isn't a multiple of
+     *             Integer.SIZE (32)
+     * @return extracted bits, as a new BitVector
+     */
     private BitVector extract(int fromIndex, int size, ExtractType type) {
         Preconditions.checkArgument(size > 0 && size % Integer.SIZE == 0);
         int[] extracted = new int[size / Integer.SIZE];
-        
-        //TODO : efficiency ? index is always the same, but we calculate it multiple times (maybe not too bad)
-        for(int i = 0; i < extracted.length; i++) { //iterates on each 32-bit chunk
-            extracted[i] = combinedExtended32bits(fromIndex + Integer.SIZE*i, type);
-        }
-        
+
+        int relativeIndex = Math.floorMod(fromIndex, Integer.SIZE);
+        int chunk = Math.floorDiv(fromIndex, Integer.SIZE);
+        for (int i = 0; i < extracted.length; i++)
+            extracted[i] = combinedExtended32bits(relativeIndex, chunk++, type);
+
         return new BitVector(extracted);
     }
-    
+
     /**
-     * Extracts 32 bits from index with given method (ZERO_EXT, WRAPPED)
-     * @param i index from which to extract (positive for left, negative for right)
-     * @param if i is out-of-bounds, ZERO_EXT will add 0s, WRAPPED will start from beginning (ie wrap around)
-     * @return 32-bit extraction
+     * Combines 2 consecutive parts of 32 bit chunks into a new 32 bit chunk,
+     * eventually adding 0's or "wrapping around" according to given ExtractType
+     * 
+     * @param index
+     *            index in chunk, included in [0;31]
+     * @param chunk
+     *            chunk to start extraction from
+     * @param type
+     *            extraction type (ZERO_EXT adds 0's, WRAPPED wraps around)
+     * @return extracted 32 bit chunk
      */
-    private int combinedExtended32bits(int i, ExtractType type) {
-        
+    private int combinedExtended32bits(int index, int chunk, ExtractType type) {
+
         int bits = 0;
-        int chunk = Math.floorDiv(i, Integer.SIZE); //chunk (32bits) of 'elements' designated by index
-        int index = Math.floorMod(i, Integer.SIZE); //relative index in chunk [0;31]
-        int complIndex = Integer.SIZE-index;
-        
-        //Optimal case
+        int complIndex = Integer.SIZE - index;
+
+        // Optimal case
         if (index == 0) {
             switch (type) {
             case WRAPPED:
                 bits = elements[Math.floorMod(chunk, elements.length)];
                 break;
-                
+
             case ZERO_EXT:
                 if (chunk >= 0 && chunk < elements.length)
                     bits = elements[chunk];
                 break;
             }
-        }
-        else {
+        } else {
             switch (type) {
             case WRAPPED:
                 // MSBs of chunk starting from index as bits LSBs
                 bits = Bits.extract(
-                        elements[Math.floorMod(chunk, elements.length)],
-                        index,
+                        elements[Math.floorMod(chunk, elements.length)], index,
                         complIndex);
 
                 // LSBs of next chunk as bits MSBs
-                bits |= Bits.clip(index, elements[Math.floorMod(chunk + 1, elements.length)]) << complIndex;
+                bits |= Bits.clip(index, elements[Math.floorMod(chunk + 1,
+                        elements.length)]) << complIndex;
                 break;
 
             case ZERO_EXT:

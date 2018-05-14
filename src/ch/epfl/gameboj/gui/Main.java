@@ -31,7 +31,7 @@ import javafx.stage.Stage;
 
 public class Main extends Application{
 
-    private static final float SIM_SPEED = 4f;
+    private static final float SIM_SPEED = 1f;
     
     //TODO : remove all of this
     private static final String[] ROM_PATHS = { 
@@ -46,13 +46,7 @@ public class Main extends Application{
             "roms/SuperMarioLand2.gb", //8
             "roms/LegendofZelda,TheLink'sAwakening.gb", //9
             "roms/PokemonRedBlue.gb"}; //10
-    private static final String ROM_PATH = ROM_PATHS[9];
-//    private static final String ROM_PATH = "/Users/Leo/git/GameBoj/roms/SuperMarioLand2.gb";
-
-//    private static final String ROM_PATH = "/Users/Leo/git/GameBoj/roms/Bomberman.gb";
-
-//    private static final String ROM_PATH = "/Users/Leo/git/GameBoj/roms/Tetris.gb";
-    
+    private static final String ROM_PATH = ROM_PATHS[0];    
     
     public static void main(String[] args) {
        launch(args);
