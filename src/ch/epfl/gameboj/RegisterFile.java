@@ -53,10 +53,7 @@ public final class RegisterFile<E extends Register> {
      *            the bit to check for {@link Bits#test(int bits, Bit bit)}
      * @return true if given bit of register is 1, false if 0
      */
-    public boolean testBit(E reg, Bit b) {
-        //TODO : remove
-//        return Bits.test(regs[reg.index()], b);
-        
+    public boolean testBit(E reg, Bit b) {       
         return Bits.test(get(reg), b);
     }
 
@@ -71,9 +68,6 @@ public final class RegisterFile<E extends Register> {
      *            value to assign to bit
      */
     public void setBit(E reg, Bit bit, boolean newValue) {
-        //TODO : remove
-//        regs[reg.index()] = (byte) Bits.set(regs[reg.index()], bit.index(), newValue);
-        
         set(reg, Bits.set(get(reg), bit.index(), newValue));
     }
 }

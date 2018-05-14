@@ -458,13 +458,7 @@ public final class Alu {
     public static int swap(int v) {
         Preconditions.checkBits8(v);
 
-        //TODO : remove
-//        int vL = Bits.clip(4, v);
-//        int vH = Bits.extract(v, 4, 4);
-//
-//        int vSwapped = (vL << 4) + vH;
-        int vSwapped = Bits.rotate(8, v, 4);
-        
+        int vSwapped = Bits.rotate(8, v, 4);        
         return packValueZNHC(vSwapped, getZFlag(vSwapped), false, false, false);
     }
 
@@ -524,7 +518,7 @@ public final class Alu {
      * @return flag Z value (true if v == 0, false otherwise)
      */
     private static boolean getZFlag(int v) {
-        return (v == 0);
+        return v == 0;
     }
 
     /**

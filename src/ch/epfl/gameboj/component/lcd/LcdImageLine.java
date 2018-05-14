@@ -198,11 +198,7 @@ public final class LcdImageLine {
 
         for (int color = 0; color < 4; color++) {
             int newColor = Bits.extract(palette, color * 2, 2);
-            // TODO : remove sysout
-            // System.out.println();
-            // System.out.println("color : " + Integer.toBinaryString(color));
-            // System.out.println("newColor : " +
-            // Integer.toBinaryString(newColor));
+
 
             if (newColor == color) // color doesn't change
                 continue;
@@ -212,16 +208,10 @@ public final class LcdImageLine {
             int newColorMsb = Bits.test(newColor, 1) ? 1 : 0;
             int newColorLsb = newColor & 0b01;
 
-            // System.out.println("colorMsb : " + colorMsb);
-            // System.out.println("colorLsb : " + colorLsb);
 
             BitVector maskMsb = colorMsb == 1 ? msb : msb.not();
             BitVector maskLsb = colorLsb == 1 ? lsb : lsb.not();
             BitVector changePos = maskMsb.and(maskLsb);
-
-            // System.out.println("maskMsb : " + maskMsb);
-            // System.out.println("maskLsb : " + maskLsb);
-            // System.out.println(changePos);
 
             newMsb = colorMsb == newColorMsb ? newMsb : newMsb.xor(changePos);
             newLsb = colorLsb == newColorLsb ? newLsb : newLsb.xor(changePos);

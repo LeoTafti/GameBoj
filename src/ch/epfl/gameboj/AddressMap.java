@@ -24,21 +24,13 @@ public interface AddressMap {
     int REG_TAC = 0xFF07;
     int REG_IF = 0xFF0F;
     int REGS_LCDC_START = 0xFF40, REGS_LCDC_END = 0xFF4C;
-    //Memory-mapped "LCD" registers
     
-    //TODO : remove unused
+    //Memory-mapped relevant "LCD" registers
     int REG_LCDC = 0xFF40;
     int REG_STAT = 0xFF41;
-    int REG_SCY = 0xFF42;
-    int REG_SCX = 0xFF43;
-    int REG_LY = 0xFF44;
     int REG_LYC = 0xFF45;
     int REG_DMA = 0xFF46;
-    int REG_BGP = 0xFF47;
-    int REG_OBP0 = 0xFF48;
-    int REG_OBP1 = 0xFF49;
-    int REG_WY = 0xFF4A;
-    int REG_WX = 0xFF4B;
+    
     //other mapped registers
     int REG_BOOT_ROM_DISABLE = 0xFF50;
     int REG_IE = 0xFFFF;

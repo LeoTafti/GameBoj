@@ -89,12 +89,8 @@ public final class RamController implements Component {
      * @return true for valid or false for invalid
      */
     private boolean isInBound(int address) {
-        return (!(address < startAddress || address >= endAddress));
-        //TODO : remove
-//        if (address < startAddress || address >= endAddress) {
-//            return false;
-//        } else
-//            return true;
+        return !(address < startAddress || address >= endAddress);
+
     }
 
 }
