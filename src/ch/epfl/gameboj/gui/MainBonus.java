@@ -18,11 +18,20 @@ import ch.epfl.gameboj.component.lcd.LcdController;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.scene.Scene;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.RadioButton;
+import javafx.scene.control.RadioMenuItem;
+import javafx.scene.control.Slider;
 import javafx.scene.control.SplitPane;
+import javafx.scene.control.ToggleButton;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
@@ -31,7 +40,7 @@ import javafx.stage.Stage;
 
 public class MainBonus extends Application{
 
-    private static final float SIM_SPEED = 4f;
+    private static double SIM_SPEED = 2f;
     
     //TODO : remove all of this
     private static final String[] ROM_PATHS = { 
@@ -46,7 +55,7 @@ public class MainBonus extends Application{
             "roms/SuperMarioLand2.gb", //8
             "roms/LegendofZelda,TheLink'sAwakening.gb", //9
             };
-    private static final String ROM_PATH = ROM_PATHS[8];    
+    private static final String ROM_PATH = ROM_PATHS[0];    
     
     public static void main(String[] args) {
        launch(args);
@@ -65,28 +74,53 @@ public class MainBonus extends Application{
         mainPane.setPrefHeight(LcdController.LCD_HEIGHT*2);
         
         //----------------------------- LEFT --------------------------------
-        SplitPane menuPane = new SplitPane();
+        VBox menuPane = new VBox();
         menuPane.setMinWidth(80);
         mainPane.setLeft(menuPane);
         
+        Slider speedSlider = new Slider(0.2, 4.0, 1);
+        
+        
+        MenuBar speedBar = new MenuBar();
+        Menu speedMenu = new Menu();
+        ToggleGroup speedSwitch = new ToggleGroup();
+        RadioButton half       = new RadioButton("0.5x");
+        RadioButton normal     = new RadioButton("1x");
+        RadioButton one_half   = new RadioButton("1.5x");
+        RadioButton twice      = new RadioButton("2x");
+        RadioButton thrice     = new RadioButton("3x");
+        RadioButton ultraSpeed = new RadioButton("4x");
+        List<RadioButton> speeds = List.of(
+                half,
+                normal,
+                one_half,
+                twice,
+                thrice,
+                ultraSpeed);
+        speeds.forEach(s -> s.setToggleGroup(speedSwitch));
+        
+        ToggleButton oneOrTwo = new ToggleButton("speed");
+        oneOrTwo.setSelected(false);
+        oneOrTwo.setOnSwipeLeft(e -> SIM_SPEED *= 2);
+        
+        
+        menuPane.getChildren().addAll(speeds);
+        menuPane.getChildren().add(speedSlider);
+        menuPane.getChildren().add(oneOrTwo);
+        
+        
         //------------------------------ CENTER -----------------------------
         
-        Pane backgroundPane = new Pane();
-//        backgroundPane.setBlendMode(BlendMode.GREEN);
-        
-        
+        VBox backgroundPane = new VBox();
+
         ImageView lcdPane = new ImageView();
         //TODO : we don't need it, but prof says to use it
-        lcdPane.setFitWidth(LcdController.LCD_WIDTH);
-        lcdPane.setFitHeight(LcdController.LCD_HEIGHT);
+        lcdPane.setFitWidth(LcdController.LCD_WIDTH*2);
+        lcdPane.setFitHeight(LcdController.LCD_HEIGHT*2);
         lcdPane.setPreserveRatio(true);
         lcdPane.setImage(ImageConverter.convert(gameboj.lcdController().currentImage()));
         
         Pane joyPane = new Pane();
-        joyPane.maxHeightProperty().bind(lcdPane.fitHeightProperty());
-        joyPane.minHeightProperty().bind(lcdPane.fitHeightProperty());
-        joyPane.maxWidthProperty().bind(lcdPane.fitWidthProperty());
-        joyPane.minWidthProperty().bind(lcdPane.fitWidthProperty());
         
         int shortS = 15, longS = 25, radius = 15, middleMargin = 30, topMargin = 20, interSpace = 10;
         
@@ -100,36 +134,37 @@ public class MainBonus extends Application{
             select = new Circle(interSpace*4 + longS + shortS, topMargin + interSpace*2 + longS*3 + shortS, radius/2),
             start  = new Circle(interSpace*3 + longS + shortS + middleMargin, topMargin + interSpace*2 + longS*3 + shortS, radius/2);
         
-        List<Shape> joyShapes = List.of(up, down, left, right, a, b, start,
-                select);
-        joyShapes.forEach(s -> s.setFill(Color.DARKSLATEBLUE));  
+        List<Shape> joyShapes = List.of(up, down, left, right, a, b, start, select);
         
+        joyShapes.forEach(s -> {
+            s.setFill(Color.DARKSLATEBLUE);
+            s.setLayoutY(LcdController.LCD_HEIGHT/2.0);
+        });
+            
         joyPane.getChildren().addAll(joyShapes);
         
+        
         backgroundPane.getChildren().addAll(lcdPane, joyPane);
-        joyPane.translateYProperty().bind(lcdPane.fitHeightProperty());
+        backgroundPane.setMinHeight(LcdController.LCD_HEIGHT*4);
         
+        joyPane.translateXProperty().bind(lcdPane.fitWidthProperty().subtract(LcdController.LCD_WIDTH).divide(2));
+        //responsiveness attempt
+//        double lcdRatio = (LcdController.LCD_HEIGHT/(double)LcdController.LCD_WIDTH);
+//        lcdPane.fitWidthProperty().bind(backgroundPane.widthProperty());
+//        lcdPane.fitHeightProperty().bind(lcdPane.fitWidthProperty().multiply(lcdRatio));
         
-        lcdPane.fitWidthProperty().bind(backgroundPane.widthProperty());
-        lcdPane.fitHeightProperty().bind(lcdPane.fitWidthProperty().multiply(LcdController.LCD_HEIGHT/(double)LcdController.LCD_WIDTH));
-        joyPane.minWidthProperty().bind(lcdPane.fitWidthProperty());
-        joyPane.maxWidthProperty().bind(lcdPane.fitWidthProperty());
-        joyPane.minHeightProperty().bind(lcdPane.fitHeightProperty());
-        joyPane.maxHeightProperty().bind(lcdPane.fitHeightProperty());
+//        joyPane.minWidthProperty().bind(lcdPane.fitWidthProperty());
+//        joyPane.maxWidthProperty().bind(lcdPane.fitWidthProperty());
+//        joyPane.minHeightProperty().bind(lcdPane.fitHeightProperty());
+//        joyPane.maxHeightProperty().bind(lcdPane.fitHeightProperty());
         
-//        lcdPane.fitHeightProperty().bind(lcdPane.fitWidthProperty().multiply();
-        //Bind divider to lcdHeight
-//        centerPane.getDividers().get(0).positionProperty().bind(backgroundPane.heightProperty().divide(2)); 
-//        centerPane.heightProperty().bind(lcdPane.fitHeightProperty().multiply(2));
-        
-//        menuPane.heightProperty().bind(mainPane.)
+//        joyPane.translateYProperty().bind(lcdPane.fitHe);
+//        joyPane.scaleXProperty().bind(lcdPane.fitWidthProperty().divide(LcdController.LCD_WIDTH));
+//        joyPane.scaleYProperty().bind(lcdPane.fitHeightProperty().divide(LcdController.LCD_HEIGHT).multiply(lcdRatio));
+//        joyPane.set
         
         mainPane.setCenter(backgroundPane);
-        
-                
-        //TODO should map from KeyEvent to Joypad.Key 
-        //but couldnt implement distinction between keyEvent.getCode() and keyEvent.getText();
-        //juliens made 2 maps and used 
+
         
         //++++++++++++++++++++++++++++++++++++++++++ FUNCTIONNEMENT +++++++++++++++++++++++++++++++++++++
         
