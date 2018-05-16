@@ -27,7 +27,7 @@ public final class LcdImage {
      * @param lines
      *            the image's lines
      * @throws IllegalArgumentException
-     *             if dimensions are invalid (if either is negative or null)
+     *             if dimensions are invalid (if either negative or null)
      *             or if lines are not of width-length
      */
     public LcdImage(List<LcdImageLine> lines) {
@@ -55,6 +55,7 @@ public final class LcdImage {
         public Builder(int width, int height) {
             Preconditions.checkArgument(width % Integer.SIZE == 0);
             Preconditions.checkArgument(width > 0 && height > 0);
+            
             for (int i = 0; i < height; ++i)
                 lines.add(new LcdImageLine(new BitVector(width, false),
                         new BitVector(width, false),
@@ -62,13 +63,13 @@ public final class LcdImage {
         }
         
         /**
-         * Gets Image Builder width in pixels
+         * Gets Image Builder's width in pixels
          * @return builder width
          */
         private int width() { return lines.get(0).size(); }
         
         /**
-         * Gets Image Builder height in pixels
+         * Gets Image Builder's height in pixels
          * @return builder height
          */
         private int height() { return lines.size(); }

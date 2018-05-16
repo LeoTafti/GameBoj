@@ -112,7 +112,7 @@ public final class BitVector {
          * @param b
          *            byte value to add
          * 
-         * @return builder
+         * @return builder this to allow to chain-calling
          * 
          * @throws IlegalStateException
          *             if already built
@@ -120,11 +120,10 @@ public final class BitVector {
         public Builder setByte(int index, int b) {
             if (elements == null)
                 throw new IllegalStateException("Already built");
-
             Objects.checkIndex(index, elements.length * Integer.BYTES);
             Preconditions.checkBits8(b);
 
-            elements[index / Integer.BYTES] += b << index * Byte.SIZE;
+            elements[index / Integer.BYTES] += b << (index * Byte.SIZE);
             return this;
         }
 
@@ -167,14 +166,19 @@ public final class BitVector {
     @Override
     public String toString() {
         // TODO : move it somewhere else ?
-        final String ZERO_32 = "00000000000000000000000000000000";
-
+//        final String ZERO_32 = "00000000000000000000000000000000";
+//        for (int i = elements.length - 1; i >= 0; i--) {
+//            String binaryRep = Integer.toBinaryString(elements[i]);
+//            sb.append((ZERO_32 + binaryRep).substring(binaryRep.length()));
+//            // TODO : do it with numberOfLeadingZeros instead ?
+//        }
+        
+        //Integer.toBinaryString(..) uses number of leading zeros anyways...
+        
         StringBuilder sb = new StringBuilder();
-        for (int i = elements.length - 1; i >= 0; i--) {
-            String binaryRep = Integer.toBinaryString(elements[i]);
-            sb.append((ZERO_32 + binaryRep).substring(binaryRep.length()));
-            // TODO : do it with numberOfLeadingZeros instead ?
-        }
+        for (int i = (elements.length - 1)*Integer.SIZE; i >= 0 ; i--)
+            sb.append(testBit(i));
+
         return sb.toString();
     }
 
@@ -252,9 +256,8 @@ public final class BitVector {
         Preconditions.checkArgument(length == that.elements.length);
 
         int[] res = new int[length];
-        for (int i = 0; i < length; i++) {
+        for (int i = 0; i < length; i++) 
             res[i] = elements[i] | that.elements[i];
-        }
         return new BitVector(res);
     }
 
@@ -273,9 +276,8 @@ public final class BitVector {
         Preconditions.checkArgument(length == that.elements.length);
 
         int[] res = new int[length];
-        for (int i = 0; i < length; i++) {
+        for (int i = 0; i < length; i++)
             res[i] = elements[i] ^ that.elements[i];
-        }
         return new BitVector(res);
     }
 

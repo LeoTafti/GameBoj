@@ -12,7 +12,7 @@ import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
 
 public final class ImageConverter {
-    //Hex code of color associated to gameboy colors, indexed by encoding
+    //Hex code of colors associated to gameboy's colors, indexed by encoding
     private static final int[] argbColors = {0xff_ff_ff_ff,
                                       0xff_d3_d3_d3,
                                       0xff_a9_a9_a9,

@@ -29,9 +29,9 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
 import javafx.stage.Stage;
 
-public class Main extends Application{
+public class MainBonus extends Application{
 
-    private static final float SIM_SPEED = 2f;
+    private static final float SIM_SPEED = 4f;
     
     //TODO : remove all of this
     private static final String[] ROM_PATHS = { 
@@ -45,8 +45,8 @@ public class Main extends Application{
             "roms/SuperMarioLand.gb", //7
             "roms/SuperMarioLand2.gb", //8
             "roms/LegendofZelda,TheLink'sAwakening.gb", //9
-            "roms/PokemonRedBlue.gb"}; //10
-    private static final String ROM_PATH = ROM_PATHS[2];    
+            };
+    private static final String ROM_PATH = ROM_PATHS[8];    
     
     public static void main(String[] args) {
        launch(args);
@@ -54,9 +54,6 @@ public class Main extends Application{
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-//        TODO : uncomment
-        if (getParameters().getRaw().size() != 1)
-            System.exit(1);
         
         //construct gameboy with given ROM
         File romFile = new File(ROM_PATH);

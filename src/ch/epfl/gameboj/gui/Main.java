@@ -24,16 +24,16 @@ import javafx.stage.Stage;
 
 public class Main extends Application{
     
-//            "roms/Tetris.gb"
-//            "roms/2048.gb"
-//            "roms/snake.gb"
-//            "roms/tasmaniaStory.gb"
-//            "roms/flappyboy.gb"
-//            "roms/DonkeyKong.gb"
-//            "roms/Bomberman.gb"
-//            "roms/SuperMarioLand.gb"
-//            "roms/SuperMarioLand2.gb"
-//            "roms/LegendofZelda,TheLink'sAwakening.gb"
+//   "roms/Tetris.gb"
+//   "roms/2048.gb"
+//   "roms/snake.gb"
+//   "roms/tasmaniaStory.gb"
+//   "roms/flappyboy.gb"
+//   "roms/DonkeyKong.gb"
+//   "roms/Bomberman.gb"
+//   "roms/SuperMarioLand.gb"
+//   "roms/SuperMarioLand2.gb"
+//   "roms/LegendofZelda,TheLink'sAwakening.gb"
     
     public static void main(String[] args) {
        launch(args);
@@ -88,8 +88,6 @@ public class Main extends Application{
                 gameboj.joypad().keyReleased(p);           
         });
             
-
-        
         // gameboj simulation
         long start = System.nanoTime();
         AnimationTimer timer = new AnimationTimer() {
@@ -108,7 +106,7 @@ public class Main extends Application{
         Scene scene = new Scene(mainPane);
         primaryStage.setScene(scene);
         primaryStage.sizeToScene();
-        primaryStage.setTitle("gameboj");
+        primaryStage.setTitle("GAMEBOJ");
         primaryStage.show();
         imageView.requestFocus();
     }

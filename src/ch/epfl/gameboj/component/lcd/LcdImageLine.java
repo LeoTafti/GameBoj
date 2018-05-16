@@ -40,22 +40,23 @@ public final class LcdImageLine {
          * Constructor for Builder : allows to create a new LcdImage
          * incrementally
          * 
-         * @param size size of line, in pixels
+         * @param size size of line, in pixels (must be multiple of 32)
          * 
          * @throws IllegalArgumentException
          *             if size isn't a multiple of 32
          */
         public Builder(int size) {
             Preconditions.checkArgument(size > 0 && size % Integer.SIZE == 0);
+            
             msbB = new BitVector.Builder(size);
             lsbB = new BitVector.Builder(size);
         }
 
         /**
-         * Sets bytes at given index
+         * Sets byte at given index
          * 
          * @param index
-         *            index bytes to set (in bytes)
+         *            index of byte to set (in bytes)
          * @param mb
          *            new msb-byte
          * @param lb
@@ -68,7 +69,6 @@ public final class LcdImageLine {
          */
         public Builder setBytes(int index, int mb, int lb) {
             Objects.checkIndex(index, size());
-
             Preconditions.checkBits8(mb);
             Preconditions.checkBits8(lb);
 
@@ -197,7 +197,7 @@ public final class LcdImageLine {
             int newColor = Bits.extract(palette, color * 2, 2);
 
 
-            if (newColor == color) // color doesn't change
+            if (newColor == color)
                 continue;
 
             int colorMsb = Bits.test(color, 1) ? 1 : 0;
@@ -244,7 +244,6 @@ public final class LcdImageLine {
         
         BitVector msb = opacity.and(top.msb).or(opacity.not().and(this.msb));
         BitVector lsb = opacity.and(top.lsb).or(opacity.not().and(this.lsb));
-
         BitVector op = opacity.or(this.opacity);
 
         return new LcdImageLine(msb, lsb, op);
@@ -292,7 +291,7 @@ public final class LcdImageLine {
         if (opacity.testBit(index)) {
             int msbI = msb.testBit(index) ? 1 : 0;
             int lsbI = lsb.testBit(index) ? 1 : 0;
-            return msbI << 1 | lsbI;
+            return (msbI << 1) | lsbI;
         }
         return 0;
     }

@@ -43,7 +43,7 @@ public final class Cartridge implements Component {
      *             exist
      * @throws IllegalArgumentException
      *             if given romFile 147th's bit (used to identify MBC type)
-     *             isn't 0
+     *             isn't 0, 1, 2 or 3
      */
     public static Cartridge ofFile(File romFile) throws IOException {
         try (FileInputStream s = new FileInputStream(romFile)) {

@@ -26,6 +26,11 @@ public final class Joypad implements Component {
 
     private final Cpu cpu;
 
+    /**
+     * Contructor for gameboy's joypad consisting of 8 buttons
+     * 4 cardinal directions and A, B, select, start
+     * @param cpu the gameboy's cpu
+     */
     public Joypad(Cpu cpu) {
         this.cpu = Objects.requireNonNull(cpu);
         lines = new int[2];
@@ -52,14 +57,27 @@ public final class Joypad implements Component {
         }
     }
 
+    /**
+     * simulates key press on gameboy
+     * @param key one of the joypad's keys
+     */
     public void keyPressed(Key key) {
         update(key, true);
     }
 
+    /**
+     * simulates key release on gameboy
+     * @param key one of joypad's keys
+     */
     public void keyReleased(Key key) {
         update(key, false);
     }
 
+    /**
+     * updates joypad's state and potentially notifies cpu
+     * @param key one of joypad's keys
+     * @param newValue true for pressed, false for released
+     */
     private void update(Key key, boolean newValue) {
         int oldP1 = computeP1();
         
