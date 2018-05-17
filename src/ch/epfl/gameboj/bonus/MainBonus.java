@@ -3,22 +3,33 @@
  *  @Author : Leo Tafti (285418)
 */
 
-package ch.epfl.gameboj.gui;
+package ch.epfl.gameboj.bonus;
 
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.xml.stream.EventFilter;
+
+import com.sun.scenario.effect.Effect;
 import com.sun.tools.javac.util.List;
 
 import ch.epfl.gameboj.GameBoy;
 import ch.epfl.gameboj.component.Joypad;
 import ch.epfl.gameboj.component.cartridge.Cartridge;
 import ch.epfl.gameboj.component.lcd.LcdController;
+import ch.epfl.gameboj.gui.ImageConverter;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
+import javafx.event.ActionEvent;
+import javafx.event.Event;
+import javafx.event.Event.*;
+import javafx.event.EventHandler;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
+import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.RadioButton;
@@ -27,8 +38,10 @@ import javafx.scene.control.Slider;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.effect.BlendMode;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
@@ -40,7 +53,7 @@ import javafx.stage.Stage;
 
 public class MainBonus extends Application{
 
-    private static double SIM_SPEED = 2f;
+    private static double simSpeed = 1.0;
     
     //TODO : remove all of this
     private static final String[] ROM_PATHS = { 
@@ -75,46 +88,36 @@ public class MainBonus extends Application{
         
         //----------------------------- LEFT --------------------------------
         VBox menuPane = new VBox();
-        menuPane.setMinWidth(80);
-        mainPane.setLeft(menuPane);
+        int menuWidth = 80;
+        menuPane.setMinWidth(menuWidth);
+
+        VBox buttonPane = new VBox(); 
         
+        Button startButton = new Button("Start");
+        ToggleButton pauseButton = new ToggleButton("Pause");
+        
+        
+        
+        buttonPane.getChildren().addAll(startButton, pauseButton);
+        menuPane.getChildren().add(buttonPane);
+        
+        Pane speedPane = new Pane();
+        Label speedLabel = new Label("Speed");
+        speedLabel.setLayoutX(menuWidth/2);
         Slider speedSlider = new Slider(0.2, 4.0, 1);
+        speedSlider.setLayoutY(20);
+        speedPane.getChildren().addAll(speedLabel, speedSlider);
+        menuPane.getChildren().add(speedPane);
+        speedPane.setTranslateY(mainPane.getPrefHeight());
         
         
-        MenuBar speedBar = new MenuBar();
-        Menu speedMenu = new Menu();
-        ToggleGroup speedSwitch = new ToggleGroup();
-        RadioButton half       = new RadioButton("0.5x");
-        RadioButton normal     = new RadioButton("1x");
-        RadioButton one_half   = new RadioButton("1.5x");
-        RadioButton twice      = new RadioButton("2x");
-        RadioButton thrice     = new RadioButton("3x");
-        RadioButton ultraSpeed = new RadioButton("4x");
-        List<RadioButton> speeds = List.of(
-                half,
-                normal,
-                one_half,
-                twice,
-                thrice,
-                ultraSpeed);
-        speeds.forEach(s -> s.setToggleGroup(speedSwitch));
-        
-        ToggleButton oneOrTwo = new ToggleButton("speed");
-        oneOrTwo.setSelected(false);
-        oneOrTwo.setOnSwipeLeft(e -> SIM_SPEED *= 2);
-        
-        
-        menuPane.getChildren().addAll(speeds);
-        menuPane.getChildren().add(speedSlider);
-        menuPane.getChildren().add(oneOrTwo);
-        
+        mainPane.setLeft(menuPane);
         
         //------------------------------ CENTER -----------------------------
         
         VBox backgroundPane = new VBox();
 
         ImageView lcdPane = new ImageView();
-        //TODO : we don't need it, but prof says to use it
         lcdPane.setFitWidth(LcdController.LCD_WIDTH*2);
         lcdPane.setFitHeight(LcdController.LCD_HEIGHT*2);
         lcdPane.setPreserveRatio(true);
@@ -166,9 +169,8 @@ public class MainBonus extends Application{
         mainPane.setCenter(backgroundPane);
 
         
-        //++++++++++++++++++++++++++++++++++++++++++ FUNCTIONNEMENT +++++++++++++++++++++++++++++++++++++
-        
-        
+        //++++++++++++++++++++++++++++++++++++++++++ CONTROLLER +++++++++++++++++++++++++++++++++++++
+
         // ----------------------------------------- keyboard interaction -------------------------------
         Map<String, Joypad.Key> buttonMap = new HashMap<>(Map.of(
             "a", Joypad.Key.A,
@@ -192,25 +194,38 @@ public class MainBonus extends Application{
                 KeyCode.LEFT, left,
                 KeyCode.RIGHT, right));
         
-        backgroundPane.setOnKeyPressed(e -> {
-        
-            Joypad.Key p = buttonMap.getOrDefault(e.getText(),
-                    joystickMap.get(e.getCode()));
-            if (p != null)
-                gameboj.joypad().keyPressed(p);
-
-            Shape s = joyButtonMap.getOrDefault(e.getText(),
-                    joyArrowMap.get(e.getCode()));
-            if (s != null)
-                s.setFill(Color.DEEPPINK);
-
+        EventHandler<? extends Event> pauseHandler = (e -> {
+            if(pauseButton.isSelected()) {
+            simSpeed = 0;
+            backgroundPane.setOpacity(0.5);
+            }
+            else {
+                simSpeed = speedSlider.getValue();
+                backgroundPane.setOpacity(1);
+            }
         });
+        
+        EventHandler<KeyEvent> keyboardHandler = (e -> {
+            
+            if(e.getEventType() == KeyEvent.KEY_PRESSED) {
+                Joypad.Key p = buttonMap.getOrDefault(e.getText(),
+                        joystickMap.get(e.getCode()));
+                if (p != null) {
+                    gameboj.joypad().keyPressed(p);
 
-        
-        backgroundPane.setOnKeyReleased(e -> {    
-        
-            Joypad.Key p = buttonMap.getOrDefault(e.getText(),
-                    joystickMap.get(e.getCode()));
+                Shape s = joyButtonMap.getOrDefault(e.getText(),
+                        joyArrowMap.get(e.getCode()));
+                if (s != null)
+                    s.setFill(Color.DEEPPINK);
+                }
+                
+//                if(e.getCode().getName() == "P")
+//                    pauseHandler.handle((Event)e);
+            }
+            
+            else {
+                Joypad.Key p = buttonMap.getOrDefault(e.getText(),
+                        joystickMap.get(e.getCode()));
             if (p != null)
                 gameboj.joypad().keyReleased(p);
             
@@ -218,27 +233,47 @@ public class MainBonus extends Application{
                     joyArrowMap.get(e.getCode()));
             if (s != null)
                 s.setFill(Color.DARKSLATEBLUE);
+            }
             
+            
+            e.consume();                
+        
+        });
+        
+        
+        
+        // TODO shouldnt need to cast here its a shame
+        pauseButton.setOnAction((EventHandler<ActionEvent>) pauseHandler);
+        
+        //had to implement a filter otherwise the slider was receiving the bubbling event
+        mainPane.addEventFilter(KeyEvent.ANY, e -> {
+            keyboardHandler.handle(e);
+            e.consume();
         });
             
 
         
         // ------------------------------------------------------ gameboj simulation ---------------------------------
-        long beginning = System.nanoTime();
         AnimationTimer timer = new AnimationTimer() {
+        long before = System.nanoTime();
+        long gameboyCycles;
+        
             @Override
             public void handle(long now) {
-                long elapsed = now - beginning; //in nanosec
-                long gameboyCycles = (long) (elapsed * GameBoy.CYCLES_PER_NANOSEC * SIM_SPEED);
+                double deltaTime = (now - before);
+                before = now;
+                gameboyCycles += (long) (deltaTime * GameBoy.CYCLES_PER_NANOSEC * simSpeed);
                 gameboj.runUntil(gameboyCycles);
                 lcdPane.setImage(ImageConverter
                         .convert(gameboj.lcdController().currentImage()));
-            };
+                if(!pauseButton.isSelected())
+                simSpeed = speedSlider.getValue();
+            }
         };
         timer.start();        
         
-        Scene scene = new Scene(mainPane);
         
+        Scene scene = new Scene(mainPane);
         primaryStage.setScene(scene);
         primaryStage.sizeToScene();
         primaryStage.setTitle("gameboj");
