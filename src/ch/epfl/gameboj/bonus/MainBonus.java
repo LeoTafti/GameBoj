@@ -25,6 +25,7 @@ import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.Event.*;
 import javafx.event.EventHandler;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -36,6 +37,8 @@ import javafx.scene.control.RadioButton;
 import javafx.scene.control.RadioMenuItem;
 import javafx.scene.control.Slider;
 import javafx.scene.control.SplitPane;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.effect.BlendMode;
@@ -43,6 +46,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -54,6 +58,11 @@ import javafx.stage.Stage;
 public class MainBonus extends Application{
 
     private static double simSpeed = 1.0;
+    
+    private static final int[] argbColors = {0xff_ff_ff_00,
+            0xff_d3_d3_00,
+            0xff_a9_a9_00,
+            0xff_00_00_00};
     
     //TODO : remove all of this
     private static final String[] ROM_PATHS = { 
@@ -68,7 +77,8 @@ public class MainBonus extends Application{
             "roms/SuperMarioLand2.gb", //8
             "roms/LegendofZelda,TheLink'sAwakening.gb", //9
             };
-    private static final String ROM_PATH = ROM_PATHS[0];    
+    
+    private static final String ROM_PATH = ROM_PATHS[9];    
     
     public static void main(String[] args) {
        launch(args);
@@ -88,6 +98,7 @@ public class MainBonus extends Application{
         
         //----------------------------- LEFT --------------------------------
         VBox menuPane = new VBox();
+        menuPane.setPadding(new Insets(5));
         int menuWidth = 80;
         menuPane.setMinWidth(menuWidth);
 
@@ -96,17 +107,64 @@ public class MainBonus extends Application{
         Button startButton = new Button("Start");
         ToggleButton pauseButton = new ToggleButton("Pause");
         
+        TabPane colorTabs = new TabPane();
+        Tab customTab = new Tab("custom");
+        VBox colorMenuPane = new VBox();
+        Label colorLabel = new Label("Colorize!"),
+             redLabel   = new Label("Red"),
+             greenLabel = new Label("Blue"),
+             blueLabel  = new Label("Green"),
+             redVLabel   = new Label(), 
+             greenVLabel = new Label(),
+             blueVLabel  = new Label();
+        Slider redSlider = new Slider(0, 1, 1),
+             greenSlider = new Slider(0, 1, 1),
+             blueSlider = new Slider(0, 1, 1);
+        
+        redVLabel.textProperty().bind(redSlider.valueProperty().asString("%1$.2f"));
+        greenVLabel.textProperty().bind(greenSlider.valueProperty().asString("%1$.2f"));
+        blueVLabel.textProperty().bind(blueSlider.valueProperty().asString("%1$.2f"));
+        
+        Button colorButton = new Button("change color");
+        colorButton.setOnAction(e -> {
+            ImageConverter.setCustomColors(redSlider.getValue(), greenSlider.getValue(), blueSlider.getValue());
+        });
+        colorMenuPane.getChildren().addAll(colorLabel,
+                redLabel,redVLabel,redSlider,
+                greenLabel,greenVLabel,greenSlider,
+                blueLabel,blueVLabel, blueSlider,
+                colorButton);
+        customTab.setContent(colorMenuPane);
+        
+        Tab presetTab = new Tab("Presets");
+        GridPane palettePane = new GridPane();
+        palettePane.addColumn(0,
+                new Palette(ColorSet.GAMEBOY, "GAMEBOY"), 
+                new Palette(ColorSet.FOREST, "Forest"),
+                new Palette(ColorSet.CITY, "City"),
+                new Palette(ColorSet.DESERT, "Desert"));
+        palettePane.addColumn(1,
+                new Palette(ColorSet.SEASIDE, "Seaside"),
+                new Palette(ColorSet.MOUNTAIN, "Mountain"),
+                new Palette(ColorSet.WONDERLAND, "Wonderland"),
+                new Palette(ColorSet.Random, "Randomize!"));
+        presetTab.setContent(palettePane);
+        colorTabs.getTabs().addAll(customTab,presetTab);
+        menuPane.getChildren().add(colorTabs);
+        
         
         
         buttonPane.getChildren().addAll(startButton, pauseButton);
         menuPane.getChildren().add(buttonPane);
         
-        Pane speedPane = new Pane();
+        VBox speedPane = new VBox();
+        Slider speedSlider = new Slider(0.2, 4.0, 1);
         Label speedLabel = new Label("Speed");
         speedLabel.setLayoutX(menuWidth/2);
-        Slider speedSlider = new Slider(0.2, 4.0, 1);
-        speedSlider.setLayoutY(20);
-        speedPane.getChildren().addAll(speedLabel, speedSlider);
+        Label valueLabel = new Label("");
+        valueLabel.textProperty().bind(speedSlider.valueProperty().asString("%1$.2f x"));
+        
+        speedPane.getChildren().addAll(speedLabel, valueLabel, speedSlider);
         menuPane.getChildren().add(speedPane);
         speedPane.setTranslateY(mainPane.getPrefHeight());
         
@@ -151,6 +209,8 @@ public class MainBonus extends Application{
         backgroundPane.setMinHeight(LcdController.LCD_HEIGHT*4);
         
         joyPane.translateXProperty().bind(lcdPane.fitWidthProperty().subtract(LcdController.LCD_WIDTH).divide(2));
+       
+        
         //responsiveness attempt
 //        double lcdRatio = (LcdController.LCD_HEIGHT/(double)LcdController.LCD_WIDTH);
 //        lcdPane.fitWidthProperty().bind(backgroundPane.widthProperty());
@@ -220,7 +280,7 @@ public class MainBonus extends Application{
                 }
                 
 //                if(e.getCode().getName() == "P")
-//                    pauseHandler.handle((Event)e);
+//                    pauseHandler.handle((KeyEvent)e);
             }
             
             else {
