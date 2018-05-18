@@ -11,7 +11,6 @@ import java.util.Map;
 
 import javax.xml.stream.EventFilter;
 
-import com.sun.scenario.effect.Effect;
 import com.sun.tools.javac.util.List;
 
 import ch.epfl.gameboj.GameBoy;
@@ -21,6 +20,10 @@ import ch.epfl.gameboj.component.lcd.LcdController;
 import ch.epfl.gameboj.gui.ImageConverter;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.Event.*;
@@ -30,6 +33,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
@@ -42,9 +46,15 @@ import javafx.scene.control.TabPane;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.effect.BlendMode;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundImage;
+import javafx.scene.layout.BackgroundPosition;
+import javafx.scene.layout.BackgroundRepeat;
+import javafx.scene.layout.BackgroundSize;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
@@ -59,12 +69,6 @@ public class MainBonus extends Application{
 
     private static double simSpeed = 1.0;
     
-    private static final int[] argbColors = {0xff_ff_ff_00,
-            0xff_d3_d3_00,
-            0xff_a9_a9_00,
-            0xff_00_00_00};
-    
-    //TODO : remove all of this
     private static final String[] ROM_PATHS = { 
             "roms/Tetris.gb", //0
             "roms/2048.gb", //1
@@ -78,7 +82,9 @@ public class MainBonus extends Application{
             "roms/LegendofZelda,TheLink'sAwakening.gb", //9
             };
     
-    private static final String ROM_PATH = ROM_PATHS[9];    
+    private static String romPath = ROM_PATHS[9];
+    
+    public static GameBoy gameboj;
     
     public static void main(String[] args) {
        launch(args);
@@ -88,8 +94,11 @@ public class MainBonus extends Application{
     public void start(Stage primaryStage) throws Exception {
         
         //construct gameboy with given ROM
-        File romFile = new File(ROM_PATH);
-        GameBoy gameboj = new GameBoy(Cartridge.ofFile(romFile));
+        File romFile = new File(romPath);
+        gameboj = new GameBoy(Cartridge.ofFile(romFile));
+        
+        //++++++++++++++++++++++++++++++++++ INTRO TAB ++++++++++++++++++++++++
+        
         
         
         //++++++++++++++++++++++++++++++++++ LAYOUT +++++++++++++++++++++++++++
@@ -101,11 +110,23 @@ public class MainBonus extends Application{
         menuPane.setPadding(new Insets(5));
         int menuWidth = 80;
         menuPane.setMinWidth(menuWidth);
+        menuPane.setPadding(new Insets(10));
 
         VBox buttonPane = new VBox(); 
-        
+        buttonPane.setAlignment(Pos.CENTER);
         Button startButton = new Button("Start");
         ToggleButton pauseButton = new ToggleButton("Pause");
+        buttonPane.getChildren().addAll(startButton, pauseButton);
+        
+        
+        VBox speedPane = new VBox();
+        speedPane.setAlignment(Pos.CENTER);
+        Slider speedSlider = new Slider(0.2, 4.0, 1);
+        Label speedLabel = new Label("Speed");
+        speedLabel.setLayoutX(menuWidth/2);
+        Label valueLabel = new Label("");
+        valueLabel.textProperty().bind(speedSlider.valueProperty().asString("%1$.2f x"));
+        speedPane.getChildren().addAll(speedLabel, valueLabel, speedSlider);
         
         TabPane colorTabs = new TabPane();
         Tab customTab = new Tab("custom");
@@ -138,6 +159,11 @@ public class MainBonus extends Application{
         
         Tab presetTab = new Tab("Presets");
         GridPane palettePane = new GridPane();
+        Button randomize = new Button("Randomize!");
+        randomize.setOnAction(e -> { 
+            ColorSet.randomize();
+            ImageConverter.setColorSet(ColorSet.Random);
+        });
         palettePane.addColumn(0,
                 new Palette(ColorSet.GAMEBOY, "GAMEBOY"), 
                 new Palette(ColorSet.FOREST, "Forest"),
@@ -147,33 +173,23 @@ public class MainBonus extends Application{
                 new Palette(ColorSet.SEASIDE, "Seaside"),
                 new Palette(ColorSet.MOUNTAIN, "Mountain"),
                 new Palette(ColorSet.WONDERLAND, "Wonderland"),
-                new Palette(ColorSet.Random, "Randomize!"));
+                randomize);
         presetTab.setContent(palettePane);
-        colorTabs.getTabs().addAll(customTab,presetTab);
-        menuPane.getChildren().add(colorTabs);
+        colorTabs.getTabs().addAll(presetTab, customTab);
+//        menuPane.getChildren().add(colorTabs);
         
-        
-        
-        buttonPane.getChildren().addAll(startButton, pauseButton);
-        menuPane.getChildren().add(buttonPane);
-        
-        VBox speedPane = new VBox();
-        Slider speedSlider = new Slider(0.2, 4.0, 1);
-        Label speedLabel = new Label("Speed");
-        speedLabel.setLayoutX(menuWidth/2);
-        Label valueLabel = new Label("");
-        valueLabel.textProperty().bind(speedSlider.valueProperty().asString("%1$.2f x"));
-        
-        speedPane.getChildren().addAll(speedLabel, valueLabel, speedSlider);
-        menuPane.getChildren().add(speedPane);
-        speedPane.setTranslateY(mainPane.getPrefHeight());
-        
-        
+        menuPane.getChildren().addAll(buttonPane, speedPane, colorTabs);
         mainPane.setLeft(menuPane);
         
         //------------------------------ CENTER -----------------------------
         
         VBox backgroundPane = new VBox();
+        backgroundPane.setPadding(new Insets(20));
+        // TODO TODO j'arrive pas a utiliser le path local...
+        BackgroundImage gbImage = new BackgroundImage(new Image("https://d3nevzfk7ii3be.cloudfront.net/igi/CbGZEBGdw52JMsnB.large"),
+                BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, BackgroundSize.DEFAULT);
+        backgroundPane.setBackground(new Background(gbImage));
+//        backgroundPane.setStyle("-fx-background-image : url(roms/gameboy.jpeg);-fx-background-repeat: stretch;");
 
         ImageView lcdPane = new ImageView();
         lcdPane.setFitWidth(LcdController.LCD_WIDTH*2);
@@ -254,16 +270,22 @@ public class MainBonus extends Application{
                 KeyCode.LEFT, left,
                 KeyCode.RIGHT, right));
         
-        EventHandler<? extends Event> pauseHandler = (e -> {
-            if(pauseButton.isSelected()) {
-            simSpeed = 0;
-            backgroundPane.setOpacity(0.5);
-            }
+        Runnable togglePause = ()-> {
+            if(!pauseButton.isSelected()) {
+                simSpeed = 0;
+                pauseButton.setSelected(true);
+                backgroundPane.setOpacity(0.5);}
             else {
                 simSpeed = speedSlider.getValue();
+                pauseButton.setSelected(false);
                 backgroundPane.setOpacity(1);
             }
-        });
+            };
+        //why not??
+        pauseButton.setOnAction(e -> {togglePause.run();
+        System.out.println("coucou");
+        }
+        );
         
         EventHandler<KeyEvent> keyboardHandler = (e -> {
             
@@ -279,8 +301,8 @@ public class MainBonus extends Application{
                     s.setFill(Color.DEEPPINK);
                 }
                 
-//                if(e.getCode().getName() == "P")
-//                    pauseHandler.handle((KeyEvent)e);
+                if(e.getCode().getName() == "P")
+                    togglePause.run();
             }
             
             else {
@@ -300,21 +322,16 @@ public class MainBonus extends Application{
         
         });
         
-        
-        
-        // TODO shouldnt need to cast here its a shame
-        pauseButton.setOnAction((EventHandler<ActionEvent>) pauseHandler);
-        
         //had to implement a filter otherwise the slider was receiving the bubbling event
         mainPane.addEventFilter(KeyEvent.ANY, e -> {
             keyboardHandler.handle(e);
             e.consume();
         });
             
-
         
         // ------------------------------------------------------ gameboj simulation ---------------------------------
-        AnimationTimer timer = new AnimationTimer() {
+        AnimationTimer timer = new AnimationTimer()
+        {
         long before = System.nanoTime();
         long gameboyCycles;
         
@@ -330,7 +347,7 @@ public class MainBonus extends Application{
                 simSpeed = speedSlider.getValue();
             }
         };
-        timer.start();        
+        timer.start();
         
         
         Scene scene = new Scene(mainPane);

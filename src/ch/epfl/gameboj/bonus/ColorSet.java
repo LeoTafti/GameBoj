@@ -41,7 +41,7 @@ public final class ColorSet {
         Preconditions.checkArgument( 0 <= red && red <= 1);
         Preconditions.checkArgument( 0 <= green && green <= 1);
         Preconditions.checkArgument( 0 <= blue && blue <= 1);
-        double[] ratios = {blue, green, red};
+        double[] ratios = {green, blue, red};
         final int[] brightness = { 0xfd, 0xd3, 0xa9, 0x02};
 
         for (int c = 0; c < colors.length; c++) {
@@ -66,7 +66,16 @@ public final class ColorSet {
     }
     
     //TODO implement
-    public static void randomize( ) {}
+    public static void randomize( ) {
+        
+        for (int c = 0; c < Random.colors.length; c++) {
+            Random.colors[c] = 0xff_00_00_00;
+            for(int rgb = 0; rgb < 3; rgb++)
+                Random.colors[c] |= (int)(0xff * Math.random()) << (Byte.SIZE * rgb);
+        }
+        
+        
+    }
     
     @Override
     public String toString() {
@@ -80,53 +89,57 @@ public final class ColorSet {
         return sb.toString();
     }
     
-    public static final ColorSet GAMEBOY = new ColorSet(new int[] {0xff_ff_ff_ff,
+    public static final ColorSet GAMEBOY = new ColorSet(new int[] {
+            0xff_ff_ff_ff,
             0xff_d3_d3_d3,
             0xff_a9_a9_a9,
-            0xff_00_00_00});
+            0xff_00_00_00,
+            });
     
     
     public static final ColorSet DESERT = new ColorSet(new int[] {
-            0xff595358,
-            0xffC9ADA7,
+            0xffF2E9E4,
             0xffBFB48F,
-            0xffF2E9E4});
+            0xffC9ADA7,
+            0xff595358,
+            });
     
     public static final ColorSet FOREST = new ColorSet(new int[] {
-            0xff294936,
-            0xff856A5D,
+            0xffA3B18A,
             0xffC0CAAD,
-            0xffA3B18A});
+            0xff856A5D,
+            0xff294936,
+            });
     
     public static final ColorSet SEASIDE = new ColorSet(new int[] {
-            0xff315659,
-            0xff034078,
-            0xff1282A2,
-            0xffF0F0C9});
+            0xff8EE3EF,
+            0xffFFF1D0,
+            0xff9BC4CB,
+            0xff23395B,
+            });
     
     public static final ColorSet CITY = new ColorSet(new int[] {
-            0xff493843,
-            0xffF6F8FF,
+            0xff9CAFB7,
             0xffCCDAD1,
-            0xff9CAFB7});
+            0xffF6F8FF,
+            0xff493843,
+            });
     
     public static final ColorSet WONDERLAND = new ColorSet(new int[] {
+            0xff7CFEF0,
+            0xffE9FF70,
+            0xffccffcc,
             0xffFFA0FD,
-            0xff81F4E1,
-            0xffFFB86F,
-            0xffA9CEF4});
+            });
     
     public static final ColorSet MOUNTAIN = new ColorSet(new int[] {
-            0xff5D576B,
-            0xffA89F68,
+            0xffE5E6E4,
             0xffA6A2A2,
-            0xffE5E6E4});
+            0xffA89F68,
+            0xff5D576B,
+            });
     
-    public static ColorSet Random = new ColorSet(new int[] {
-      0xff,
-      0xff,
-      0xff,
-      0xff});
+    public static ColorSet Random = new ColorSet(Math.random(), Math.random(), Math.random());
 
     
 //    public static final ColorSet EMPTY = new ColorSet(new int[] {

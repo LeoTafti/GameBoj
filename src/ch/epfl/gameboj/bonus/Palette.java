@@ -27,7 +27,6 @@ public final class Palette extends VBox{
         this.colors = colors;
         
         button = new Button(name);
-        button.setAlignment(Pos.CENTER);
         button.setOnAction(e -> ImageConverter.setColorSet(colors));
         button.setPadding(new Insets(2));
         GridPane colorSquares = new GridPane();
@@ -44,6 +43,7 @@ public final class Palette extends VBox{
             colorSquares.add(squares.get(i), i%2, i/2);
         }
         getChildren().addAll(button, colorSquares);
+        setAlignment(Pos.CENTER);
     }
     
     
