@@ -15,7 +15,7 @@ public interface Preconditions {
      * @throws IllegalArgumentException
      *             if given logic expression is false
      */
-    static void checkArgument(boolean b) {
+    public static void checkArgument(boolean b) {
         if (!b)
             throw new IllegalArgumentException();
     }
@@ -29,7 +29,7 @@ public interface Preconditions {
      * @throws IllegalArgumentException
      *             if given value is bigger than 8 bits
      */
-    static int checkBits8(int v) {
+    public static int checkBits8(int v) {
         checkArgument(v >= 0x00 && v <= 0xFF);
         return v;
     }
@@ -43,7 +43,7 @@ public interface Preconditions {
      * @throws IllegalArgumentException
      *             if given value is bigger than 16 bits
      */
-    static int checkBits16(int v) {
+    public static int checkBits16(int v) {
         checkArgument(v >= 0x0000 && v <= 0xFFFF);
         return v;
     }
