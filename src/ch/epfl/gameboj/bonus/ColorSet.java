@@ -126,25 +126,32 @@ public final class ColorSet {
             });
     
     public static final ColorSet WONDERLAND = new ColorSet(new int[] {
-//            0xff7CFEF0,
-//            0xffE9FF70,
-//            0xffccffcc,
-//            0xffFFA0FD,
-//            0xffF4F4ED,
             0xffF9E6AA,
             0xffFF6400,
             0xff81009A,
             0xff0051A6
-            
-//            0xffF4F4ED
             });
     
     public static final ColorSet MOUNTAIN = new ColorSet(new int[] {
             0xffE5E6E4,
             0xffA6A2A2,
             0xffA89F68,
-            0xff5D576B,
+            0xff5D576B
             });
+    
+    public static final ColorSet PASTEL = new ColorSet(new int[] {
+            0xffF8D0E9,
+            0xff888888,
+            0xffBBF1F8,
+            0xff000000
+            });
+    
+    public static final ColorSet INVERTED  = new ColorSet(new int[] {
+            0xff000000,
+            0xffa9a9a9,
+            0xffd3d3d3,
+            0xffffffff
+    });
     
     public static ColorSet Random = new ColorSet(Math.random(), Math.random(), Math.random());
 

@@ -64,7 +64,7 @@ public class MainBonus extends Application{
             "roms/LegendofZelda,TheLink'sAwakening.gb", //9
             };
     
-    private static String romPath = ROM_PATHS[0];
+    private static String romPath = ROM_PATHS[9];
     
     public static GameBoy gameboj;
     
@@ -150,11 +150,13 @@ public class MainBonus extends Application{
                 new Palette(ColorSet.GAMEBOY, "GAMEBOY"), 
                 new Palette(ColorSet.FOREST, "Forest"),
                 new Palette(ColorSet.CITY, "City"),
-                new Palette(ColorSet.DESERT, "Desert"));
+                new Palette(ColorSet.DESERT, "Desert"),
+                new Palette(ColorSet.PASTEL, "Pastel"));
         palettePane.addColumn(1,
                 new Palette(ColorSet.SEASIDE, "Seaside"),
                 new Palette(ColorSet.MOUNTAIN, "Mountain"),
                 new Palette(ColorSet.WONDERLAND, "Wonderland"),
+                new Palette(ColorSet.INVERTED, "Inverted"),
                 randomize);
         presetTab.setContent(palettePane);
         colorTabs.getTabs().addAll(presetTab, customTab);
