@@ -64,7 +64,7 @@ public class MainBonus extends Application{
             "roms/LegendofZelda,TheLink'sAwakening.gb", //9
             };
     
-    private static String romPath = ROM_PATHS[5];
+    private static String romPath = ROM_PATHS[8];
     
     public static GameBoy gameboj;
     
