@@ -41,6 +41,12 @@ public final class MBC1 implements Component, Savable {
         this.ramMask = ramSize - 1;
         
         System.out.println("salut load");
+        
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            public void run() {
+                save();
+            }
+        });
         load();
     }
 
@@ -76,7 +82,8 @@ public final class MBC1 implements Component, Savable {
         case 5:
             if (ramEnabled) {
                 ram.write(ramAddress(address), data);
-                save();
+//                TODO : remove
+//                save();
             }
             break;
         }
