@@ -126,10 +126,17 @@ public final class ColorSet {
             });
     
     public static final ColorSet WONDERLAND = new ColorSet(new int[] {
-            0xff7CFEF0,
-            0xffE9FF70,
-            0xffccffcc,
-            0xffFFA0FD,
+//            0xff7CFEF0,
+//            0xffE9FF70,
+//            0xffccffcc,
+//            0xffFFA0FD,
+//            0xffF4F4ED,
+            0xffF9E6AA,
+            0xffFF6400,
+            0xff81009A,
+            0xff0051A6
+            
+//            0xffF4F4ED
             });
     
     public static final ColorSet MOUNTAIN = new ColorSet(new int[] {
