@@ -9,43 +9,25 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.xml.stream.EventFilter;
-
 import com.sun.tools.javac.util.List;
 
-import ch.epfl.gameboj.GameBoy;
+import ch.epfl.gameboj.bonus.save.GameBoy;
 import ch.epfl.gameboj.component.Joypad;
-import ch.epfl.gameboj.component.cartridge.Cartridge;
+import ch.epfl.gameboj.bonus.save.Cartridge;
 import ch.epfl.gameboj.component.lcd.LcdController;
 import ch.epfl.gameboj.gui.ImageConverter;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
-import javafx.event.Event;
-import javafx.event.Event.*;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.ButtonBar;
-import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.Menu;
-import javafx.scene.control.MenuBar;
-import javafx.scene.control.RadioButton;
-import javafx.scene.control.RadioMenuItem;
 import javafx.scene.control.Slider;
-import javafx.scene.control.SplitPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.ToggleButton;
-import javafx.scene.control.ToggleGroup;
-import javafx.scene.effect.BlendMode;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -82,7 +64,7 @@ public class MainBonus extends Application{
             "roms/LegendofZelda,TheLink'sAwakening.gb", //9
             };
     
-    private static String romPath = ROM_PATHS[9];
+    private static String romPath = ROM_PATHS[5];
     
     public static GameBoy gameboj;
     
