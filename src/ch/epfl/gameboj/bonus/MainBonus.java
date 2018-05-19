@@ -6,6 +6,7 @@
 package ch.epfl.gameboj.bonus;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,11 +19,15 @@ import ch.epfl.gameboj.component.lcd.LcdController;
 import ch.epfl.gameboj.gui.ImageConverter;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.control.Tab;
@@ -65,10 +70,9 @@ public class MainBonus extends Application{
             "roms/LegendofZelda,TheLink'sAwakening.gb", //9
             };
     
-    private static String romPath = ROM_PATHS[5];
+    private static String romPath;
     
     public static GameBoy gameboj;
-    
     public static void main(String[] args) {
        launch(args);
     }
@@ -76,12 +80,19 @@ public class MainBonus extends Application{
     @Override
     public void start(Stage primaryStage) throws Exception {
         
-        //construct gameboy with given ROM
-        File romFile = new File(romPath);
-        gameboj = new GameBoy(Cartridge.ofFile(romFile));
-        
-        //++++++++++++++++++++++++++++++++++ INTRO TAB ++++++++++++++++++++++++
-        
+        //++++++++++++++++++++++++++++++++++ INTRO WINDOW ++++++++++++++++++++++++
+        VBox powerPane = new VBox();
+        powerPane.setPrefHeight(LcdController.LCD_HEIGHT*2);
+        powerPane.setAlignment(Pos.CENTER);
+        //TODO ca marche pas
+        //j'ai fais une belle image d'intro
+        powerPane.setStyle("-fx-background-image : url(roms/powerImage.jpg);");
+        List<String> romNames = List.of("Tetris", "2048", "Snake", "Tasmania Story", "Flappy Boy", "Donkey Kong", "BomberMan", "Super Mario Land 1", 
+                "Super Mario Land 2", "Legend of Zelda, Link's Awakening");
+        Button power = new Button("POWER");
+        power.setDisable(true);
+        ChoiceBox romChoice = new ChoiceBox(FXCollections.observableArrayList(romNames));
+        powerPane.getChildren().addAll(romChoice, power);
         
         
         //++++++++++++++++++++++++++++++++++ LAYOUT +++++++++++++++++++++++++++
@@ -198,7 +209,6 @@ public class MainBonus extends Application{
         lcd.setFitWidth(LcdController.LCD_WIDTH*1.7);
         lcd.setFitHeight(LcdController.LCD_HEIGHT*1.7);
         lcd.setPreserveRatio(true);
-        lcd.setImage(ImageConverter.convert(gameboj.lcdController().currentImage()));
         
         interactivePane.setPadding(new Insets(30));
         interactivePane.setTop(lcd);
@@ -297,9 +307,50 @@ public class MainBonus extends Application{
 //        joyPane.set
         
         mainPane.setCenter(backgroundPane);
-
+        Scene powerScene = new Scene(powerPane);
+        Scene gbScene = new Scene(mainPane);
         
         //++++++++++++++++++++++++++++++++++++++++++ CONTROLLER +++++++++++++++++++++++++++++++++++++
+        
+        // ------------------------------------------------------ gameboj simulation ---------------------------------
+        AnimationTimer timer = new AnimationTimer()
+        {
+        long before = System.nanoTime();
+        long gameboyCycles;
+        
+            @Override
+            public void handle(long now) {
+                double deltaTime = (now - before);
+                before = now;
+                gameboyCycles += (long) (deltaTime * GameBoy.CYCLES_PER_NANOSEC * simSpeed);
+                gameboj.runUntil(gameboyCycles);
+                lcd.setImage(ImageConverter
+                        .convert(gameboj.lcdController().currentImage()));
+                if(!pauseButton.isSelected())
+                simSpeed = speedSlider.getValue();
+            }
+        };
+        
+        // --------------------------------- Power scene handling ----------------------------
+        romChoice.getSelectionModel().selectedIndexProperty().addListener( new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue ov,
+                    Number value, Number newValue) {
+                romPath = ROM_PATHS[(int) newValue];
+                try {
+                    gameboj = new GameBoy(Cartridge.ofFile(new File(romPath)));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                power.setDisable(false);
+            }
+        });
+        
+        power.setOnAction((e) -> {
+            lcd.setImage(ImageConverter.convert(gameboj.lcdController().currentImage()));
+            timer.start();
+            primaryStage.setScene(gbScene);
+        });
 
         // ----------------------------------------- keyboard interaction -------------------------------
         Map<String, Joypad.Key> buttonMap = new HashMap<>(Map.of(
@@ -383,29 +434,13 @@ public class MainBonus extends Application{
         });
             
         
-        // ------------------------------------------------------ gameboj simulation ---------------------------------
-        AnimationTimer timer = new AnimationTimer()
-        {
-        long before = System.nanoTime();
-        long gameboyCycles;
-        
-            @Override
-            public void handle(long now) {
-                double deltaTime = (now - before);
-                before = now;
-                gameboyCycles += (long) (deltaTime * GameBoy.CYCLES_PER_NANOSEC * simSpeed);
-                gameboj.runUntil(gameboyCycles);
-                lcd.setImage(ImageConverter
-                        .convert(gameboj.lcdController().currentImage()));
-                if(!pauseButton.isSelected())
-                simSpeed = speedSlider.getValue();
-            }
-        };
-        timer.start();
+
         
         
-        Scene scene = new Scene(mainPane);
-        primaryStage.setScene(scene);
+        
+        
+        
+        primaryStage.setScene(powerScene);
         primaryStage.sizeToScene();
         primaryStage.setTitle("gameboj");
         primaryStage.show();
