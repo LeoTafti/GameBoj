@@ -33,6 +33,7 @@ import javafx.scene.control.Slider;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.ToggleButton;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelReader;
@@ -72,7 +73,7 @@ public class MainBonus extends Application{
     
     private static String romPath;
     
-    public static GameBoy gameboj;
+    public  GameBoy gameboj;
     public static void main(String[] args) {
        launch(args);
     }
@@ -332,21 +333,18 @@ public class MainBonus extends Application{
         };
         
         // --------------------------------- Power scene handling ----------------------------
-        romChoice.getSelectionModel().selectedIndexProperty().addListener( new ChangeListener<Number>() {
-            @Override
-            public void changed(ObservableValue ov,
-                    Number value, Number newValue) {
-                romPath = ROM_PATHS[(int) newValue];
-                try {
-                    gameboj = new GameBoy(Cartridge.ofFile(new File(romPath)));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                power.setDisable(false);
-            }
-        });
+//        romChoice.setOn
+        romChoice.getSelectionModel().selectedIndexProperty()
+            .addListener( (ov, v, nv) -> power.setDisable(false));
         
         power.setOnAction((e) -> {
+            romPath = ROM_PATHS[(int) romChoice.getSelectionModel().getSelectedIndex()];
+            //TODO i dont want this try catch
+            try {
+                gameboj = new GameBoy(Cartridge.ofFile(new File(romPath)));
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
             lcd.setImage(ImageConverter.convert(gameboj.lcdController().currentImage()));
             timer.start();
             primaryStage.setScene(gbScene);
@@ -386,11 +384,8 @@ public class MainBonus extends Application{
                 backgroundPane.setOpacity(1);
             }
             };
-        //why not??
-        pauseButton.setOnAction(e -> {togglePause.run();
-        System.out.println("coucou");
-        }
-        );
+            
+        pauseButton.setOnAction(e -> togglePause.run());
         
         EventHandler<KeyEvent> keyboardHandler = (e -> {
             
@@ -422,9 +417,8 @@ public class MainBonus extends Application{
                 s.setFill(Color.DARKSLATEBLUE);
             }
             
+            e.consume();   
             
-            e.consume();                
-        
         });
         
         //had to implement a filter otherwise the slider was receiving the bubbling event
@@ -432,14 +426,11 @@ public class MainBonus extends Application{
             keyboardHandler.handle(e);
             e.consume();
         });
+        
+        
+        
+        // +++++++++++++++++++++++++++++++ FINAL SETUP +++++++++++++++++++++++
             
-        
-
-        
-        
-        
-        
-        
         primaryStage.setScene(powerScene);
         primaryStage.sizeToScene();
         primaryStage.setTitle("gameboj");
