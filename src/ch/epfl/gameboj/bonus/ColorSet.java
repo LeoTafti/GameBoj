@@ -140,9 +140,9 @@ public final class ColorSet {
             });
     
     public static final ColorSet PASTEL = new ColorSet(new int[] {
-            0xffF8D0E9,
+            0xffF8DEE9,
             0xff888888,
-            0xffBBF1F8,
+            0xffD6F1F8,
             0xff000000
             });
     

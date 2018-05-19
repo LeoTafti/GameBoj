@@ -11,9 +11,9 @@ import java.util.Map;
 
 import com.sun.tools.javac.util.List;
 
+import ch.epfl.gameboj.bonus.save.Cartridge;
 import ch.epfl.gameboj.bonus.save.GameBoy;
 import ch.epfl.gameboj.component.Joypad;
-import ch.epfl.gameboj.bonus.save.Cartridge;
 import ch.epfl.gameboj.component.lcd.LcdController;
 import ch.epfl.gameboj.gui.ImageConverter;
 import javafx.animation.AnimationTimer;
@@ -30,21 +30,22 @@ import javafx.scene.control.TabPane;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.image.PixelReader;
+import javafx.scene.image.WritableImage;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundImage;
-import javafx.scene.layout.BackgroundPosition;
-import javafx.scene.layout.BackgroundRepeat;
-import javafx.scene.layout.BackgroundSize;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
+import javafx.scene.transform.Rotate;
 import javafx.stage.Stage;
 
 public class MainBonus extends Application{
@@ -64,7 +65,7 @@ public class MainBonus extends Application{
             "roms/LegendofZelda,TheLink'sAwakening.gb", //9
             };
     
-    private static String romPath = ROM_PATHS[9];
+    private static String romPath = ROM_PATHS[5];
     
     public static GameBoy gameboj;
     
@@ -167,48 +168,117 @@ public class MainBonus extends Application{
         
         //------------------------------ CENTER -----------------------------
         
-        VBox backgroundPane = new VBox();
-        backgroundPane.setPadding(new Insets(20));
+//        VBox backgroundPane = new VBox();
+//        backgroundPane.setPadding(new Insets(20));
         // TODO TODO j'arrive pas a utiliser le path local...
-        BackgroundImage gbImage = new BackgroundImage(new Image("https://d3nevzfk7ii3be.cloudfront.net/igi/CbGZEBGdw52JMsnB.large"),
-                BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, BackgroundSize.DEFAULT);
-        backgroundPane.setBackground(new Background(gbImage));
+//        BackgroundImage gbImage = new BackgroundImage(new Image("https://d3nevzfk7ii3be.cloudfront.net/igi/CbGZEBGdw52JMsnB.large"),
+//                BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, BackgroundSize.DEFAULT);
+//        backgroundPane.setBackground(new Background(gbImage));
+        
+        Pane backgroundPane = new StackPane();
+        backgroundPane.setPadding(new Insets(50));
+        
+        Image gbImage = new Image("https://d3nevzfk7ii3be.cloudfront.net/igi/CbGZEBGdw52JMsnB.large");
+        PixelReader reader = gbImage.getPixelReader();
+        WritableImage newGbImage = new WritableImage(reader, 240, 40, 320, 520);
+        ImageView resizedGbImage = new ImageView(newGbImage);
+        backgroundPane.getChildren().add(resizedGbImage);
+        
+        
+        BorderPane interactivePane = new BorderPane();
+        backgroundPane.getChildren().add(interactivePane);
+//        BackgroundImage gbImage = new BackgroundImage(new Image("https://d3nevzfk7ii3be.cloudfront.net/igi/CbGZEBGdw52JMsnB.large"),
+//              BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, BackgroundSize.DEFAULT);
+//        backgroundPane.setBackground(new Background(gbImage));
+                
+        
 //        backgroundPane.setStyle("-fx-background-image : url(roms/gameboy.jpeg);-fx-background-repeat: stretch;");
 
-        ImageView lcdPane = new ImageView();
-        lcdPane.setFitWidth(LcdController.LCD_WIDTH*2);
-        lcdPane.setFitHeight(LcdController.LCD_HEIGHT*2);
-        lcdPane.setPreserveRatio(true);
-        lcdPane.setImage(ImageConverter.convert(gameboj.lcdController().currentImage()));
+        ImageView lcd = new ImageView();
+        lcd.setFitWidth(LcdController.LCD_WIDTH*1.7);
+        lcd.setFitHeight(LcdController.LCD_HEIGHT*1.7);
+        lcd.setPreserveRatio(true);
+        lcd.setImage(ImageConverter.convert(gameboj.lcdController().currentImage()));
         
-        Pane joyPane = new Pane();
+        interactivePane.setPadding(new Insets(30));
+        interactivePane.setTop(lcd);
+
+        BorderPane joyPane = new BorderPane();
         
-        int shortS = 15, longS = 25, radius = 15, middleMargin = 30, topMargin = 20, interSpace = 10;
+        GridPane arrows = new GridPane();
+        Rectangle up = new Rectangle(28, 28),
+                down = new Rectangle(28, 28),
+                right = new Rectangle(28, 28),
+                left = new Rectangle(28, 28),
+                middle = new Rectangle(28, 28);
         
-        Rectangle up = new Rectangle( interSpace*2+longS, topMargin, shortS, longS),
-            down     = new Rectangle( interSpace*2+longS, topMargin + interSpace*2 + longS + shortS, shortS, longS),
-            left     = new Rectangle( interSpace, topMargin + interSpace + longS, longS, shortS),
-            right    = new Rectangle( interSpace*3 + longS + shortS, topMargin + interSpace + longS, longS, shortS);
+        arrows.add(up, 1, 0);
+        arrows.add(down, 1, 2);
+        arrows.add(left, 0, 1);
+        arrows.add(right, 2, 1);
+        arrows.add(middle, 1, 1);
         
-        Circle a   = new Circle(interSpace*2 + longS*2 + shortS + middleMargin + radius + interSpace , topMargin*2 + radius , radius),
-            b      = new Circle(interSpace*2 + longS*2 + shortS + middleMargin , topMargin*2 + interSpace + shortS + longS, radius),
-            select = new Circle(interSpace*4 + longS + shortS, topMargin + interSpace*2 + longS*3 + shortS, radius/2),
-            start  = new Circle(interSpace*3 + longS + shortS + middleMargin, topMargin + interSpace*2 + longS*3 + shortS, radius/2);
+        joyPane.setLeft(arrows);
         
-        List<Shape> joyShapes = List.of(up, down, left, right, a, b, start, select);
+        
+        AnchorPane buttons = new AnchorPane();
+//        GridPane buttons = new GridPane();
+        Circle a = new Circle(20);
+        Circle b = new Circle(20);
+        
+        AnchorPane.setTopAnchor(a, 0.);
+        AnchorPane.setLeftAnchor(a, 51.);
+        AnchorPane.setTopAnchor(b, 25.);
+        AnchorPane.setLeftAnchor(b, 0.);
+        
+        buttons.getChildren().addAll(a, b);
+        buttons.setPadding(new Insets(4, 0, 0, 10));
+//        buttons.add(a, 1, 0);
+//        buttons.add(b, 0, 1);
+        
+        joyPane.setRight(buttons);
+        
+        
+        HBox options = new HBox();
+        Rectangle start = new Rectangle(40, 8);
+        start.getTransforms().add(new Rotate(-27));
+        Rectangle select = new Rectangle(40, 8);
+        select.getTransforms().add(new Rotate(-27));
+        
+        options.getChildren().addAll(select, start);
+        
+        options.setSpacing(15.);
+        options.setPadding(new Insets(-54, 0, 0, 73));
+        options.setMaxHeight(20.);
+        joyPane.setBottom(options);
+//        joyPane.setAlignment(options, Pos.CENTER);
+//        Pane joyPane = new Pane();
+//        
+//        int shortS = 15, longS = 25, radius = 15, middleMargin = 30, topMargin = 20, interSpace = 10;
+//        
+//        Rectangle up = new Rectangle( interSpace*2+longS, topMargin, shortS, longS),
+//            down     = new Rectangle( interSpace*2+longS, topMargin + interSpace*2 + longS + shortS, shortS, longS),
+//            left     = new Rectangle( interSpace, topMargin + interSpace + longS, longS, shortS),
+//            right    = new Rectangle( interSpace*3 + longS + shortS, topMargin + interSpace + longS, longS, shortS);
+//        
+//        Circle a   = new Circle(interSpace*2 + longS*2 + shortS + middleMargin + radius + interSpace , topMargin*2 + radius , radius),
+//            b      = new Circle(interSpace*2 + longS*2 + shortS + middleMargin , topMargin*2 + interSpace + shortS + longS, radius),
+//            select = new Circle(interSpace*4 + longS + shortS, topMargin + interSpace*2 + longS*3 + shortS, radius/2),
+//            start  = new Circle(interSpace*3 + longS + shortS + middleMargin, topMargin + interSpace*2 + longS*3 + shortS, radius/2);
+//        
+        List<Shape> joyShapes = List.of(up, down, left, right, a, b, start, select, middle);
         
         joyShapes.forEach(s -> {
             s.setFill(Color.DARKSLATEBLUE);
             s.setLayoutY(LcdController.LCD_HEIGHT/2.0);
         });
-            
-        joyPane.getChildren().addAll(joyShapes);
         
+        joyPane.setPadding(new Insets(37, 0, 0, 2));
+        interactivePane.setCenter(joyPane);
         
-        backgroundPane.getChildren().addAll(lcdPane, joyPane);
-        backgroundPane.setMinHeight(LcdController.LCD_HEIGHT*4);
+//        backgroundPane.setMinHeight(LcdController.LCD_HEIGHT*4);
         
-        joyPane.translateXProperty().bind(lcdPane.fitWidthProperty().subtract(LcdController.LCD_WIDTH).divide(2));
+//        joyPane.translateXProperty().bind(lcd.fitWidthProperty().subtract(LcdController.LCD_WIDTH).divide(2));
        
         
         //responsiveness attempt
@@ -325,7 +395,7 @@ public class MainBonus extends Application{
                 before = now;
                 gameboyCycles += (long) (deltaTime * GameBoy.CYCLES_PER_NANOSEC * simSpeed);
                 gameboj.runUntil(gameboyCycles);
-                lcdPane.setImage(ImageConverter
+                lcd.setImage(ImageConverter
                         .convert(gameboj.lcdController().currentImage()));
                 if(!pauseButton.isSelected())
                 simSpeed = speedSlider.getValue();
