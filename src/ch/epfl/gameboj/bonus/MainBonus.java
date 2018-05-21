@@ -19,8 +19,8 @@ import ch.epfl.gameboj.component.lcd.LcdController;
 import ch.epfl.gameboj.gui.ImageConverter;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -32,8 +32,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
-import javafx.scene.control.ToggleButton;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.TabPane.TabClosingPolicy;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelReader;
@@ -56,7 +55,8 @@ import javafx.stage.Stage;
 
 public class MainBonus extends Application{
 
-    private static double simSpeed = 1.0;
+    private static DoubleProperty simSpeedProperty = new SimpleDoubleProperty(1);
+    private static boolean paused = false;
     
     private static final String[] ROM_PATHS = { 
             "roms/Tetris.gb", //0
@@ -82,19 +82,21 @@ public class MainBonus extends Application{
     public void start(Stage primaryStage) throws Exception {
         
         //++++++++++++++++++++++++++++++++++ INTRO WINDOW ++++++++++++++++++++++++
-        VBox powerPane = new VBox();
-        powerPane.setPrefHeight(LcdController.LCD_HEIGHT*2);
-        powerPane.setAlignment(Pos.CENTER);
-        //TODO ca marche pas
-        //j'ai fais une belle image d'intro
-        powerPane.setStyle("-fx-background-image : url(roms/powerImage.jpg);");
+        StackPane powerPane = new StackPane();
+        ImageView powerBg = new ImageView("file:powerImage.jpg");
+        
         List<String> romNames = List.of("Tetris", "2048", "Snake", "Tasmania Story", "Flappy Boy", "Donkey Kong", "BomberMan", "Super Mario Land 1", 
                 "Super Mario Land 2", "Legend of Zelda, Link's Awakening");
+        
         Button power = new Button("POWER");
         power.setDisable(true);
         ChoiceBox romChoice = new ChoiceBox(FXCollections.observableArrayList(romNames));
-        powerPane.getChildren().addAll(romChoice, power);
+        HBox powerChoice = new HBox();
+        powerChoice.getChildren().addAll(romChoice, power);
+        powerChoice.setAlignment(Pos.CENTER);
+        powerChoice.setPadding(new Insets(25, 0, 0, 0));
         
+        powerPane.getChildren().addAll(powerBg, powerChoice);
         
         //++++++++++++++++++++++++++++++++++ LAYOUT +++++++++++++++++++++++++++
         BorderPane mainPane = new BorderPane();
@@ -107,27 +109,29 @@ public class MainBonus extends Application{
         menuPane.setMinWidth(menuWidth);
         menuPane.setPadding(new Insets(10));
 
-        VBox buttonPane = new VBox(); 
-        buttonPane.setAlignment(Pos.CENTER);
-        Button startButton = new Button("Start");
-        ToggleButton pauseButton = new ToggleButton("Pause");
-        buttonPane.getChildren().addAll(startButton, pauseButton);
-        
+//        VBox buttonPane = new VBox(); 
+//        buttonPane.setAlignment(Pos.CENTER);
+//        Button startButton = new Button("Start");
+//        ToggleButton pauseButton = new ToggleButton("Pause");
+//        buttonPane.getChildren().addAll(startButton, pauseButton);
+//        
         
         VBox speedPane = new VBox();
         speedPane.setAlignment(Pos.CENTER);
+        speedPane.setPadding(new Insets(10));
         Slider speedSlider = new Slider(0.2, 4.0, 1);
         Label speedLabel = new Label("Speed");
         speedLabel.setLayoutX(menuWidth/2);
         Label valueLabel = new Label("");
         valueLabel.textProperty().bind(speedSlider.valueProperty().asString("%1$.2f x"));
+        simSpeedProperty.bind(speedSlider.valueProperty());
         speedPane.getChildren().addAll(speedLabel, valueLabel, speedSlider);
         
         TabPane colorTabs = new TabPane();
-        Tab customTab = new Tab("custom");
+        colorTabs.setTabClosingPolicy(TabClosingPolicy.UNAVAILABLE);
+        Tab customTab = new Tab("Custom");
         VBox colorMenuPane = new VBox();
-        Label colorLabel = new Label("Colorize!"),
-             redLabel   = new Label("Red"),
+        Label redLabel   = new Label("Red"),
              greenLabel = new Label("Blue"),
              blueLabel  = new Label("Green"),
              redVLabel   = new Label(), 
@@ -145,7 +149,7 @@ public class MainBonus extends Application{
         colorButton.setOnAction(e -> {
             ImageConverter.setCustomColors(redSlider.getValue(), greenSlider.getValue(), blueSlider.getValue());
         });
-        colorMenuPane.getChildren().addAll(colorLabel,
+        colorMenuPane.getChildren().addAll(
                 redLabel,redVLabel,redSlider,
                 greenLabel,greenVLabel,greenSlider,
                 blueLabel,blueVLabel, blueSlider,
@@ -173,20 +177,14 @@ public class MainBonus extends Application{
                 randomize);
         presetTab.setContent(palettePane);
         colorTabs.getTabs().addAll(presetTab, customTab);
-//        menuPane.getChildren().add(colorTabs);
         
-        menuPane.getChildren().addAll(buttonPane, speedPane, colorTabs);
+//        menuPane.getChildren().addAll(buttonPane, speedPane, colorTabs);
+        menuPane.getChildren().addAll(speedPane, colorTabs);
         mainPane.setLeft(menuPane);
         
         //------------------------------ CENTER -----------------------------
-        
-//        VBox backgroundPane = new VBox();
-//        backgroundPane.setPadding(new Insets(20));
+
         // TODO TODO j'arrive pas a utiliser le path local...
-//        BackgroundImage gbImage = new BackgroundImage(new Image("https://d3nevzfk7ii3be.cloudfront.net/igi/CbGZEBGdw52JMsnB.large"),
-//                BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, BackgroundSize.DEFAULT);
-//        backgroundPane.setBackground(new Background(gbImage));
-        
         Pane backgroundPane = new StackPane();
         backgroundPane.setPadding(new Insets(50));
         
@@ -199,12 +197,6 @@ public class MainBonus extends Application{
         
         BorderPane interactivePane = new BorderPane();
         backgroundPane.getChildren().add(interactivePane);
-//        BackgroundImage gbImage = new BackgroundImage(new Image("https://d3nevzfk7ii3be.cloudfront.net/igi/CbGZEBGdw52JMsnB.large"),
-//              BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, BackgroundSize.DEFAULT);
-//        backgroundPane.setBackground(new Background(gbImage));
-                
-        
-//        backgroundPane.setStyle("-fx-background-image : url(roms/gameboy.jpeg);-fx-background-repeat: stretch;");
 
         ImageView lcd = new ImageView();
         lcd.setFitWidth(LcdController.LCD_WIDTH*1.7);
@@ -233,7 +225,6 @@ public class MainBonus extends Application{
         
         
         AnchorPane buttons = new AnchorPane();
-//        GridPane buttons = new GridPane();
         Circle a = new Circle(20);
         Circle b = new Circle(20);
         
@@ -244,8 +235,6 @@ public class MainBonus extends Application{
         
         buttons.getChildren().addAll(a, b);
         buttons.setPadding(new Insets(4, 0, 0, 10));
-//        buttons.add(a, 1, 0);
-//        buttons.add(b, 0, 1);
         
         joyPane.setRight(buttons);
         
@@ -262,21 +251,7 @@ public class MainBonus extends Application{
         options.setPadding(new Insets(-54, 0, 0, 73));
         options.setMaxHeight(20.);
         joyPane.setBottom(options);
-//        joyPane.setAlignment(options, Pos.CENTER);
-//        Pane joyPane = new Pane();
-//        
-//        int shortS = 15, longS = 25, radius = 15, middleMargin = 30, topMargin = 20, interSpace = 10;
-//        
-//        Rectangle up = new Rectangle( interSpace*2+longS, topMargin, shortS, longS),
-//            down     = new Rectangle( interSpace*2+longS, topMargin + interSpace*2 + longS + shortS, shortS, longS),
-//            left     = new Rectangle( interSpace, topMargin + interSpace + longS, longS, shortS),
-//            right    = new Rectangle( interSpace*3 + longS + shortS, topMargin + interSpace + longS, longS, shortS);
-//        
-//        Circle a   = new Circle(interSpace*2 + longS*2 + shortS + middleMargin + radius + interSpace , topMargin*2 + radius , radius),
-//            b      = new Circle(interSpace*2 + longS*2 + shortS + middleMargin , topMargin*2 + interSpace + shortS + longS, radius),
-//            select = new Circle(interSpace*4 + longS + shortS, topMargin + interSpace*2 + longS*3 + shortS, radius/2),
-//            start  = new Circle(interSpace*3 + longS + shortS + middleMargin, topMargin + interSpace*2 + longS*3 + shortS, radius/2);
-//        
+
         List<Shape> joyShapes = List.of(up, down, left, right, a, b, start, select, middle);
         
         joyShapes.forEach(s -> {
@@ -286,26 +261,6 @@ public class MainBonus extends Application{
         
         joyPane.setPadding(new Insets(37, 0, 0, 2));
         interactivePane.setCenter(joyPane);
-        
-//        backgroundPane.setMinHeight(LcdController.LCD_HEIGHT*4);
-        
-//        joyPane.translateXProperty().bind(lcd.fitWidthProperty().subtract(LcdController.LCD_WIDTH).divide(2));
-       
-        
-        //responsiveness attempt
-//        double lcdRatio = (LcdController.LCD_HEIGHT/(double)LcdController.LCD_WIDTH);
-//        lcdPane.fitWidthProperty().bind(backgroundPane.widthProperty());
-//        lcdPane.fitHeightProperty().bind(lcdPane.fitWidthProperty().multiply(lcdRatio));
-        
-//        joyPane.minWidthProperty().bind(lcdPane.fitWidthProperty());
-//        joyPane.maxWidthProperty().bind(lcdPane.fitWidthProperty());
-//        joyPane.minHeightProperty().bind(lcdPane.fitHeightProperty());
-//        joyPane.maxHeightProperty().bind(lcdPane.fitHeightProperty());
-        
-//        joyPane.translateYProperty().bind(lcdPane.fitHe);
-//        joyPane.scaleXProperty().bind(lcdPane.fitWidthProperty().divide(LcdController.LCD_WIDTH));
-//        joyPane.scaleYProperty().bind(lcdPane.fitHeightProperty().divide(LcdController.LCD_HEIGHT).multiply(lcdRatio));
-//        joyPane.set
         
         mainPane.setCenter(backgroundPane);
         Scene powerScene = new Scene(powerPane);
@@ -323,12 +278,12 @@ public class MainBonus extends Application{
             public void handle(long now) {
                 double deltaTime = (now - before);
                 before = now;
-                gameboyCycles += (long) (deltaTime * GameBoy.CYCLES_PER_NANOSEC * simSpeed);
+                gameboyCycles += (long) (deltaTime * GameBoy.CYCLES_PER_NANOSEC * simSpeedProperty.doubleValue());
                 gameboj.runUntil(gameboyCycles);
                 lcd.setImage(ImageConverter
                         .convert(gameboj.lcdController().currentImage()));
-                if(!pauseButton.isSelected())
-                simSpeed = speedSlider.getValue();
+//                if(!pauseButton.isSelected())
+//                    simSpeed = speedSlider.getValue();
             }
         };
         
@@ -348,6 +303,7 @@ public class MainBonus extends Application{
             lcd.setImage(ImageConverter.convert(gameboj.lcdController().currentImage()));
             timer.start();
             primaryStage.setScene(gbScene);
+            primaryStage.centerOnScreen();
         });
 
         // ----------------------------------------- keyboard interaction -------------------------------
@@ -373,19 +329,32 @@ public class MainBonus extends Application{
                 KeyCode.LEFT, left,
                 KeyCode.RIGHT, right));
         
-        Runnable togglePause = ()-> {
-            if(!pauseButton.isSelected()) {
-                simSpeed = 0;
-                pauseButton.setSelected(true);
-                backgroundPane.setOpacity(0.5);}
-            else {
-                simSpeed = speedSlider.getValue();
-                pauseButton.setSelected(false);
-                backgroundPane.setOpacity(1);
-            }
+//        Runnable togglePause = ()-> {
+//            if(!pauseButton.isSelected()) {
+//                simSpeed = 0;
+//                pauseButton.setSelected(true);
+//                backgroundPane.setOpacity(0.5);}
+//            else {
+//                simSpeed = speedSlider.getValue();
+//                pauseButton.setSelected(false);
+//                backgroundPane.setOpacity(1);
+//            }
+//            };
+            Runnable togglePause = ()-> {
+                if(!paused) {
+                    simSpeedProperty.unbind();
+                    simSpeedProperty.set(0);
+                    backgroundPane.setOpacity(0.5);
+                }
+                else {
+                    simSpeedProperty.bind(speedSlider.valueProperty());
+                    backgroundPane.setOpacity(1);
+                }
+                
+                paused = !paused;
             };
-            
-        pauseButton.setOnAction(e -> togglePause.run());
+//            
+//        pauseButton.setOnAction(e -> togglePause.run());
         
         EventHandler<KeyEvent> keyboardHandler = (e -> {
             
@@ -435,6 +404,7 @@ public class MainBonus extends Application{
         primaryStage.sizeToScene();
         primaryStage.setTitle("gameboj");
         primaryStage.show();
+        primaryStage.setResizable(false);
         backgroundPane.requestFocus();
     }
 

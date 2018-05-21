@@ -28,7 +28,6 @@ public final class MBC1 implements Component, Savable {
     private final int romMask, ramMask;
 
     public MBC1(Rom rom, int ramSize) {
-        System.out.println("mbc1");
         this.rom = rom;
         this.ram = new Ram(ramSize);
 
@@ -39,8 +38,6 @@ public final class MBC1 implements Component, Savable {
 
         this.romMask = rom.size() - 1;
         this.ramMask = ramSize - 1;
-        
-        System.out.println("salut load");
         
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
@@ -80,11 +77,8 @@ public final class MBC1 implements Component, Savable {
             mode = Bits.test(data, 0) ? Mode.MODE_1 : Mode.MODE_0;
             break;
         case 5:
-            if (ramEnabled) {
+            if (ramEnabled)
                 ram.write(ramAddress(address), data);
-//                TODO : remove
-//                save();
-            }
             break;
         }
     }
@@ -107,26 +101,24 @@ public final class MBC1 implements Component, Savable {
 
     @Override
     public void save() {
-        System.out.println("save()");
         File saveFile = new File("save.sav");
         try(OutputStream s = new FileOutputStream(saveFile)){
             ram.toFile(s);
         }
         catch (IOException e) {
-            //Do smth
+            //TODO : Do smth
         }
     }
 
     @Override
     public void load() {
-        System.out.println("load()");
         File saveFile = new File("save.sav");
         try(InputStream s = new FileInputStream(saveFile)){
             ram.fromFile(s.readAllBytes());
         }
         catch (IOException e) {
             System.out.println("problem load()");
-            //Do smth
+            //TODO : Do smth
         }
     }
 }
