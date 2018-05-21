@@ -428,17 +428,19 @@ public class MainBonus extends Application{
       } catch (IOException e1) {
           e1.printStackTrace();
       }
-
+      
       timer = new AnimationTimer() {
-          long before = System.nanoTime();
+      long before = System.nanoTime();
+      long gameboyCycles;
+      
           @Override
           public void handle(long now) {
-              long elapsed = now - before; //in nanosec
-              long gameboyCycles = (long) (elapsed * GameBoy.CYCLES_PER_NANOSEC);
+              double elapsed = now - before;
+              before = now;
+              gameboyCycles += (long) (elapsed * GameBoy.CYCLES_PER_NANOSEC * simSpeedProperty.doubleValue());
               gameboj.runUntil(gameboyCycles);
-              lcd.setImage(ImageConverter
-                      .convert(gameboj.lcdController().currentImage()));
-          };
+              lcd.setImage(ImageConverter.convert(gameboj.lcdController().currentImage()));
+          }
       };
       timer.start(); 
     }
