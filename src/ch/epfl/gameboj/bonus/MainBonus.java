@@ -57,6 +57,7 @@ public class MainBonus extends Application{
 
     private static DoubleProperty simSpeedProperty = new SimpleDoubleProperty(1);
     private static boolean paused = false;
+    private static AnimationTimer timer;
     
     private static final String[] ROM_PATHS = { 
             "roms/Tetris.gb", //0
@@ -72,8 +73,8 @@ public class MainBonus extends Application{
             };
     
     private static String romPath;
+    private GameBoy gameboj; //TODO : was public ??
     
-    public  GameBoy gameboj;
     public static void main(String[] args) {
        launch(args);
     }
@@ -81,7 +82,7 @@ public class MainBonus extends Application{
     @Override
     public void start(Stage primaryStage) throws Exception {
         
-        //++++++++++++++++++++++++++++++++++ INTRO WINDOW ++++++++++++++++++++++++
+        //++++++++++++++++++++++++++++++++++ Power Scene ++++++++++++++++++++++++
         StackPane powerPane = new StackPane();
         ImageView powerBg = new ImageView("file:powerImage.jpg");
         
@@ -98,27 +99,27 @@ public class MainBonus extends Application{
         
         powerPane.getChildren().addAll(powerBg, powerChoice);
         
-        //++++++++++++++++++++++++++++++++++ LAYOUT +++++++++++++++++++++++++++
+        romChoice.getSelectionModel().selectedIndexProperty()
+        .addListener( (ov, v, nv) -> power.setDisable(false));
+
+        //++++++++++++++++++++++++++++++++++ Gameboy Window +++++++++++++++++++++++++++
         BorderPane mainPane = new BorderPane();
-        mainPane.setPrefHeight(LcdController.LCD_HEIGHT*2);
-        
-        //----------------------------- LEFT --------------------------------
+        //----------------------------- Menu --------------------------------
         VBox menuPane = new VBox();
-        menuPane.setPadding(new Insets(5));
         int menuWidth = 80;
         menuPane.setMinWidth(menuWidth);
         menuPane.setPadding(new Insets(10));
 
-//        VBox buttonPane = new VBox(); 
-//        buttonPane.setAlignment(Pos.CENTER);
-//        Button startButton = new Button("Start");
-//        ToggleButton pauseButton = new ToggleButton("Pause");
-//        buttonPane.getChildren().addAll(startButton, pauseButton);
-//        
-        
+
+        //----------------------------- Power Off Button --------------------------------
+        Button powerOff = new Button("Power Off");
+        powerOff.setMaxWidth(Integer.MAX_VALUE);
+
+        //----------------------------- Speed Slider --------------------------------
         VBox speedPane = new VBox();
         speedPane.setAlignment(Pos.CENTER);
         speedPane.setPadding(new Insets(10));
+
         Slider speedSlider = new Slider(0.2, 4.0, 1);
         Label speedLabel = new Label("Speed");
         speedLabel.setLayoutX(menuWidth/2);
@@ -126,11 +127,38 @@ public class MainBonus extends Application{
         valueLabel.textProperty().bind(speedSlider.valueProperty().asString("%1$.2f x"));
         simSpeedProperty.bind(speedSlider.valueProperty());
         speedPane.getChildren().addAll(speedLabel, valueLabel, speedSlider);
-        
+
+
+        //----------------------------- Color choosing tabs --------------------------------
         TabPane colorTabs = new TabPane();
         colorTabs.setTabClosingPolicy(TabClosingPolicy.UNAVAILABLE);
+        
+        //----------------------------- Preset tab --------------------------------
+        Tab presetTab = new Tab("Presets");
+        GridPane presetPane = new GridPane();
+        Button randomize = new Button("Randomize!");
+        randomize.setOnAction(e -> { 
+            ColorSet.randomize();
+            ImageConverter.setColorSet(ColorSet.Random);
+        });
+        presetPane.addColumn(0,
+                new Palette(ColorSet.GAMEBOY, "GAMEBOY"), 
+                new Palette(ColorSet.FOREST, "Forest"),
+                new Palette(ColorSet.CITY, "City"),
+                new Palette(ColorSet.DESERT, "Desert"),
+                new Palette(ColorSet.PASTEL, "Pastel"));
+        presetPane.addColumn(1,
+                new Palette(ColorSet.SEASIDE, "Seaside"),
+                new Palette(ColorSet.MOUNTAIN, "Mountain"),
+                new Palette(ColorSet.WONDERLAND, "Wonderland"),
+                new Palette(ColorSet.INVERTED, "Inverted"),
+                randomize);
+        presetTab.setContent(presetPane);
+        
+        //----------------------------- Custom tab --------------------------------
         Tab customTab = new Tab("Custom");
-        VBox colorMenuPane = new VBox();
+        VBox customPane = new VBox();
+        
         Label redLabel   = new Label("Red"),
              greenLabel = new Label("Blue"),
              blueLabel  = new Label("Green"),
@@ -145,49 +173,30 @@ public class MainBonus extends Application{
         greenVLabel.textProperty().bind(greenSlider.valueProperty().asString("%1$.2f"));
         blueVLabel.textProperty().bind(blueSlider.valueProperty().asString("%1$.2f"));
         
-        Button colorButton = new Button("change color");
+        Button colorButton = new Button("Change color");
         colorButton.setOnAction(e -> {
             ImageConverter.setCustomColors(redSlider.getValue(), greenSlider.getValue(), blueSlider.getValue());
         });
-        colorMenuPane.getChildren().addAll(
+        colorTabs.getTabs().addAll(presetTab, customTab);
+        
+        customPane.getChildren().addAll(
                 redLabel,redVLabel,redSlider,
                 greenLabel,greenVLabel,greenSlider,
                 blueLabel,blueVLabel, blueSlider,
                 colorButton);
-        customTab.setContent(colorMenuPane);
+        customTab.setContent(customPane);
         
-        Tab presetTab = new Tab("Presets");
-        GridPane palettePane = new GridPane();
-        Button randomize = new Button("Randomize!");
-        randomize.setOnAction(e -> { 
-            ColorSet.randomize();
-            ImageConverter.setColorSet(ColorSet.Random);
-        });
-        palettePane.addColumn(0,
-                new Palette(ColorSet.GAMEBOY, "GAMEBOY"), 
-                new Palette(ColorSet.FOREST, "Forest"),
-                new Palette(ColorSet.CITY, "City"),
-                new Palette(ColorSet.DESERT, "Desert"),
-                new Palette(ColorSet.PASTEL, "Pastel"));
-        palettePane.addColumn(1,
-                new Palette(ColorSet.SEASIDE, "Seaside"),
-                new Palette(ColorSet.MOUNTAIN, "Mountain"),
-                new Palette(ColorSet.WONDERLAND, "Wonderland"),
-                new Palette(ColorSet.INVERTED, "Inverted"),
-                randomize);
-        presetTab.setContent(palettePane);
-        colorTabs.getTabs().addAll(presetTab, customTab);
-        
-//        menuPane.getChildren().addAll(buttonPane, speedPane, colorTabs);
-        menuPane.getChildren().addAll(speedPane, colorTabs);
+
+        menuPane.getChildren().addAll(powerOff, speedPane, colorTabs);
         mainPane.setLeft(menuPane);
         
-        //------------------------------ CENTER -----------------------------
+        //------------------------------ Gameboy Pane -----------------------------
 
-        // TODO TODO j'arrive pas a utiliser le path local...
         Pane backgroundPane = new StackPane();
         backgroundPane.setPadding(new Insets(50));
         
+        //------------------------------ Background Image -----------------------------
+        // TODO TODO j'arrive pas a utiliser le path local...
         Image gbImage = new Image("https://d3nevzfk7ii3be.cloudfront.net/igi/CbGZEBGdw52JMsnB.large");
         PixelReader reader = gbImage.getPixelReader();
         WritableImage newGbImage = new WritableImage(reader, 240, 40, 320, 520);
@@ -195,19 +204,24 @@ public class MainBonus extends Application{
         backgroundPane.getChildren().add(resizedGbImage);
         
         
+        //------------------------------ Interactive Pane -----------------------------
         BorderPane interactivePane = new BorderPane();
+        interactivePane.setPadding(new Insets(30));
         backgroundPane.getChildren().add(interactivePane);
-
+        
+        //------------------------------ LCD -----------------------------
         ImageView lcd = new ImageView();
         lcd.setFitWidth(LcdController.LCD_WIDTH*1.7);
         lcd.setFitHeight(LcdController.LCD_HEIGHT*1.7);
         lcd.setPreserveRatio(true);
         
-        interactivePane.setPadding(new Insets(30));
         interactivePane.setTop(lcd);
 
+        //------------------------------ JoyPane -----------------------------
         BorderPane joyPane = new BorderPane();
         
+        
+        //------------------------------ Arrows -----------------------------
         GridPane arrows = new GridPane();
         Rectangle up = new Rectangle(28, 28),
                 down = new Rectangle(28, 28),
@@ -223,7 +237,7 @@ public class MainBonus extends Application{
         
         joyPane.setLeft(arrows);
         
-        
+        //------------------------------ A, B -----------------------------
         AnchorPane buttons = new AnchorPane();
         Circle a = new Circle(20);
         Circle b = new Circle(20);
@@ -238,7 +252,7 @@ public class MainBonus extends Application{
         
         joyPane.setRight(buttons);
         
-        
+        //------------------------------ start, select -----------------------------
         HBox options = new HBox();
         Rectangle start = new Rectangle(40, 8);
         start.getTransforms().add(new Rotate(-27));
@@ -250,8 +264,10 @@ public class MainBonus extends Application{
         options.setSpacing(15.);
         options.setPadding(new Insets(-54, 0, 0, 73));
         options.setMaxHeight(20.);
+        
         joyPane.setBottom(options);
 
+        
         List<Shape> joyShapes = List.of(up, down, left, right, a, b, start, select, middle);
         
         joyShapes.forEach(s -> {
@@ -260,6 +276,8 @@ public class MainBonus extends Application{
         });
         
         joyPane.setPadding(new Insets(37, 0, 0, 2));
+        
+        
         interactivePane.setCenter(joyPane);
         
         mainPane.setCenter(backgroundPane);
@@ -269,43 +287,24 @@ public class MainBonus extends Application{
         //++++++++++++++++++++++++++++++++++++++++++ CONTROLLER +++++++++++++++++++++++++++++++++++++
         
         // ------------------------------------------------------ gameboj simulation ---------------------------------
-        AnimationTimer timer = new AnimationTimer()
-        {
-        long before = System.nanoTime();
-        long gameboyCycles;
+//        AnimationTimer timer = new AnimationTimer()
+//        {
+//        long before = System.nanoTime();
+//        long gameboyCycles;
+//        
+//            @Override
+//            public void handle(long now) {
+//                double deltaTime = (now - before);
+//                before = now;
+//                gameboyCycles += (long) (deltaTime * GameBoy.CYCLES_PER_NANOSEC * simSpeedProperty.doubleValue());
+//                gameboj.runUntil(gameboyCycles);
+//                lcd.setImage(ImageConverter
+//                        .convert(gameboj.lcdController().currentImage()));
+////                if(!pauseButton.isSelected())
+////                    simSpeed = speedSlider.getValue();
+//            }
+//        };
         
-            @Override
-            public void handle(long now) {
-                double deltaTime = (now - before);
-                before = now;
-                gameboyCycles += (long) (deltaTime * GameBoy.CYCLES_PER_NANOSEC * simSpeedProperty.doubleValue());
-                gameboj.runUntil(gameboyCycles);
-                lcd.setImage(ImageConverter
-                        .convert(gameboj.lcdController().currentImage()));
-//                if(!pauseButton.isSelected())
-//                    simSpeed = speedSlider.getValue();
-            }
-        };
-        
-        // --------------------------------- Power scene handling ----------------------------
-//        romChoice.setOn
-        romChoice.getSelectionModel().selectedIndexProperty()
-            .addListener( (ov, v, nv) -> power.setDisable(false));
-        
-        power.setOnAction((e) -> {
-            romPath = ROM_PATHS[(int) romChoice.getSelectionModel().getSelectedIndex()];
-            //TODO i dont want this try catch
-            try {
-                gameboj = new GameBoy(Cartridge.ofFile(new File(romPath)));
-            } catch (IOException e1) {
-                e1.printStackTrace();
-            }
-            lcd.setImage(ImageConverter.convert(gameboj.lcdController().currentImage()));
-            timer.start();
-            primaryStage.setScene(gbScene);
-            primaryStage.centerOnScreen();
-        });
-
         // ----------------------------------------- keyboard interaction -------------------------------
         Map<String, Joypad.Key> buttonMap = new HashMap<>(Map.of(
             "a", Joypad.Key.A,
@@ -379,33 +378,71 @@ public class MainBonus extends Application{
                         joystickMap.get(e.getCode()));
             if (p != null)
                 gameboj.joypad().keyReleased(p);
-            
+
             Shape s = joyButtonMap.getOrDefault(e.getText(),
                     joyArrowMap.get(e.getCode()));
             if (s != null)
                 s.setFill(Color.DARKSLATEBLUE);
             }
-            
+
             e.consume();   
-            
+
         });
-        
+
         //had to implement a filter otherwise the slider was receiving the bubbling event
         mainPane.addEventFilter(KeyEvent.ANY, e -> {
             keyboardHandler.handle(e);
             e.consume();
         });
-        
-        
-        
+
+
+
         // +++++++++++++++++++++++++++++++ FINAL SETUP +++++++++++++++++++++++
-            
+        power.setOnAction((e) -> {
+            //TODO : having to give lcd is not clean, but what can I do...
+            startGame(romChoice.getSelectionModel().getSelectedIndex(), lcd);
+            primaryStage.setScene(gbScene);
+            primaryStage.centerOnScreen();
+        });
+
+        powerOff.setOnAction(e -> {
+            endGame();
+            primaryStage.setScene(powerScene);
+        });
+
+
         primaryStage.setScene(powerScene);
         primaryStage.sizeToScene();
-        primaryStage.setTitle("gameboj");
+        primaryStage.setTitle("Gameboj");
         primaryStage.show();
         primaryStage.setResizable(false);
         backgroundPane.requestFocus();
     }
 
+    private void startGame(int romIndex, ImageView lcd) {
+        romPath = ROM_PATHS[romIndex];
+      //TODO i dont want this try catch
+      try {
+          gameboj = new GameBoy(Cartridge.ofFile(new File(romPath)));
+      } catch (IOException e1) {
+          e1.printStackTrace();
+      }
+
+      timer = new AnimationTimer() {
+          long before = System.nanoTime();
+          @Override
+          public void handle(long now) {
+              long elapsed = now - before; //in nanosec
+              long gameboyCycles = (long) (elapsed * GameBoy.CYCLES_PER_NANOSEC);
+              gameboj.runUntil(gameboyCycles);
+              lcd.setImage(ImageConverter
+                      .convert(gameboj.lcdController().currentImage()));
+          };
+      };
+      timer.start(); 
+    }
+    
+    private void endGame() {
+        timer.stop();
+    }
 }

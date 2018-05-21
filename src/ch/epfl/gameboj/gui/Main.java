@@ -95,8 +95,6 @@ public class Main extends Application{
             public void handle(long now) {
                 long elapsed = now - start; //in nanosec
                 long gameboyCycles = (long) (elapsed * GameBoy.CYCLES_PER_NANOSEC);
-                System.out.println("e" + elapsed);
-                System.out.println("c" + gameboyCycles);
                 gameboj.runUntil(gameboyCycles);
                 imageView.setImage(ImageConverter
                         .convert(gameboj.lcdController().currentImage()));
