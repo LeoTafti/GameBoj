@@ -158,6 +158,7 @@ public class MainBonus extends Application{
         //----------------------------- Custom tab --------------------------------
         Tab customTab = new Tab("Custom");
         VBox customPane = new VBox();
+        customPane.setPadding(new Insets(10, 0, 0, 0));
         
         Label redLabel   = new Label("Red"),
              greenLabel = new Label("Blue"),
@@ -174,9 +175,12 @@ public class MainBonus extends Application{
         blueVLabel.textProperty().bind(blueSlider.valueProperty().asString("%1$.2f"));
         
         Button colorButton = new Button("Change color");
+        colorButton.setMaxWidth(Integer.MAX_VALUE);
         colorButton.setOnAction(e -> {
             ImageConverter.setCustomColors(redSlider.getValue(), greenSlider.getValue(), blueSlider.getValue());
         });
+        VBox.setMargin(colorButton, new Insets(20, 0, 0, 0));
+        
         colorTabs.getTabs().addAll(presetTab, customTab);
         
         customPane.getChildren().addAll(
