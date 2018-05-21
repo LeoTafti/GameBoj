@@ -408,6 +408,7 @@ public class MainBonus extends Application{
         powerOff.setOnAction(e -> {
             endGame();
             primaryStage.setScene(powerScene);
+            primaryStage.centerOnScreen();
         });
 
 
