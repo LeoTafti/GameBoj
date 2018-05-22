@@ -27,8 +27,8 @@ public final class Joypad implements Component {
     private final Cpu cpu;
 
     /**
-     * Contructor for gameboy's joypad consisting of 8 buttons
-     * 4 cardinal directions and A, B, select, start
+     * Constructor for gameboy's joypad consisting of 8 buttons
+     * 4 arrows and A, B, select, start
      * @param cpu the gameboy's cpu
      */
     public Joypad(Cpu cpu) {
@@ -36,6 +36,9 @@ public final class Joypad implements Component {
         lines = new int[2];
     }
 
+    /* (non-Javadoc)
+     * @see ch.epfl.gameboj.component.Component#read(int)
+     */
     @Override
     public int read(int address) {
         Preconditions.checkBits16(address);
@@ -45,6 +48,9 @@ public final class Joypad implements Component {
         return NO_DATA;
     }
 
+    /* (non-Javadoc)
+     * @see ch.epfl.gameboj.component.Component#write(int, int)
+     */
     @Override
     public void write(int address, int data) {
         Preconditions.checkBits16(address);
@@ -58,7 +64,7 @@ public final class Joypad implements Component {
     }
 
     /**
-     * simulates key press on gameboy
+     * Simulates GameBoy's key pressed
      * @param key one of the joypad's keys
      */
     public void keyPressed(Key key) {
@@ -66,7 +72,7 @@ public final class Joypad implements Component {
     }
 
     /**
-     * simulates key release on gameboy
+     * Simulates GameBoy's key released
      * @param key one of joypad's keys
      */
     public void keyReleased(Key key) {
@@ -74,7 +80,7 @@ public final class Joypad implements Component {
     }
 
     /**
-     * updates joypad's state and potentially notifies cpu
+     * Updates joypad's state and potentially requests Cpu
      * @param key one of joypad's keys
      * @param newValue true for pressed, false for released
      */
@@ -84,21 +90,25 @@ public final class Joypad implements Component {
         int keyIndex = key.ordinal();
         int line = keyIndex / LINE_SIZE;
 
-        // update key pressed
+        // Update key pressed
         lines[line] = Bits.set(lines[line], keyIndex % LINE_SIZE, newValue);
         
         int newP1 = computeP1();
-        if(oldP1 != newP1) //4 msb haven't changed
+        if(oldP1 != newP1) //4 msb haven't changed in between, no need to clip the 4 lsb
             cpu.requestInterrupt(Interrupt.JOYPAD);
     }
     
+    /**
+     * Computes P1 from stored lines and selection bits values
+     * @return corresponding P1
+     */
     private int computeP1() {
         int line0 = select0 ? lines[0] : 0;
         int line1 = select1 ? lines[1] : 0;
         
-        int s0 = select0 ? 1 : 0;
-        int s1 = select1 ? 1 : 0;
+        int sBit0 = select0 ? 1 : 0;
+        int sBit1 = select1 ? 1 : 0;
         
-        return (s1<<5) | (s0<<4) | (line0 | line1);
+        return (sBit1<<5) | (sBit0<<4) | (line0 | line1);
     }
 }

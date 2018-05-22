@@ -287,7 +287,7 @@ public final class LcdImageLine {
      * 
      * @param index
      *            pixel index in line
-     * @return pixel color at given index
+     * @return pixel color at given index (color is 0 if pixel is transparent)
      * 
      * @throws IndexOutOfBoundsException
      *             if given index is out-of-bounds (not in [0, size()[ )

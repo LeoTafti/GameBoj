@@ -16,7 +16,7 @@ import ch.epfl.gameboj.component.memory.Rom;
 
 public final class Cartridge implements Component {
 
-    private static final int MBC_TYPE_ADDRESS = 0x147;
+    private static final int MBC_TYPE_ADDRESS = 0x147, RAM_SIZE_ADDRESS = 0x149;
     private static final int[] RAM_SIZES = {0, 2048, 8192, 32768};
     
     private final Component mbc;
@@ -50,10 +50,14 @@ public final class Cartridge implements Component {
         try (FileInputStream s = new FileInputStream(romFile)) {
             byte[] data = s.readAllBytes();
             int mbcType = data[MBC_TYPE_ADDRESS];
+            
             Preconditions.checkArgument(mbcType >= 0 && mbcType <= 3);
+            
             if(mbcType == 0) 
                 return new Cartridge(new MBC0(new Rom(data)));
-            else return new Cartridge(new MBC1(new Rom(data), RAM_SIZES[mbcType] ));
+            else {
+                return new Cartridge(new MBC1(new Rom(data), RAM_SIZES[data[RAM_SIZE_ADDRESS]]));
+            }
         }
     }
 

@@ -14,26 +14,27 @@ import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.bits.BitVector;
 
 public final class LcdImage {
-    
+
     private final List<LcdImageLine> lines;
 
     /**
      * Constructor for LcdImage
      * 
-     * @param width
-     *            number of pixels in a line
-     * @param height
-     *            number of pixels in a column
      * @param lines
      *            the image's lines
      * @throws IllegalArgumentException
-     *             if dimensions are invalid (if either negative or null)
-     *             or if lines are not of width-length
+     *             if lines consists of 0 lines, or lines are 0 pixels long, or
+     *             lines length in pixels isn't a multiple of Integer.SIZE (32)
+     * @throws NullPointerException
+     *             if given lines is null
+     * 
      */
     public LcdImage(List<LcdImageLine> lines) {
+        // Note that we deliberately DO NOT check that each line has the same
+        // length, since it is too costly (cf. Piazza post @239)
         Objects.requireNonNull(lines);
-        Preconditions.checkArgument(lines.get(0).size() % Integer.SIZE == 0);
         Preconditions.checkArgument(lines.get(0).size() > 0 && lines.size() > 0);
+        Preconditions.checkArgument(lines.get(0).size() % Integer.SIZE == 0);
 
         this.lines = Collections.unmodifiableList(new ArrayList<>(lines));
     }
@@ -42,53 +43,44 @@ public final class LcdImage {
         private final List<LcdImageLine> lines = new ArrayList<>();
 
         /**
-         * Creates LcdImage builder for and image of given width and given
+         * Creates LcdImage builder for an image of given width and given
          * height with default pixel color 0
          * 
          * @param height
          *            number of lines
          * @param width
          *            number of pixels in a line
-         * @throws IllegalAgumentException if width is not a multiple of Integer.SIZE
-         *            or if height(width) is negative or null
+         * @throws IllegalAgumentException
+         *             if width is not a multiple of Integer.SIZE or if
+         *             height(width) is negative or null
          */
         public Builder(int width, int height) {
             Preconditions.checkArgument(width % Integer.SIZE == 0);
             Preconditions.checkArgument(width > 0 && height > 0);
-            
+
             for (int i = 0; i < height; ++i)
                 lines.add(new LcdImageLine(new BitVector(width, false),
                         new BitVector(width, false),
                         new BitVector(width, false)));
         }
-        
-        /**
-         * Gets Image Builder's width in pixels
-         * @return builder width
-         */
-        private int width() { return lines.get(0).size(); }
-        
-        /**
-         * Gets Image Builder's height in pixels
-         * @return builder height
-         */
-        private int height() { return lines.size(); }
+
 
         /**
          * Sets a line of LcdImage as given line
          * 
          * @param index
-         *            line to set (between 0 and height)
+         *            index of line to set
          * @param newLine
-         *            will replace the line at index, must be of the same length
-         * @throws IndexOutOfBoundsException
-         *             if index is negative or bigger than height
+         *            replaces the previous line at given index
+         * @return this
+         *            allows method chaining
          * @throws IllegalArgumentException
-         *             if line does not have a correct size
-         *         IndexOutOfBoundException if given index is out-of-bounds, ie not in [0, height[
+         *             if line length doesn't match image width (in pixels)
+         * @throws IndexOutOfBoundException if given index is out-of-bounds,
+         *             ie not in [0, height[
          */
-        public LcdImage.Builder setLine(int index, LcdImageLine newLine) {
-            Preconditions.checkArgument(newLine.size() <= width());
+        public Builder setLine(int index, LcdImageLine newLine) {
+            Preconditions.checkArgument(newLine.size() == width());
             Objects.checkIndex(index, height());
             lines.set(index, newLine);
             return this;
@@ -96,15 +88,35 @@ public final class LcdImage {
 
         /**
          * Builds LcdImage out of the previously set lines
-         * @return constructed LcdImage
+         * 
+         * @return new LcdImage of Builder's lines
          */
         public LcdImage build() {
             return new LcdImage(lines);
+        }
+        
+        /**
+         * Gets Image Builder's width in pixels
+         * 
+         * @return Builder's width
+         */
+        private int width() {
+            return lines.get(0).size();
+        }
+        
+        /**
+         * Gets Image Builder's height in pixels
+         * 
+         * @return Builder's height
+         */
+        private int height() {
+            return lines.size();
         }
     }
 
     /**
      * Gets image width in pixels
+     * 
      * @return image width
      */
     public int width() {
@@ -113,6 +125,7 @@ public final class LcdImage {
 
     /**
      * Gets image height in pixels
+     * 
      * @return image height
      */
     public int height() {
@@ -126,9 +139,16 @@ public final class LcdImage {
      *            horizontal position of pixel starting from the LEFT
      * @param y
      *            vertical position of pixel starting from TOP
-     * @return a gray-scale color as either 0, 1, 2 or 3
+     * @return a gray-scale color, encoded on two bits
+     * 
+     * @throws IndexOutOfBoundsException
+     *            if x isn't in [0, width()[
+     *            if y isn't in [0, height()[
      */
     public int get(int x, int y) {
+        Objects.checkIndex(x, width());
+        Objects.checkIndex(y, height());
+        
         return lines.get(y).pixelColor(x);
     }
 
@@ -139,9 +159,7 @@ public final class LcdImage {
      */
     @Override
     public boolean equals(Object o) {
-        
-        return (o instanceof LcdImage
-                && lines.equals(((LcdImage) o).lines));
+        return (o instanceof LcdImage && lines.equals(((LcdImage) o).lines));
     }
 
     /*
