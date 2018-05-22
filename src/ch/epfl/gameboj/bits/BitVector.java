@@ -108,7 +108,7 @@ public final class BitVector {
          * Sets byte at given index of pending BitVector
          * 
          * @param index
-         *            bitVector's Index in BYTES (i.e 8-th bit is index 1)
+         *            bitVector's Index in BYTES
          * @param b
          *            byte value to add
          * 

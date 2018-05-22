@@ -315,7 +315,7 @@ public class MainBonus extends Application{
             "b", Joypad.Key.B,
             "s", Joypad.Key.START,
             " ", Joypad.Key.SELECT));
-        Map<KeyCode, Joypad.Key> joystickMap = new HashMap<>(Map.of(
+        Map<KeyCode, Joypad.Key> arrowsMap = new HashMap<>(Map.of(
             KeyCode.UP, Joypad.Key.UP,
             KeyCode.DOWN, Joypad.Key.DOWN,
             KeyCode.LEFT, Joypad.Key.LEFT,
@@ -363,7 +363,7 @@ public class MainBonus extends Application{
             
             if(e.getEventType() == KeyEvent.KEY_PRESSED) {
                 Joypad.Key p = buttonMap.getOrDefault(e.getText(),
-                        joystickMap.get(e.getCode()));
+                        arrowsMap.get(e.getCode()));
                 if (p != null) {
                     gameboj.joypad().keyPressed(p);
 
@@ -379,7 +379,7 @@ public class MainBonus extends Application{
             
             else {
                 Joypad.Key p = buttonMap.getOrDefault(e.getText(),
-                        joystickMap.get(e.getCode()));
+                        arrowsMap.get(e.getCode()));
             if (p != null)
                 gameboj.joypad().keyReleased(p);
 

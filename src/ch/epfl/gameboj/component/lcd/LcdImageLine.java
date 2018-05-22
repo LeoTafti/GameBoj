@@ -40,10 +40,10 @@ public final class LcdImageLine {
          * Constructor for Builder : allows to create a new LcdImage
          * incrementally
          * 
-         * @param size size of line, in pixels (must be multiple of 32)
+         * @param size size of line, in pixels
          * 
          * @throws IllegalArgumentException
-         *             if size isn't a multiple of 32
+         *             if given size isn't bigger than 0 and a multiple of Integer.SIZE (32)
          */
         public Builder(int size) {
             Preconditions.checkArgument(size > 0 && size % Integer.SIZE == 0);
@@ -64,11 +64,12 @@ public final class LcdImageLine {
          * @return this, allows method chaining
          * 
          * @throws IndexOutOfBoundsException
-         *             if given index is out-of-bounds (ie. not in [0, size()[ )
-         *             IllegalArgumentException if mb or lb isn't an 8-bit value
+         *             if given index is out-of-bounds (ie. not in [0, size()/Byte.SIZE[ )       
+         * @throws IllegalArgumentException
+         *             if mb or lb isn't an 8-bit value
          */
         public Builder setBytes(int index, int mb, int lb) {
-            Objects.checkIndex(index, size());
+            Objects.checkIndex(index, size()/Byte.SIZE);
             Preconditions.checkBits8(mb);
             Preconditions.checkBits8(lb);
 
@@ -85,9 +86,8 @@ public final class LcdImageLine {
         public LcdImageLine build() {
             BitVector msb = msbB.build();
             BitVector lsb = lsbB.build();
-            BitVector opacity = lsb.or(msb);
 
-            return new LcdImageLine(msb, lsb, opacity);
+            return new LcdImageLine(msb, lsb, lsb.or(msb));
         }
 
         /**
@@ -148,8 +148,7 @@ public final class LcdImageLine {
      * @see BitVector#shift(int delta)
      */
     public LcdImageLine shift(int delta) {
-        return new LcdImageLine(msb.shift(delta), lsb.shift(delta),
-                opacity.shift(delta));
+        return new LcdImageLine(msb.shift(delta), lsb.shift(delta), opacity.shift(delta));
     }
 
     /**
@@ -163,7 +162,7 @@ public final class LcdImageLine {
      * @return Extracted line, as new LcdImageLine
      * 
      * @throws IllegalArgumentException
-     *             if given size isn't a multiple of Integer.SIZE (32)
+     *             if given size isn't bigger than 0 and a multiple of Integer.SIZE (32)
      * 
      * @see BitVector#extractWrapped(int fromIndex, int size)
      */
@@ -210,6 +209,7 @@ public final class LcdImageLine {
             BitVector maskLsb = colorLsb == 1 ? lsb : lsb.not();
             BitVector changePos = maskMsb.and(maskLsb);
 
+            //If same do nothing, otherwise flip (using xor) bits at required change positions
             newMsb = colorMsb == newColorMsb ? newMsb : newMsb.xor(changePos);
             newLsb = colorLsb == newColorLsb ? newLsb : newLsb.xor(changePos);
         }
@@ -221,7 +221,13 @@ public final class LcdImageLine {
      * Composes a line by taking pixels from top if they are opaque, otherwise
      * pixels from this
      * 
+     * @param top
+     *            same-sized line, to be "placed" on top
+     * 
      * @return new LcdImageLine composed from this and that according to top opacity
+     * 
+     * @throws IllegalArgumentException
+     *            if given top line isn't same-sized as this
      */
     public LcdImageLine below(LcdImageLine top) {
         return below(top, top.opacity);
@@ -232,12 +238,15 @@ public final class LcdImageLine {
      * this index is 1, otherwise pixels from this
      * 
      * @param top
-     *            same-sized line, "placed" on top
+     *            same-sized line, to be "placed" on top
      * @param opacity
      *            opacity BitVector, allows to choose which pixel we want to
      *            take from each LcdImageLine
      *            
      * @return new LcdImageLine composed from this and that according to given opacity
+     * 
+     * @throws IllegalArgumentException
+     *            if given line isn't the same-size as this
      */
     public LcdImageLine below(LcdImageLine top, BitVector opacity) {
         Preconditions.checkArgument(top.size() == size());
@@ -265,8 +274,6 @@ public final class LcdImageLine {
         Preconditions.checkArgument(other.size() == size());
         BitVector mask = new BitVector(size(), true).shift(fromIndex);
 
-        // selects (fromIndex)-lsb of this.msb
-        // and concatenates (size-fromIndex)-msb of other.msb
         BitVector joinedMsb = other.msb.and(mask).or(this.msb.and(mask.not()));
         BitVector joinedLsb = other.lsb.and(mask).or(this.lsb.and(mask.not()));
         BitVector joinedOpacity = other.opacity.and(mask)
