@@ -7,7 +7,7 @@ package ch.epfl.gameboj.bonus;
 
 import java.util.List;
 
-import ch.epfl.gameboj.gui.ImageConverter;
+import ch.epfl.gameboj.bonus.ImageConverter;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;

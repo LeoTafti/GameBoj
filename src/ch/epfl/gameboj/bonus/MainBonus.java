@@ -14,9 +14,9 @@ import com.sun.tools.javac.util.List;
 
 import ch.epfl.gameboj.bonus.save.Cartridge;
 import ch.epfl.gameboj.bonus.save.GameBoy;
+import ch.epfl.gameboj.bonus.ImageConverter;
 import ch.epfl.gameboj.component.Joypad;
 import ch.epfl.gameboj.component.lcd.LcdController;
-import ch.epfl.gameboj.gui.ImageConverter;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.beans.property.DoubleProperty;
@@ -73,7 +73,7 @@ public class MainBonus extends Application{
             };
     
     private static String romPath;
-    private GameBoy gameboj; //TODO : was public ??
+    private GameBoy gameboj;
     
     public static void main(String[] args) {
        launch(args);
@@ -82,16 +82,27 @@ public class MainBonus extends Application{
     @Override
     public void start(Stage primaryStage) throws Exception {
         
-        //++++++++++++++++++++++++++++++++++ Power Scene ++++++++++++++++++++++++
+//========================================= VIEW ======================================================
+        
+        //++++++++++++++++++++++++++++++++++ Power Scene ++++++++++++++++++++++++++++++++++++++++++++++
         StackPane powerPane = new StackPane();
         ImageView powerBg = new ImageView("file:powerImage.jpg");
         
-        List<String> romNames = List.of("Tetris", "2048", "Snake", "Tasmania Story", "Flappy Boy", "Donkey Kong", "BomberMan", "Super Mario Land 1", 
-                "Super Mario Land 2", "Legend of Zelda, Link's Awakening");
+        List<String> romNames = List.of(
+                "Tetris",
+                "2048",
+                "Snake",
+                "Tasmania Story",
+                "Flappy Boy",
+                "Donkey Kong",
+                "BomberMan",
+                "Super Mario Land 1", 
+                "Super Mario Land 2",
+                "Legend of Zelda, Link's Awakening");
         
         Button power = new Button("POWER");
         power.setDisable(true);
-        ChoiceBox romChoice = new ChoiceBox(FXCollections.observableArrayList(romNames));
+        ChoiceBox<String> romChoice = new ChoiceBox<>(FXCollections.observableArrayList(romNames));
         HBox powerChoice = new HBox();
         powerChoice.getChildren().addAll(romChoice, power);
         powerChoice.setAlignment(Pos.CENTER);
@@ -99,23 +110,22 @@ public class MainBonus extends Application{
         
         powerPane.getChildren().addAll(powerBg, powerChoice);
         
-        romChoice.getSelectionModel().selectedIndexProperty()
-        .addListener( (ov, v, nv) -> power.setDisable(false));
 
-        //++++++++++++++++++++++++++++++++++ Gameboy Window +++++++++++++++++++++++++++
+        //++++++++++++++++++++++++++++++++++ Gameboy Scene ++++++++++++++++++++++++++++++++++++++++++++
+        
         BorderPane mainPane = new BorderPane();
-        //----------------------------- Menu --------------------------------
+        
+        //----------------------------- Menu ----------------------------------------------------------
         VBox menuPane = new VBox();
         int menuWidth = 80;
         menuPane.setMinWidth(menuWidth);
         menuPane.setPadding(new Insets(10));
 
-
-        //----------------------------- Power Off Button --------------------------------
+            //----------------------------- Power Off Button ------------------------------------------
         Button powerOff = new Button("Power Off");
         powerOff.setMaxWidth(Integer.MAX_VALUE);
 
-        //----------------------------- Speed Slider --------------------------------
+            //----------------------------- Speed Slider ----------------------------------------------
         VBox speedPane = new VBox();
         speedPane.setAlignment(Pos.CENTER);
         speedPane.setPadding(new Insets(10));
@@ -129,18 +139,15 @@ public class MainBonus extends Application{
         speedPane.getChildren().addAll(speedLabel, valueLabel, speedSlider);
 
 
-        //----------------------------- Color choosing tabs --------------------------------
+            //----------------------------- Color choosing tabs ----------------------------------------
         TabPane colorTabs = new TabPane();
         colorTabs.setTabClosingPolicy(TabClosingPolicy.UNAVAILABLE);
         
-        //----------------------------- Preset tab --------------------------------
+                //----------------------------- Preset tab --------------------------------------------
         Tab presetTab = new Tab("Presets");
         GridPane presetPane = new GridPane();
         Button randomize = new Button("Randomize!");
-        randomize.setOnAction(e -> { 
-            ColorSet.randomize();
-            ImageConverter.setColorSet(ColorSet.Random);
-        });
+        
         presetPane.addColumn(0,
                 new Palette(ColorSet.GAMEBOY, "GAMEBOY"), 
                 new Palette(ColorSet.FOREST, "Forest"),
@@ -155,7 +162,7 @@ public class MainBonus extends Application{
                 randomize);
         presetTab.setContent(presetPane);
         
-        //----------------------------- Custom tab --------------------------------
+                //----------------------------- Custom tab ---------------------------------------------
         Tab customTab = new Tab("Custom");
         VBox customPane = new VBox();
         customPane.setPadding(new Insets(10, 0, 0, 0));
@@ -176,9 +183,6 @@ public class MainBonus extends Application{
         
         Button colorButton = new Button("Change color");
         colorButton.setMaxWidth(Integer.MAX_VALUE);
-        colorButton.setOnAction(e -> {
-            ImageConverter.setCustomColors(redSlider.getValue(), greenSlider.getValue(), blueSlider.getValue());
-        });
         VBox.setMargin(colorButton, new Insets(20, 0, 0, 0));
         
         colorTabs.getTabs().addAll(presetTab, customTab);
@@ -194,12 +198,12 @@ public class MainBonus extends Application{
         menuPane.getChildren().addAll(powerOff, speedPane, colorTabs);
         mainPane.setLeft(menuPane);
         
-        //------------------------------ Gameboy Pane -----------------------------
+        //------------------------------ Gameboy Pane -------------------------------------------------
 
         Pane backgroundPane = new StackPane();
         backgroundPane.setPadding(new Insets(50));
         
-        //------------------------------ Background Image -----------------------------
+            //------------------------------ Background Image -----------------------------------------
         // TODO TODO j'arrive pas a utiliser le path local...
         Image gbImage = new Image("https://d3nevzfk7ii3be.cloudfront.net/igi/CbGZEBGdw52JMsnB.large");
         PixelReader reader = gbImage.getPixelReader();
@@ -208,12 +212,12 @@ public class MainBonus extends Application{
         backgroundPane.getChildren().add(resizedGbImage);
         
         
-        //------------------------------ Interactive Pane -----------------------------
+            //------------------------------ Interactive Pane -----------------------------------------
         BorderPane interactivePane = new BorderPane();
         interactivePane.setPadding(new Insets(30));
         backgroundPane.getChildren().add(interactivePane);
         
-        //------------------------------ LCD -----------------------------
+                //------------------------------ LCD --------------------------------------------------
         ImageView lcd = new ImageView();
         lcd.setFitWidth(LcdController.LCD_WIDTH*1.7);
         lcd.setFitHeight(LcdController.LCD_HEIGHT*1.7);
@@ -221,11 +225,11 @@ public class MainBonus extends Application{
         
         interactivePane.setTop(lcd);
 
-        //------------------------------ JoyPane -----------------------------
+                //------------------------------ JoyPane ----------------------------------------------
         BorderPane joyPane = new BorderPane();
         
         
-        //------------------------------ Arrows -----------------------------
+                    //------------------------------ Arrows -------------------------------------------
         GridPane arrows = new GridPane();
         Rectangle up = new Rectangle(28, 28),
                 down = new Rectangle(28, 28),
@@ -241,7 +245,7 @@ public class MainBonus extends Application{
         
         joyPane.setLeft(arrows);
         
-        //------------------------------ A, B -----------------------------
+                    //------------------------------ A, B ---------------------------------------------
         AnchorPane buttons = new AnchorPane();
         Circle a = new Circle(20);
         Circle b = new Circle(20);
@@ -256,7 +260,7 @@ public class MainBonus extends Application{
         
         joyPane.setRight(buttons);
         
-        //------------------------------ start, select -----------------------------
+                    //------------------------------ start, select ------------------------------------
         HBox options = new HBox();
         Rectangle start = new Rectangle(40, 8);
         start.getTransforms().add(new Rotate(-27));
@@ -281,35 +285,34 @@ public class MainBonus extends Application{
         
         joyPane.setPadding(new Insets(37, 0, 0, 2));
         
-        
         interactivePane.setCenter(joyPane);
+        
         
         mainPane.setCenter(backgroundPane);
         Scene powerScene = new Scene(powerPane);
         Scene gbScene = new Scene(mainPane);
         
-        //++++++++++++++++++++++++++++++++++++++++++ CONTROLLER +++++++++++++++++++++++++++++++++++++
+// ================================================ CONTROLER =========================================
         
-        // ------------------------------------------------------ gameboj simulation ---------------------------------
-//        AnimationTimer timer = new AnimationTimer()
-//        {
-//        long before = System.nanoTime();
-//        long gameboyCycles;
-//        
-//            @Override
-//            public void handle(long now) {
-//                double deltaTime = (now - before);
-//                before = now;
-//                gameboyCycles += (long) (deltaTime * GameBoy.CYCLES_PER_NANOSEC * simSpeedProperty.doubleValue());
-//                gameboj.runUntil(gameboyCycles);
-//                lcd.setImage(ImageConverter
-//                        .convert(gameboj.lcdController().currentImage()));
-////                if(!pauseButton.isSelected())
-////                    simSpeed = speedSlider.getValue();
-//            }
-//        };
+        // ++++++++++++++++++++++++++++++++++++++++ Power +++++++++++++++++++++++++++++++++++++++++++++
+        romChoice.getSelectionModel().selectedIndexProperty()
+            .addListener( (ov, v, nv) -> power.setDisable(false));
         
-        // ----------------------------------------- keyboard interaction -------------------------------
+        // ++++++++++++++++++++++++++++++++++++++++ Gameboy +++++++++++++++++++++++++++++++++++++++++++
+        
+        // ----------------------------------------- Menu ---------------------------------------------
+        randomize.setOnAction(e -> { 
+            ColorSet.randomize();
+            ImageConverter.setColorSet(ColorSet.Random);
+        });
+
+        colorButton.setOnAction(e -> {
+            ImageConverter.setCustomColors(redSlider.getValue(),
+                    greenSlider.getValue(), blueSlider.getValue());
+        });
+        
+        
+        // ----------------------------------------- keyboard interaction -----------------------------
         Map<String, Joypad.Key> buttonMap = new HashMap<>(Map.of(
             "a", Joypad.Key.A,
             "b", Joypad.Key.B,
@@ -332,32 +335,19 @@ public class MainBonus extends Application{
                 KeyCode.LEFT, left,
                 KeyCode.RIGHT, right));
         
-//        Runnable togglePause = ()-> {
-//            if(!pauseButton.isSelected()) {
-//                simSpeed = 0;
-//                pauseButton.setSelected(true);
-//                backgroundPane.setOpacity(0.5);}
-//            else {
-//                simSpeed = speedSlider.getValue();
-//                pauseButton.setSelected(false);
-//                backgroundPane.setOpacity(1);
-//            }
-//            };
-            Runnable togglePause = ()-> {
-                if(!paused) {
-                    simSpeedProperty.unbind();
-                    simSpeedProperty.set(0);
-                    backgroundPane.setOpacity(0.5);
-                }
-                else {
-                    simSpeedProperty.bind(speedSlider.valueProperty());
-                    backgroundPane.setOpacity(1);
-                }
-                
-                paused = !paused;
-            };
-//            
-//        pauseButton.setOnAction(e -> togglePause.run());
+
+        Runnable togglePause = () -> {
+            if (!paused) {
+                simSpeedProperty.unbind();
+                simSpeedProperty.set(0);
+                backgroundPane.setOpacity(0.5);
+            } else {
+                simSpeedProperty.bind(speedSlider.valueProperty());
+                backgroundPane.setOpacity(1);
+            }
+
+            paused = !paused;
+        };
         
         EventHandler<KeyEvent> keyboardHandler = (e -> {
             
@@ -401,7 +391,7 @@ public class MainBonus extends Application{
 
 
 
-        // +++++++++++++++++++++++++++++++ FINAL SETUP +++++++++++++++++++++++
+// =================================== FINAL SETUP ==========================================
         power.setOnAction((e) -> {
             //TODO : having to give lcd is not clean, but what can I do...
             startGame(romChoice.getSelectionModel().getSelectedIndex(), lcd);
@@ -449,6 +439,7 @@ public class MainBonus extends Application{
       timer.start(); 
     }
     
+    //TODO is it necessary?
     private void endGame() {
         timer.stop();
     }
