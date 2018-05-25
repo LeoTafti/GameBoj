@@ -350,6 +350,8 @@ public final class LcdController implements Component, Clocked {
             int y = read(address) - SPRITE_Y_CORRECTION;
             int x = read(address + 1) - SPRITE_X_CORRECTION;
             int tileIndex = read(address + 2);
+            if(bigSprites) tileIndex = Bits.set(tileIndex, 0, false); //for Zelda's fairy
+
             int infos = read(address + 3);
 
             int tileLine = index - y;
