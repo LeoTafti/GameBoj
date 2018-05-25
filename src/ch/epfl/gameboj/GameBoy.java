@@ -18,8 +18,8 @@ import ch.epfl.gameboj.component.memory.RamController;
 
 public final class GameBoy {
 
-    public static final long CYCLES_PER_SEC = (long) Math.pow(2, 20);
-    public static final double CYCLES_PER_NANOSEC = CYCLES_PER_SEC*Math.pow(10, -9);
+    public static final long CYCLES_PER_SEC = 1 << 20;
+    public static final double CYCLES_PER_NANOSEC = CYCLES_PER_SEC * 1e-9;
     
     private final Bus bus;
     private final Cpu cpu;

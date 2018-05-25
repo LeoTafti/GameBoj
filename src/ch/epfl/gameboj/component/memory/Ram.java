@@ -5,9 +5,8 @@
 
 package ch.epfl.gameboj.component.memory;
 
-import java.io.IOException;
-import java.io.OutputStream;
 import java.util.Objects;
+
 import ch.epfl.gameboj.Preconditions;
 
 public final class Ram {

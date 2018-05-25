@@ -10,7 +10,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 
 import ch.epfl.gameboj.Preconditions;
-import ch.epfl.gameboj.bonus.save.Savable;
 import ch.epfl.gameboj.component.Component;
 import ch.epfl.gameboj.component.memory.Rom;
 
