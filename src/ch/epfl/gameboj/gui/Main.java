@@ -7,10 +7,15 @@ package ch.epfl.gameboj.gui;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
-
-import com.sun.tools.javac.util.List;
 
 import ch.epfl.gameboj.GameBoy;
 import ch.epfl.gameboj.component.Joypad;
@@ -57,24 +62,28 @@ public class Main extends Application{
     private static boolean paused = false;
     private static AnimationTimer timer;
     
-    private static final String[] ROM_PATHS = { 
-            "roms/Tetris.gb", //0
-            "roms/2048.gb", //1
-            "roms/snake.gb", //2
-            "roms/tasmaniaStory.gb", //3
-            "roms/flappyboy.gb", //4
-            "roms/DonkeyKong.gb", //5
-            "roms/Bomberman.gb", //6
-            "roms/SuperMarioLand.gb", //7
-            "roms/SuperMarioLand2.gb", //8
-            "roms/LegendofZelda,TheLink'sAwakening.gb", //9
-            };
+//    private static final String[] ROM_PATHS = { 
+//            "roms/Tetris.gb", //0
+//            "roms/2048.gb", //1
+//            "roms/snake.gb", //2
+//            "roms/tasmaniaStory.gb", //3
+//            "roms/flappyboy.gb", //4
+//            "roms/DonkeyKong.gb", //5
+//            "roms/Bomberman.gb", //6
+//            "roms/SuperMarioLand.gb", //7
+//            "roms/SuperMarioLand2.gb", //8
+//            "roms/LegendofZelda,TheLink'sAwakening.gb", //9
+//            };
     
-    private static String romPath;
+    private static File[] ROM_PATHS = new File("roms").listFiles();;
+    
+    
+    
+    private static File romPath;
     private GameBoy gameboj;
     
     public static void main(String[] args) {
-       launch(args);
+        launch(args);
     }
 
     @Override
@@ -86,17 +95,22 @@ public class Main extends Application{
         StackPane powerPane = new StackPane();
         ImageView powerBg = new ImageView("file:powerImage.jpg");
         
-        List<String> romNames = List.of(
-                "Tetris",
-                "2048",
-                "Snake",
-                "Tasmania Story",
-                "Flappy Boy",
-                "Donkey Kong",
-                "BomberMan",
-                "Super Mario Land 1", 
-                "Super Mario Land 2",
-                "Legend of Zelda, Link's Awakening");
+//        List<String> romNames = List.of(
+//                "Tetris",
+//                "2048",
+//                "Snake",
+//                "Tasmania Story",
+//                "Flappy Boy",
+//                "Donkey Kong",
+//                "BomberMan",
+//                "Super Mario Land 1", 
+//                "Super Mario Land 2",
+//                "Legend of Zelda, Link's Awakening");
+        List<String> romNames = new LinkedList<>();
+        for(int i = 0; i < ROM_PATHS.length; i++) {
+            romNames.add(ROM_PATHS[i].getName());
+        }
+
         
         Button power = new Button("POWER");
         power.setDisable(true);
@@ -412,7 +426,7 @@ public class Main extends Application{
         romPath = ROM_PATHS[romIndex];
       //TODO i dont want this try catch
       try {
-          gameboj = new GameBoy(Cartridge.ofFile(new File(romPath)));
+          gameboj = new GameBoy(Cartridge.ofFile(romPath));
       } catch (IOException e1) {
           e1.printStackTrace();
       }
