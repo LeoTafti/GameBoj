@@ -52,7 +52,7 @@ public final class ColorSet {
     }
     
     /**
-     * returns the requested color as argb
+     * Returns the requested color as argb
      * @param index index of the color (from 0 to 3)
      * @return color as int with bytes representing respectively alpha-red-green-blue
      */
@@ -76,19 +76,7 @@ public final class ColorSet {
         
         
     }
-    
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append('[');
-        for (int i = 0; i < colors.length; i++) {
-            sb.append(Integer.toHexString(colors[i])).append(',');
-            
-        }
-        sb.append(']');
-        return sb.toString();
-    }
-    
+
     public static final ColorSet GAMEBOY = new ColorSet(new int[] {
             0xff_ff_ff_ff,
             0xff_d3_d3_d3,

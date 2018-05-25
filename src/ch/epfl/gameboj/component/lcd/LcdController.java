@@ -96,7 +96,7 @@ public final class LcdController implements Component, Clocked {
         nextImageBuilder = new LcdImage.Builder(LCD_WIDTH, LCD_HEIGHT);
         currentImage = BLANK_IMAGE;
 
-        nextNonIdleCycle = Long.MAX_VALUE; // TODO : still unsure about that
+        nextNonIdleCycle = Long.MAX_VALUE;
     }
 
     /*
@@ -474,9 +474,9 @@ public final class LcdController implements Component, Clocked {
 
     private void updateLYC_EQ_LY() {
         boolean newValue = reg(Reg.LYC) == reg(Reg.LY);
-        setBitSTAT(STAT_Bits.LYC_EQ_LY, newValue);
+        setReg(Reg.STAT, Bits.set(reg(Reg.STAT), STAT_Bits.LYC_EQ_LY.index(), newValue));
 
-        if (testBitSTAT(STAT_Bits.INT_LYC) && newValue)
+        if ( testBit(Reg.STAT, STAT_Bits.INT_LYC.index()) && newValue)
             cpu.requestInterrupt(Cpu.Interrupt.LCD_STAT);
     }
 
@@ -528,23 +528,7 @@ public final class LcdController implements Component, Clocked {
         return testBit(Reg.LCDC, bit.index());
     }
 
-    // TODO only used once in inc LY
-    private boolean testBitSTAT(STAT_Bits bit) {
-        return testBit(Reg.STAT, bit.index());
-    }
-
     private boolean testBitSprite(SpriteInfos bit, int infos) {
         return Bits.test(infos, bit.index());
     }
-
-    // TODO only used in setBitsStat
-    private void setBit(Reg r, int index, boolean newValue) {
-        setReg(r, Bits.set(reg(r), index, newValue));
-    }
-
-    // TODO only used once in incLY
-    private void setBitSTAT(STAT_Bits bit, boolean newValue) {
-        setBit(Reg.STAT, bit.index(), newValue);
-    }
-
 }
