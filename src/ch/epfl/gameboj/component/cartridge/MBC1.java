@@ -108,6 +108,7 @@ public final class MBC1 implements Component, Savable {
             ram.toFile(s);
         }
         catch (IOException e) {
+            System.out.println("Problem saving");
             //TODO : Do smth
         }
     }
