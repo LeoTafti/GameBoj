@@ -5,8 +5,6 @@
 
 package ch.epfl.gameboj.gui;
 
-import java.util.Arrays;
-
 import ch.epfl.gameboj.Preconditions;
 
 public final class ColorSet {
