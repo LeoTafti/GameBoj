@@ -14,13 +14,10 @@ import com.sun.tools.javac.util.List;
 
 import ch.epfl.gameboj.bonus.save.Cartridge;
 import ch.epfl.gameboj.bonus.save.GameBoy;
-import ch.epfl.gameboj.bonus.ImageConverter;
 import ch.epfl.gameboj.component.Joypad;
 import ch.epfl.gameboj.component.lcd.LcdController;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -55,7 +52,8 @@ import javafx.stage.Stage;
 
 public class MainBonus extends Application{
 
-    private static DoubleProperty simSpeedProperty = new SimpleDoubleProperty(1);
+    private static double simSpeed = 1;
+    
     private static boolean paused = false;
     private static AnimationTimer timer;
     
@@ -103,7 +101,8 @@ public class MainBonus extends Application{
         Button power = new Button("POWER");
         power.setDisable(true);
         ChoiceBox<String> romChoice = new ChoiceBox<>(FXCollections.observableArrayList(romNames));
-        HBox powerChoice = new HBox();
+        romChoice.setAccessibleText("salut");
+        HBox powerChoice = new HBox(5);
         powerChoice.getChildren().addAll(romChoice, power);
         powerChoice.setAlignment(Pos.CENTER);
         powerChoice.setPadding(new Insets(25, 0, 0, 0));
@@ -135,7 +134,9 @@ public class MainBonus extends Application{
         speedLabel.setLayoutX(menuWidth/2);
         Label valueLabel = new Label("");
         valueLabel.textProperty().bind(speedSlider.valueProperty().asString("%1$.2f x"));
-        simSpeedProperty.bind(speedSlider.valueProperty());
+        speedSlider.valueProperty().addListener(e -> {
+            if(!paused) simSpeed = speedSlider.getValue();
+        });
         speedPane.getChildren().addAll(speedLabel, valueLabel, speedSlider);
 
 
@@ -147,6 +148,7 @@ public class MainBonus extends Application{
         Tab presetTab = new Tab("Presets");
         GridPane presetPane = new GridPane();
         Button randomize = new Button("Randomize!");
+        randomize.setMinSize(randomize.getMaxWidth(), randomize.getMinWidth());
         
         presetPane.addColumn(0,
                 new Palette(ColorSet.GAMEBOY, "GAMEBOY"), 
@@ -204,8 +206,7 @@ public class MainBonus extends Application{
         backgroundPane.setPadding(new Insets(50));
         
             //------------------------------ Background Image -----------------------------------------
-        // TODO TODO j'arrive pas a utiliser le path local...
-        Image gbImage = new Image("https://d3nevzfk7ii3be.cloudfront.net/igi/CbGZEBGdw52JMsnB.large");
+        Image gbImage = new Image("file:gameboy.jpg");
         PixelReader reader = gbImage.getPixelReader();
         WritableImage newGbImage = new WritableImage(reader, 240, 40, 320, 520);
         ImageView resizedGbImage = new ImageView(newGbImage);
@@ -338,14 +339,12 @@ public class MainBonus extends Application{
 
         Runnable togglePause = () -> {
             if (!paused) {
-                simSpeedProperty.unbind();
-                simSpeedProperty.set(0);
+                simSpeed = 0;
                 backgroundPane.setOpacity(0.5);
             } else {
-                simSpeedProperty.bind(speedSlider.valueProperty());
+                simSpeed = speedSlider.getValue();
                 backgroundPane.setOpacity(1);
             }
-
             paused = !paused;
         };
         
@@ -378,12 +377,8 @@ public class MainBonus extends Application{
             if (s != null)
                 s.setFill(Color.DARKSLATEBLUE);
             }
-
-            e.consume();   
-
         });
 
-        //had to implement a filter otherwise the slider was receiving the bubbling event
         mainPane.addEventFilter(KeyEvent.ANY, e -> {
             keyboardHandler.handle(e);
             e.consume();
@@ -431,7 +426,7 @@ public class MainBonus extends Application{
           public void handle(long now) {
               double elapsed = now - before;
               before = now;
-              gameboyCycles += (long) (elapsed * GameBoy.CYCLES_PER_NANOSEC * simSpeedProperty.doubleValue());
+              gameboyCycles += (long) (elapsed * GameBoy.CYCLES_PER_NANOSEC * simSpeed);
               gameboj.runUntil(gameboyCycles);
               lcd.setImage(ImageConverter.convert(gameboj.lcdController().currentImage()));
           }
