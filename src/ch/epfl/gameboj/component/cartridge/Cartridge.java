@@ -11,6 +11,7 @@ import java.io.IOException;
 
 import ch.epfl.gameboj.Preconditions;
 import ch.epfl.gameboj.component.Component;
+import ch.epfl.gameboj.component.cartridge.MBC0;
 import ch.epfl.gameboj.component.memory.Rom;
 
 public final class Cartridge implements Component {

@@ -5,12 +5,14 @@
 
 package ch.epfl.gameboj.component.memory;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Objects;
 import ch.epfl.gameboj.Preconditions;
 
 public final class Ram {
 
-    private final byte[] data;
+    private byte[] data;
 
     /**
      * Constructor
@@ -68,5 +70,14 @@ public final class Ram {
         Preconditions.checkBits8(value);
         
         data[index] = (byte) value;
+    }
+    
+    public void toFile(OutputStream s) throws IOException {
+        s.write(data);
+    }
+    
+    public void fromFile(byte[] data) {
+        this.data = data;
+        //TODO : simply removed final modifier to do that, but may be ugly
     }
 }

@@ -3,12 +3,20 @@ package ch.epfl.gameboj.component.cartridge;
 import static ch.epfl.gameboj.Preconditions.checkBits16;
 import static ch.epfl.gameboj.Preconditions.checkBits8;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+
 import ch.epfl.gameboj.bits.Bits;
+import ch.epfl.gameboj.bonus.save.Savable;
 import ch.epfl.gameboj.component.Component;
 import ch.epfl.gameboj.component.memory.Ram;
 import ch.epfl.gameboj.component.memory.Rom;
 
-public final class MBC1 implements Component {
+public final class MBC1 implements Component, Savable {
     private static final int RAM_ENABLE = 0xA;
 
     private enum Mode { MODE_0, MODE_1 };
@@ -32,6 +40,13 @@ public final class MBC1 implements Component {
 
         this.romMask = rom.size() - 1;
         this.ramMask = ramSize - 1;
+        
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            public void run() {
+                save();
+            }
+        });
+        load();
     }
 
     public int read(int address) {
@@ -84,5 +99,28 @@ public final class MBC1 implements Component {
 
     private int ramAddress(int b_12_0) {
         return ((msb2() << 13) | Bits.clip(13, b_12_0)) & ramMask;
+    }
+
+    @Override
+    public void save() {
+        File saveFile = new File("save.sav");
+        try(OutputStream s = new FileOutputStream(saveFile)){
+            ram.toFile(s);
+        }
+        catch (IOException e) {
+            //TODO : Do smth
+        }
+    }
+
+    @Override
+    public void load() {
+        File saveFile = new File("save.sav");
+        try(InputStream s = new FileInputStream(saveFile)){
+            ram.fromFile(s.readAllBytes());
+        }
+        catch (IOException e) {
+            System.out.println("Problem loading save");
+            //TODO : Do smth
+        }
     }
 }

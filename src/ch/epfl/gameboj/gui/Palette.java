@@ -3,11 +3,10 @@
  *  @Author : Leo Tafti (285418)
 */
 
-package ch.epfl.gameboj.bonus;
+package ch.epfl.gameboj.gui;
 
 import java.util.List;
 
-import ch.epfl.gameboj.bonus.ImageConverter;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;

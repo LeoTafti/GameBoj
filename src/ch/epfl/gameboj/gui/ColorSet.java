@@ -3,7 +3,7 @@
  *  @Author : Leo Tafti (285418)
 */
 
-package ch.epfl.gameboj.bonus;
+package ch.epfl.gameboj.gui;
 
 import java.util.Arrays;
 
