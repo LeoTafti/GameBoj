@@ -25,30 +25,24 @@ public final class LcdController implements Component, Clocked {
 
     public static final int LCD_WIDTH = 160, LCD_HEIGHT = 144;
 
-    private static final int TILE_SIZE = 8,
-            IMAGE_TILE_SIZE = 32,
-            IMAGE_SIZE = TILE_SIZE * IMAGE_TILE_SIZE,
-            SPRITE_LINES = 8, BIG_SPRITE_LINES = 16,
-            SPRITE_BYTE_SIZE = 4;
+    private static final int TILE_SIZE = 8, IMAGE_TILE_SIZE = 32,
+            IMAGE_SIZE = TILE_SIZE * IMAGE_TILE_SIZE, SPRITE_LINES = 8,
+            BIG_SPRITE_LINES = 16, SPRITE_BYTE_SIZE = 4;
 
-    private static final int WX_CORRECTION = 7,
-            SPRITE_X_CORRECTION = 8,
-            SPRITE_Y_CORRECTION = 16,
-            TILE_INDEX_CORRECTION = 0x80;
+    private static final int WX_CORRECTION = 7, SPRITE_X_CORRECTION = 8,
+            SPRITE_Y_CORRECTION = 16, TILE_INDEX_CORRECTION = 0x80;
 
-    private static final int LINE_CYCLES = 114,
-            TOTAL_DMA_CYCLES = 160;
-    
+    private static final int LINE_CYCLES = 114, TOTAL_DMA_CYCLES = 160;
+
     private static final int V_BLANK_LINES = 10;
 
-    private static final int H_BLANK_CYCLES = 51,
-            MODE_2_CYCLES = 20,
+    private static final int H_BLANK_CYCLES = 51, MODE_2_CYCLES = 20,
             MODE_3_CYCLES = 43;
 
-    private static final int TOTAL_SPRITES = 40,
-            MAX_SPRITES_PER_LINE = 10;
-    
+    private static final int TOTAL_SPRITES = 40, MAX_SPRITES_PER_LINE = 10;
+
     private final LcdImage BLANK_IMAGE = new LcdImage.Builder(LCD_WIDTH, LCD_HEIGHT).build();
+    private final LcdImageLine BLANK_LINE = new LcdImageLine.Builder(LCD_WIDTH).build();
 
     private enum Reg implements Register {
         LCDC, STAT, SCY, SCX, LY, LYC, DMA, BGP, OBP0, OBP1, WY, WX
@@ -61,7 +55,7 @@ public final class LcdController implements Component, Clocked {
     private enum STAT_Bits implements Bit {
         MODE0, MODE1, LYC_EQ_LY, INT_MODE0, INT_MODE1, INT_MODE2, INT_LYC, UNUSED_7
     }
-    
+
     private enum SpriteInfos implements Bit {
         UNUSED_0, UNUSED_1, UNUSED_2, UNUSED_3, PALETTE, FLIP_H, FLIP_V, BEHIND_BG
     };
@@ -70,21 +64,20 @@ public final class LcdController implements Component, Clocked {
         H_BLANK, V_BLANK, MODE_2, MODE_3
     };
 
-
     private final Cpu cpu;
     private final RegisterFile<Reg> registerFile;
     private final Ram vRam;
     private final Ram oam;
     private Bus bus;
 
-    private LcdImage currentImage = null;
+    private LcdImage currentImage;
     private LcdImage.Builder nextImageBuilder;
 
     private long nextNonIdleCycle;
     private int remainingDMACycles;
 
     private int winY = 0;
-    
+
     public LcdController(Cpu cpu) {
         this.cpu = Objects.requireNonNull(cpu);
 
@@ -93,8 +86,9 @@ public final class LcdController implements Component, Clocked {
         oam = new Ram(AddressMap.OAM_RAM_SIZE);
 
         nextImageBuilder = new LcdImage.Builder(LCD_WIDTH, LCD_HEIGHT);
+        currentImage = BLANK_IMAGE;
 
-        nextNonIdleCycle = Long.MAX_VALUE; //TODO : still unsure about that
+        nextNonIdleCycle = Long.MAX_VALUE; // TODO : still unsure about that
     }
 
     /*
@@ -104,43 +98,40 @@ public final class LcdController implements Component, Clocked {
      */
     @Override
     public void cycle(long cycle) {
-        
-        //Direct Memory Access handling
+
+        // Direct Memory Access handling
         if (remainingDMACycles > 0) {
             int index = TOTAL_DMA_CYCLES - remainingDMACycles;
             write(AddressMap.OAM_START + index,
                     bus.read((reg(Reg.DMA) << 8) + index));
-            
+
             remainingDMACycles--;
             // TODO : compute reg(Reg.DMA) only once and not 160 times ?
         }
-        
-        //screen is turned on
-        if (nextNonIdleCycle == Long.MAX_VALUE && screenIsOn()) {
+
+        // Starts drawing again if screen has been turned on
+        if (nextNonIdleCycle == Long.MAX_VALUE && screenIsOn())
             nextNonIdleCycle = cycle;
-        }
-        else if (cycle != nextNonIdleCycle) {
+        else if (cycle != nextNonIdleCycle)
             return;
-        }
-        
-        reallyCycle(cycle);
+
+        reallyCycle();
     }
 
     /**
      * Changes mode, potentially requests adequate interrupts and updates
-     * nextNonIdleCycle accordingly
+     * nextNonIdleCycle value accordingly
      **/
-    private void reallyCycle(long cycle) {
-        
-        //switch is called when the case-state is about to finish,
-        //i.e. case MODE_2 represents " MODE_2 -> MODE_3 ..... "
+    private void reallyCycle() {
+
+        // reallyCycle() is called when the previous mode is about to finish,
+        // e.g. case MODE_2 represents transition from MODE_2 to MODE_3, etc.
         switch (mode()) {
         case H_BLANK:
             if (reg(Reg.LY) < LCD_HEIGHT - 1) {
                 setMode(LcdMode.MODE_2);
                 nextNonIdleCycle += MODE_2_CYCLES;
-            }
-            else {
+            } else {
                 setMode(LcdMode.V_BLANK);
                 nextNonIdleCycle += LINE_CYCLES;
                 cpu.requestInterrupt(Cpu.Interrupt.VBLANK);
@@ -148,31 +139,30 @@ public final class LcdController implements Component, Clocked {
             }
             incLY();
             break;
-    
+
         case V_BLANK:
             if (reg(Reg.LY) == LCD_HEIGHT + V_BLANK_LINES - 1) {
                 setMode(LcdMode.MODE_2);
                 nextNonIdleCycle += MODE_2_CYCLES;
                 nextImageBuilder = new LcdImage.Builder(LCD_WIDTH, LCD_HEIGHT);
                 winY = 0;
-            }
-            else
+            } else
                 nextNonIdleCycle += LINE_CYCLES;
             incLY();
             break;
-    
+
         case MODE_2:
             setMode(LcdMode.MODE_3);
             nextNonIdleCycle += MODE_3_CYCLES;
             break;
-    
+
         case MODE_3:
             setMode(LcdMode.H_BLANK);
             nextNonIdleCycle += H_BLANK_CYCLES;
             nextImageBuilder.setLine(reg(Reg.LY), computeLine(reg(Reg.LY)));
             break;
         }
-        
+
         requestPotentialInterrupt(mode());
     }
 
@@ -185,15 +175,18 @@ public final class LcdController implements Component, Clocked {
     public int read(int address) {
         Preconditions.checkBits16(address);
 
-        if (address >= AddressMap.REGS_LCDC_START && address < AddressMap.REGS_LCDC_END)
+        if (address >= AddressMap.REGS_LCDC_START
+                && address < AddressMap.REGS_LCDC_END)
             return readRegAt(address);
 
-        else if (address >= AddressMap.VIDEO_RAM_START && address < AddressMap.VIDEO_RAM_END)
+        else if (address >= AddressMap.VIDEO_RAM_START
+                && address < AddressMap.VIDEO_RAM_END)
             return vRam.read(address - AddressMap.VIDEO_RAM_START);
-        
-        else if (address >= AddressMap.OAM_START && address < AddressMap.OAM_END)
+
+        else if (address >= AddressMap.OAM_START
+                && address < AddressMap.OAM_END)
             return oam.read(address - AddressMap.OAM_START);
-        
+
         return NO_DATA;
     }
 
@@ -206,37 +199,40 @@ public final class LcdController implements Component, Clocked {
     public void write(int address, int data) {
         Preconditions.checkBits16(address);
         Preconditions.checkBits8(data);
-        
-        if (address >= AddressMap.REGS_LCDC_START && address < AddressMap.REGS_LCDC_END) {
+
+        if (address >= AddressMap.REGS_LCDC_START
+                && address < AddressMap.REGS_LCDC_END) {
             if (address == AddressMap.REG_STAT)
-                setReg(Reg.STAT, Bits.extract(data, 3, 5) << 3 | Bits.clip(3, reg(Reg.STAT)));
-            
+                setReg(Reg.STAT, Bits.extract(data, 3, 5) << 3
+                        | Bits.clip(3, reg(Reg.STAT)));
+
             else if (address == AddressMap.REG_LCDC) {
                 boolean oldScreenState = screenIsOn();
                 setRegAt(address, data);
-                if (address == AddressMap.REG_LCDC && oldScreenState != screenIsOn()) {
+                if (address == AddressMap.REG_LCDC
+                        && oldScreenState != screenIsOn()) {
                     setMode(LcdMode.H_BLANK);
                     setReg(Reg.LY, 0);
                     nextNonIdleCycle = Long.MAX_VALUE;
                 }
             }
-            
+
             else {
                 setRegAt(address, data);
 
                 if (address == AddressMap.REG_LYC)
                     updateLYC_EQ_LY();
-                else if (address == AddressMap.REG_DMA) 
+                else if (address == AddressMap.REG_DMA)
                     remainingDMACycles = TOTAL_DMA_CYCLES;
             }
         }
-        
+
         else if (address >= AddressMap.VIDEO_RAM_START
                 && address < AddressMap.VIDEO_RAM_END)
             vRam.write(address - AddressMap.VIDEO_RAM_START, data);
 
         else if (address >= AddressMap.OAM_START
-                && address < AddressMap.OAM_END) 
+                && address < AddressMap.OAM_END)
             oam.write(address - AddressMap.OAM_START, data);
     }
 
@@ -253,60 +249,66 @@ public final class LcdController implements Component, Clocked {
 
     /**
      * Getter for currentImage
+     * 
      * @return current Lcd Image
      */
     public LcdImage currentImage() {
-        if(currentImage == null)
-            return BLANK_IMAGE;
         return currentImage;
     }
 
     /**
-     * computes the Lcd pixel line by composing background and potential window & sprites
-     * @param index the relative lcd line
-     * @return computed line composed of background and potential window & sprites
+     * computes the Lcd pixel line by composing background and potential window
+     * & sprites
+     * 
+     * @param index
+     *            the relative lcd line
+     * @return computed line composed of background and potential window &
+     *         sprites
      */
     private LcdImageLine computeLine(int index) {
-        
-        //compute background
-        int lcdBgLine = Math.floorMod(index + reg(Reg.SCY), IMAGE_SIZE);
-//        LcdImageLine bg  = computeLine(lcdBgLine, LCDC_Bits.BG_AREA, testBitLCDC(LCDC_Bits.BG))
-        LcdImageLine bg  = computeLine(lcdBgLine, LCDC_Bits.BG_AREA)
-                    .extractWrapped(reg(Reg.SCX), LCD_WIDTH)
-                    .mapColors(reg(Reg.BGP));
-        
-        //window conditions
-        int WX_prime = Math.max(reg(Reg.WX) - WX_CORRECTION, 0);
-        boolean windowOnLine = testBitLCDC(LCDC_Bits.WIN)
-                && WX_prime >= 0 && WX_prime < LCD_WIDTH
-                && reg(Reg.LY) >= reg(Reg.WY);
+        LcdImageLine bg = BLANK_LINE;
+        if (testBitLCDC(LCDC_Bits.BG)) {
+            int lcdBgLine = Math.floorMod(index + reg(Reg.SCY), IMAGE_SIZE);
+            bg = computeLine(lcdBgLine, LCDC_Bits.BG_AREA)
+                            .extractWrapped(reg(Reg.SCX), LCD_WIDTH)
+                            .mapColors(reg(Reg.BGP));
+            
+        }
 
-        //compute window and compose with background
+        // Check if window intersects current line
+        int WX_prime = Math.max(reg(Reg.WX) - WX_CORRECTION, 0);
+        boolean windowOnLine = testBitLCDC(LCDC_Bits.WIN) && WX_prime >= 0
+                && WX_prime < LCD_WIDTH && reg(Reg.LY) >= reg(Reg.WY);
+
+        // Compute window line and compose with background
         if (windowOnLine) {
-            //TODO apparently dont need the boolean, tried all games without problems
-//            LcdImageLine win = computeLine(winY, LCDC_Bits.WIN_AREA, true)
-              LcdImageLine win = computeLine(winY, LCDC_Bits.WIN_AREA)
-                    .extractWrapped(0, LCD_WIDTH)
-                    .mapColors(reg(Reg.BGP));
+            LcdImageLine win = computeLine(winY, LCDC_Bits.WIN_AREA)
+                    .extractWrapped(0, LCD_WIDTH).mapColors(reg(Reg.BGP));
             winY++;
             bg = bg.join(win.shift(WX_prime), WX_prime);
         }
-        
-        //compute sprites
-        LcdImageLine[] spriteLines = computeSpriteLines(index);
-        
-        return composeSpritesAndBG(spriteLines[0], spriteLines[1], bg);
+
+        // Compute sprites
+        if (testBitLCDC(LCDC_Bits.OBJ)) {
+            LcdImageLine[] spriteLines = computeSpriteLines(index);
+            return composeSpritesAndBG(spriteLines[0], spriteLines[1], bg);
+        } else
+            return bg;
     }
 
     /**
-     * computes line out of tiles unsing given index and tile area
-     * @param index line being drawn
-     * @param area tile area
-     * @return 160-pixel long line computed from indicated tiles
+     * Computes line for given area (BG_AREA or WIN_AREA), if active,
+     * using given line index. Returns a blank line if inactive.
+     * 
+     * @param index
+     *            line being drawn
+     * @param area
+     *            tile area
+     * @return 160-pixel long line.
      */
     private LcdImageLine computeLine(int index, LCDC_Bits area) {
         LcdImageLine.Builder b = new LcdImageLine.Builder(IMAGE_SIZE);
-        
+
         int tileLine = index / TILE_SIZE;
         int line = index % TILE_SIZE;
 
@@ -316,65 +318,72 @@ public final class LcdController implements Component, Clocked {
 
             int tileIndex = read(areaStart + tileLine * IMAGE_TILE_SIZE + tile);
 
-            if (!testBitLCDC(LCDC_Bits.TILE_SOURCE)) 
+            if (!testBitLCDC(LCDC_Bits.TILE_SOURCE))
                 tileIndex = Bits.clip(8, tileIndex + TILE_INDEX_CORRECTION);
-            
+
             addTileToLine(b, tile, tileIndex, line);
         }
         return b.build();
     }
 
     /**
-     * Make background sprite line and foreground sprite line
-     * @param index line being drawn
-     * @return array with background sprite line first and foreground sprite line second
+     * Makes background sprite line and foreground sprite line
+     * 
+     * @param index
+     *            index of line being drawn
+     * @return array with background sprite line first and foreground sprite
+     *         line second
      */
     private LcdImageLine[] computeSpriteLines(int index) {
-        
         LcdImageLine bgLine = new LcdImageLine.Builder(LCD_WIDTH).build();
         LcdImageLine fgLine = new LcdImageLine.Builder(LCD_WIDTH).build();
-        
-        if(testBitLCDC(LCDC_Bits.OBJ)) {
-            boolean bigSprites = testBitLCDC(LCDC_Bits.OBJ_SIZE);
-            
-            int[] sprites = spritesIntersectingLine(index, bigSprites);
-            
-            for (int spriteIndex : sprites) {
-                LcdImageLine.Builder spriteLineBuilder = new LcdImageLine.Builder(LCD_WIDTH);
-                
-                int address = AddressMap.OAM_START + spriteIndex * SPRITE_BYTE_SIZE;
-                
-                int y = read(address) - SPRITE_Y_CORRECTION;
-                int x = read(address + 1) - SPRITE_X_CORRECTION;
-                int tileIndex = read(address + 2);
-                int infos = read(address + 3);
-                
-                int tileLine = index - y;
-                
-                if (testBitSprite(SpriteInfos.FLIP_V, infos))
-                    tileLine = bigSprites ? BIG_SPRITE_LINES - tileLine - 1 : SPRITE_LINES - tileLine - 1;
-                    
-                int[] lineBytes = getLineBytes(tileIndex, tileLine, AddressMap.TILE_SOURCE[1]);
-                
-                /* Horizontal flip
-                Since tiles (bytes) read from the bus are stored as is in the vRam, we have to reverse them
-                when computing a NOT reversed sprite, and we don't have to reverse them when computing
-                a reversed one*/
-                if(!testBitSprite(SpriteInfos.FLIP_H, infos)) {
-                    lineBytes[0] = Bits.reverse8(lineBytes[0]);
-                    lineBytes[1] = Bits.reverse8(lineBytes[1]);
-                }
-                
-                spriteLineBuilder.setBytes(0, lineBytes[1], lineBytes[0]);
-                LcdImageLine spriteLine = spriteLineBuilder.build().shift(x)
-                        .mapColors(testBitSprite(SpriteInfos.PALETTE, infos) ? reg(Reg.OBP1) : reg(Reg.OBP0));
-                
-                if(testBitSprite(SpriteInfos.BEHIND_BG, infos)) 
-                    bgLine = spriteLine.below(bgLine);
-                else fgLine = spriteLine.below(fgLine);
+
+        boolean bigSprites = testBitLCDC(LCDC_Bits.OBJ_SIZE);
+
+        int[] sprites = spritesIntersectingLine(index, bigSprites);
+
+        for (int spriteIndex : sprites) {
+            LcdImageLine.Builder spriteLineBuilder = new LcdImageLine.Builder(LCD_WIDTH);
+
+            int address = AddressMap.OAM_START + spriteIndex * SPRITE_BYTE_SIZE;
+
+            int y = read(address) - SPRITE_Y_CORRECTION;
+            int x = read(address + 1) - SPRITE_X_CORRECTION;
+            int tileIndex = read(address + 2);
+            int infos = read(address + 3);
+
+            int tileLine = index - y;
+
+            if (testBitSprite(SpriteInfos.FLIP_V, infos))
+                tileLine = bigSprites ? BIG_SPRITE_LINES - tileLine - 1
+                        : SPRITE_LINES - tileLine - 1;
+
+            int[] lineBytes = getLineBytes(tileIndex, tileLine,
+                    AddressMap.TILE_SOURCE[1]);
+
+            /*
+             * Horizontal flip Since tiles (bytes) read from the bus are stored
+             * as is in the vRam, we have to reverse them when computing a NOT
+             * reversed sprite, and we don't have to reverse them when computing
+             * a reversed one
+             */
+            if (!testBitSprite(SpriteInfos.FLIP_H, infos)) {
+                lineBytes[0] = Bits.reverse8(lineBytes[0]);
+                lineBytes[1] = Bits.reverse8(lineBytes[1]);
             }
+
+            spriteLineBuilder.setBytes(0, lineBytes[1], lineBytes[0]);
+            LcdImageLine spriteLine = spriteLineBuilder.build().shift(x)
+                    .mapColors(testBitSprite(SpriteInfos.PALETTE, infos)
+                            ? reg(Reg.OBP1)
+                            : reg(Reg.OBP0));
+
+            if (testBitSprite(SpriteInfos.BEHIND_BG, infos))
+                bgLine = spriteLine.below(bgLine);
+            else
+                fgLine = spriteLine.below(fgLine);
         }
-        return new LcdImageLine[] {bgLine, fgLine};
+        return new LcdImageLine[] { bgLine, fgLine };
     }
 
     /**
@@ -391,27 +400,32 @@ public final class LcdController implements Component, Clocked {
      */
     private void addTileToLine(LcdImageLine.Builder lb, int tile, int tileIndex, int lineIndex) {
         int startAddress = AddressMap.TILE_SOURCE[testBitLCDC(LCDC_Bits.TILE_SOURCE) ? 1 : 0];
-        
+
         int[] lineBytes = getLineBytes(tileIndex, lineIndex, startAddress);
-        lb.setBytes(tile, Bits.reverse8(lineBytes[1]), Bits.reverse8(lineBytes[0]));
+        lb.setBytes(tile, Bits.reverse8(lineBytes[1]),
+                Bits.reverse8(lineBytes[0]));
     }
 
     private int[] getLineBytes(int tileIndex, int lineIndex, int startAddress) {
         int address = startAddress + tileIndex * 2 * Byte.SIZE + 2 * lineIndex;
-        return new int[] { read(address), read(address + 1) };
+        return new int[] {read(address), read(address + 1)};
     }
 
     /**
-     * computes the indexes of the frist 10 sprites intersecting with given line
-     * @param bigSprites true if sprites are 16 pixels high
-     * @return array of intersecting sprite's indexes
+     * Computes the indices of the first 10 sprites intersecting with given line
+     * 
+     * @param bigSprites
+     *            true if sprites are 16 pixels high
+     * @return array of intersecting sprites' indices
      */
     private int[] spritesIntersectingLine(int line, boolean bigSprites) {
         int[] sprites = new int[10];
         int spriteCount = 0;
-        for (int sprite = 0; sprite <= TOTAL_SPRITES && spriteCount < MAX_SPRITES_PER_LINE; sprite++) {
+        for (int sprite = 0; sprite <= TOTAL_SPRITES
+                && spriteCount < MAX_SPRITES_PER_LINE; sprite++) {
 
-            int spriteAddress = AddressMap.OAM_START + sprite * SPRITE_BYTE_SIZE;
+            int spriteAddress = AddressMap.OAM_START
+                    + sprite * SPRITE_BYTE_SIZE;
             int spriteY = read(spriteAddress) - SPRITE_Y_CORRECTION;
 
             int range = bigSprites ? BIG_SPRITE_LINES : SPRITE_LINES;
@@ -431,16 +445,20 @@ public final class LcdController implements Component, Clocked {
 
         return spritesIndex;
     }
-    
+
     private LcdImageLine composeSpritesAndBG(LcdImageLine bgSprites, LcdImageLine fgSprites, LcdImageLine bg) {
         BitVector newOpacity = bg.opacity().or(bgSprites.opacity().not());
         return bgSprites.below(bg, newOpacity).below(fgSprites);
     }
 
     private void requestPotentialInterrupt(LcdMode mode) {
-        if(!mode.equals(LcdMode.MODE_3)
-                && testBit(Reg.STAT, mode.ordinal() + 3)) //corresponding STAT_Bits index is greater by 3 compared to LcdMode
-                cpu.requestInterrupt(Cpu.Interrupt.LCD_STAT);
+        if (!mode.equals(LcdMode.MODE_3)
+                && testBit(Reg.STAT, mode.ordinal() + 3)) // TODO : leave it like that ?
+                                                          // corresponding
+                                                          // STAT_Bits index is
+                                                          // greater by 3
+                                                          // compared to LcdMode
+            cpu.requestInterrupt(Cpu.Interrupt.LCD_STAT);
     }
 
     private void incLY() {
@@ -453,7 +471,7 @@ public final class LcdController implements Component, Clocked {
         boolean newValue = reg(Reg.LYC) == reg(Reg.LY);
         setBitSTAT(STAT_Bits.LYC_EQ_LY, newValue);
 
-        if(testBitSTAT(STAT_Bits.INT_LYC) && newValue)
+        if (testBitSTAT(STAT_Bits.INT_LYC) && newValue)
             cpu.requestInterrupt(Cpu.Interrupt.LCD_STAT);
     }
 
@@ -477,7 +495,7 @@ public final class LcdController implements Component, Clocked {
 
     private void setMode(LcdMode mode) {
         setReg(Reg.STAT,
-                Bits.extract(reg(Reg.STAT), 2, 6) << 2 | mode.ordinal());
+                (Bits.extract(reg(Reg.STAT), 2, 6) << 2) | mode.ordinal());
     }
 
     private int reg(Reg r) {
@@ -488,11 +506,11 @@ public final class LcdController implements Component, Clocked {
         registerFile.set(r, newV);
     }
 
-    //TODO only used once in read
+    // TODO only used once in read
     private int readRegAt(int address) {
         return reg(Reg.values()[address - AddressMap.REG_LCDC]);
     }
-    
+
     private void setRegAt(int address, int newV) {
         setReg(Reg.values()[address - AddressMap.REG_LCDC], newV);
     }
@@ -504,8 +522,8 @@ public final class LcdController implements Component, Clocked {
     private boolean testBitLCDC(LCDC_Bits bit) {
         return testBit(Reg.LCDC, bit.index());
     }
-   
-    //TODO only used once in inc LY
+
+    // TODO only used once in inc LY
     private boolean testBitSTAT(STAT_Bits bit) {
         return testBit(Reg.STAT, bit.index());
     }
@@ -514,14 +532,14 @@ public final class LcdController implements Component, Clocked {
         return Bits.test(infos, bit.index());
     }
 
-    //TODO only used in setBitsStat
+    // TODO only used in setBitsStat
     private void setBit(Reg r, int index, boolean newValue) {
         setReg(r, Bits.set(reg(r), index, newValue));
     }
 
-    //TODO only used once in incLY
+    // TODO only used once in incLY
     private void setBitSTAT(STAT_Bits bit, boolean newValue) {
         setBit(Reg.STAT, bit.index(), newValue);
     }
-    
+
 }

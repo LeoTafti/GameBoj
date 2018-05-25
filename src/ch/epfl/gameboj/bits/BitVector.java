@@ -165,21 +165,11 @@ public final class BitVector {
      */
     @Override
     public String toString() {
-        // TODO : move it somewhere else ?
-//        final String ZERO_32 = "00000000000000000000000000000000";
-//        for (int i = elements.length - 1; i >= 0; i--) {
-//            String binaryRep = Integer.toBinaryString(elements[i]);
-//            sb.append((ZERO_32 + binaryRep).substring(binaryRep.length()));
-//            // TODO : do it with numberOfLeadingZeros instead ?
-//        }
-        
-        //Integer.toBinaryString(..) uses number of leading zeros anyways...
-        
-        StringBuilder sb = new StringBuilder();
-        for (int i = (elements.length - 1)*Integer.SIZE; i >= 0 ; i--)
-            sb.append(testBit(i));
-
-        return sb.toString();
+      StringBuilder sb = new StringBuilder();
+      for(int i = elements.length * Integer.SIZE - 1; i >= 0; i--) {
+          sb.append(testBit(i) ? "1" : "0");
+      }
+      return sb.toString();
     }
 
     /**
@@ -322,7 +312,7 @@ public final class BitVector {
      * @return new bitVector with shifted bits
      */
     public BitVector shift(int delta) {
-        return extract(-delta, size(), ExtractType.ZERO_EXT);
+        return extractZeroExtended(-delta, size());
     }
 
     /**
