@@ -11,8 +11,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -80,7 +80,7 @@ public class Main extends Application{
         StackPane powerPane = new StackPane();
         ImageView powerBg = new ImageView("file:powerImage.jpg");
 
-        List<String> romNames = new LinkedList<>();
+        List<String> romNames = new ArrayList<>();
         for(int i = 0; i < ROM_PATHS.length; i++) {
             romNames.add(ROM_PATHS[i].getName());
         }

@@ -64,7 +64,7 @@ public final class ColorSet {
      * @return String formatted for css use
      */
     public String getRgbString(int index) {
-        return String.format("%1$06X",(colors[index] - 0xff_00_00_00)); //TODO static var
+        return String.format("%1$06X",(colors[index] - 0xff_00_00_00)); // Remove alpha from argb
     }
     
     /**
@@ -77,78 +77,71 @@ public final class ColorSet {
                 Random.colors[c] |= (int)(0xff * Math.random()) << (Byte.SIZE * rgb);
         } 
     }
-    
+
     public static final ColorSet GAMEBOY = new ColorSet(new int[] {
             0xff_ff_ff_ff,
             0xff_d3_d3_d3,
             0xff_a9_a9_a9,
             0xff_00_00_00,
-            });
-    
+    });
+
     
     public static final ColorSet DESERT = new ColorSet(new int[] {
             0xffF2E9E4,
             0xffBFB48F,
             0xffC9ADA7,
             0xff595358,
-            });
-    
+    });
+
     public static final ColorSet FOREST = new ColorSet(new int[] {
             0xffA3B18A,
             0xffC0CAAD,
             0xff856A5D,
             0xff294936,
-            });
-    
+    });
+
     public static final ColorSet SEASIDE = new ColorSet(new int[] {
             0xff8EE3EF,
             0xffFFF1D0,
             0xff9BC4CB,
             0xff23395B,
-            });
-    
+    });
+
     public static final ColorSet CITY = new ColorSet(new int[] {
             0xff9CAFB7,
             0xffCCDAD1,
             0xffF6F8FF,
             0xff493843,
-            });
-    
+    });
+
     public static final ColorSet WONDERLAND = new ColorSet(new int[] {
             0xffF9E6AA,
             0xffFF6400,
             0xff81009A,
             0xff0051A6
-            });
-    
+    });
+
     public static final ColorSet MOUNTAIN = new ColorSet(new int[] {
             0xffE5E6E4,
             0xffA6A2A2,
             0xffA89F68,
             0xff5D576B
-            });
-    
+    });
+
     public static final ColorSet PASTEL = new ColorSet(new int[] {
             0xffF8DEE9,
             0xff888888,
             0xffD6F1F8,
             0xff000000
-            });
-    
+    });
+
     public static final ColorSet INVERTED  = new ColorSet(new int[] {
             0xff000000,
             0xffa9a9a9,
             0xffd3d3d3,
             0xffffffff
     });
-    
-    /* randomize using ColorSet.randomize() !!! */
-    public static ColorSet Random = new ColorSet(Math.random(), Math.random(), Math.random());
 
-    
-//    public static final ColorSet EMPTY = new ColorSet(new int[] {
-//            0xff,
-//            0xff,
-//            0xff,
-//            0xff});
+    // randomize using ColorSet.randomize() !!!
+    public static ColorSet Random = new ColorSet(Math.random(), Math.random(), Math.random());
 }

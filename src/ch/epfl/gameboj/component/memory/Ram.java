@@ -77,6 +77,5 @@ public final class Ram {
     
     public void ofData(byte[] data) {
         this.data = data;
-        //TODO : simply removed final modifier to do that, but may be ugly
     }
 }
