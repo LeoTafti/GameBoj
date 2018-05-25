@@ -61,19 +61,6 @@ public class Main extends Application{
     private static boolean paused = false;
     private static AnimationTimer timer;
     
-//    private static final String[] ROM_PATHS = { 
-//            "roms/Tetris.gb", //0
-//            "roms/2048.gb", //1
-//            "roms/snake.gb", //2
-//            "roms/tasmaniaStory.gb", //3
-//            "roms/flappyboy.gb", //4
-//            "roms/DonkeyKong.gb", //5
-//            "roms/Bomberman.gb", //6
-//            "roms/SuperMarioLand.gb", //7
-//            "roms/SuperMarioLand2.gb", //8
-//            "roms/LegendofZelda,TheLink'sAwakening.gb", //9
-//            };
-    
     private static File[] ROM_PATHS = new File("roms").listFiles();;
     
     private Thread saver;
@@ -92,24 +79,12 @@ public class Main extends Application{
         //++++++++++++++++++++++++++++++++++ Power Scene ++++++++++++++++++++++++++++++++++++++++++++++
         StackPane powerPane = new StackPane();
         ImageView powerBg = new ImageView("file:powerImage.jpg");
-        
-//        List<String> romNames = List.of(
-//                "Tetris",
-//                "2048",
-//                "Snake",
-//                "Tasmania Story",
-//                "Flappy Boy",
-//                "Donkey Kong",
-//                "BomberMan",
-//                "Super Mario Land 1", 
-//                "Super Mario Land 2",
-//                "Legend of Zelda, Link's Awakening");
+
         List<String> romNames = new LinkedList<>();
         for(int i = 0; i < ROM_PATHS.length; i++) {
             romNames.add(ROM_PATHS[i].getName());
         }
 
-        
         Button power = new Button("POWER");
         power.setDisable(true);
         ChoiceBox<String> romChoice = new ChoiceBox<>(FXCollections.observableArrayList(romNames));
@@ -399,7 +374,6 @@ public class Main extends Application{
 
 // =================================== FINAL SETUP ==========================================
         power.setOnAction((e) -> {
-            //TODO : having to give lcd is not clean, but what can I do...
             startGame(romChoice.getValue(), lcd);
             primaryStage.setScene(gbScene);
             primaryStage.centerOnScreen();
@@ -421,12 +395,10 @@ public class Main extends Application{
     }
 
     private void startGame(String rom, ImageView lcd) {
-      //TODO i dont want this try catch
       try {
-          gameboj = new GameBoy(Cartridge.ofFile(new File("roms/" + rom))); //TODO : ugly    
+          gameboj = new GameBoy(Cartridge.ofFile(new File("roms/" + rom)));  
       }
       catch (IOException e) {
-          //TODO : do smth
           System.out.println("No such rom");
       }
       
@@ -436,7 +408,6 @@ public class Main extends Application{
               gameboj.cartridge().load(s.readAllBytes());
           }
           catch (IOException e){
-              //TODO : qqch
               System.out.println("Problem loading file");
           }
       
@@ -476,7 +447,6 @@ public class Main extends Application{
           }
           catch (IOException e) {
               System.out.println("Problem saving");
-              //TODO : Do smth
           }
       }
       Runtime.getRuntime().removeShutdownHook(saver);

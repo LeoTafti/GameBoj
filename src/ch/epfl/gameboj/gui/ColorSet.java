@@ -60,33 +60,24 @@ public final class ColorSet {
         return colors[index];
     }
     
-    //TODO comment
+    /**
+     * Returns red, green and blue values as hex string (in css color formating)
+     * @param index which color to translate
+     * @return String formatted for css use
+     */
     public String getRgbString(int index) {
         return String.format("%1$06X",(colors[index] - 0xff_00_00_00)); //TODO static var
     }
     
-    //TODO implement
+    /**
+     * Randomizes Random ColorSet's colors
+     */
     public static void randomize( ) {
-        
         for (int c = 0; c < Random.colors.length; c++) {
             Random.colors[c] = 0xff_00_00_00;
             for(int rgb = 0; rgb < 3; rgb++)
                 Random.colors[c] |= (int)(0xff * Math.random()) << (Byte.SIZE * rgb);
-        }
-        
-        
-    }
-    
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append('[');
-        for (int i = 0; i < colors.length; i++) {
-            sb.append(Integer.toHexString(colors[i])).append(',');
-            
-        }
-        sb.append(']');
-        return sb.toString();
+        } 
     }
     
     public static final ColorSet GAMEBOY = new ColorSet(new int[] {
@@ -153,6 +144,7 @@ public final class ColorSet {
             0xffffffff
     });
     
+    /* randomize using ColorSet.randomize() !!! */
     public static ColorSet Random = new ColorSet(Math.random(), Math.random(), Math.random());
 
     
