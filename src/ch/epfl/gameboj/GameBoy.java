@@ -26,6 +26,7 @@ public final class GameBoy {
     private final Timer timer;
     private final LcdController lcdController;
     private final Joypad joypad;
+    private final Cartridge cartridge;
 
     private long cycleCount;
 
@@ -44,6 +45,8 @@ public final class GameBoy {
         
         timer = new Timer(cpu);
         timer.attachTo(bus);
+        
+        this.cartridge = cartridge;
         
         cycleCount = 0;
 
@@ -132,6 +135,15 @@ public final class GameBoy {
     public Joypad joypad() {
         return joypad;
     }
+    
+    /**
+     * Getter for cartridge
+     * 
+     * @return GameBoy's cartridge
+     */
+    public Cartridge cartridge() {
+        return cartridge;
+    }
 
     /**
      * Getter for number of cycles the gameboy has already run for
@@ -139,5 +151,4 @@ public final class GameBoy {
     public long cycles() {
         return cycleCount;
     }
-
 }

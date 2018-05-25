@@ -10,11 +10,11 @@ import java.io.FileInputStream;
 import java.io.IOException;
 
 import ch.epfl.gameboj.Preconditions;
+import ch.epfl.gameboj.bonus.save.Savable;
 import ch.epfl.gameboj.component.Component;
-import ch.epfl.gameboj.component.cartridge.MBC0;
 import ch.epfl.gameboj.component.memory.Rom;
 
-public final class Cartridge implements Component {
+public final class Cartridge implements Component, Savable {
 
     private static final int MBC_TYPE_ADDRESS = 0x147, RAM_SIZE_ADDRESS = 0x149;
     private static final int[] RAM_SIZES = {0, 2048, 8192, 32768};
@@ -78,6 +78,17 @@ public final class Cartridge implements Component {
         Preconditions.checkBits16(address);
         Preconditions.checkBits8(data);
         mbc.write(address, data);
+    }
+
+    @Override
+    public byte[] save() {
+        return (mbc instanceof Savable) ? ((Savable)mbc).save() : null;
+    }
+
+    @Override
+    public void load(byte[] data) {
+        if(mbc instanceof Savable)
+            ((Savable)mbc).load(data);
     }
 
 }

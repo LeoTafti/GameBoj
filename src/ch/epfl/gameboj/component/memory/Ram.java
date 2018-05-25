@@ -72,11 +72,11 @@ public final class Ram {
         data[index] = (byte) value;
     }
     
-    public void toFile(OutputStream s) throws IOException {
-        s.write(data);
+    public byte[] getData() {
+        return data;
     }
     
-    public void fromFile(byte[] data) {
+    public void ofData(byte[] data) {
         this.data = data;
         //TODO : simply removed final modifier to do that, but may be ugly
     }

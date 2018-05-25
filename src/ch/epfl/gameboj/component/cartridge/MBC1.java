@@ -40,13 +40,6 @@ public final class MBC1 implements Component, Savable {
 
         this.romMask = rom.size() - 1;
         this.ramMask = ramSize - 1;
-        
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            public void run() {
-                save();
-            }
-        });
-        load();
     }
 
     public int read(int address) {
@@ -102,26 +95,12 @@ public final class MBC1 implements Component, Savable {
     }
 
     @Override
-    public void save() {
-        File saveFile = new File("save.sav");
-        try(OutputStream s = new FileOutputStream(saveFile)){
-            ram.toFile(s);
-        }
-        catch (IOException e) {
-            System.out.println("Problem saving");
-            //TODO : Do smth
-        }
+    public byte[] save() {
+        return ram.getData();
     }
 
     @Override
-    public void load() {
-        File saveFile = new File("save.sav");
-        try(InputStream s = new FileInputStream(saveFile)){
-            ram.fromFile(s.readAllBytes());
-        }
-        catch (IOException e) {
-            System.out.println("Problem loading save");
-            //TODO : Do smth
-        }
+    public void load(byte[] data) {
+        ram.ofData(data);
     }
 }

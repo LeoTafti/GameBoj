@@ -6,7 +6,11 @@
 package ch.epfl.gameboj.gui;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -408,11 +412,13 @@ public class Main extends Application{
         backgroundPane.requestFocus();
     }
 
-    private void startGame(int romIndex, ImageView lcd) {
-        romPath = ROM_PATHS[romIndex];
+    private void startGame(String rom, ImageView lcd) {
       //TODO i dont want this try catch
-      try {
-          gameboj = new GameBoy(Cartridge.ofFile(new File(romPath)));
+      try (InputStream s = new FileInputStream("saves/" + rom)){
+          gameboj = new GameBoy(Cartridge.ofFile(new File("roms/" + rom))); //TODO : ugly
+          
+          gameboj.cartridge().load(s.readAllBytes());
+          
       } catch (IOException e1) {
           e1.printStackTrace();
       }
@@ -430,11 +436,26 @@ public class Main extends Application{
               lcd.setImage(ImageConverter.convert(gameboj.lcdController().currentImage()));
           }
       };
-      timer.start(); 
+      timer.start();
+
+      Runtime.getRuntime().addShutdownHook(new Thread() {
+          public void run() {
+              endGame(rom);
+          }
+      });
     }
     
     //TODO is it necessary?
-    private void endGame() {
-        timer.stop();
+    private void endGame(String rom) {
+      timer.stop();
+      
+      File saveFile = new File("saves/" + rom);
+      try(OutputStream s = new FileOutputStream(saveFile)){
+          s.write(gameboj.cartridge().save());
+      }
+      catch (IOException e) {
+          System.out.println("Problem loading save");
+          //TODO : Do smth
+      }
     }
 }
