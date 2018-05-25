@@ -12,9 +12,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
-
-import com.sun.tools.javac.util.List;
 
 import ch.epfl.gameboj.GameBoy;
 import ch.epfl.gameboj.component.Joypad;
@@ -61,24 +61,27 @@ public class Main extends Application{
     private static boolean paused = false;
     private static AnimationTimer timer;
     
-    private static final String[] ROM_PATHS = { 
-            "roms/Tetris.gb", //0
-            "roms/2048.gb", //1
-            "roms/snake.gb", //2
-            "roms/tasmaniaStory.gb", //3
-            "roms/flappyboy.gb", //4
-            "roms/DonkeyKong.gb", //5
-            "roms/Bomberman.gb", //6
-            "roms/SuperMarioLand.gb", //7
-            "roms/SuperMarioLand2.gb", //8
-            "roms/LegendofZelda,TheLink'sAwakening.gb", //9
-            };
+//    private static final String[] ROM_PATHS = { 
+//            "roms/Tetris.gb", //0
+//            "roms/2048.gb", //1
+//            "roms/snake.gb", //2
+//            "roms/tasmaniaStory.gb", //3
+//            "roms/flappyboy.gb", //4
+//            "roms/DonkeyKong.gb", //5
+//            "roms/Bomberman.gb", //6
+//            "roms/SuperMarioLand.gb", //7
+//            "roms/SuperMarioLand2.gb", //8
+//            "roms/LegendofZelda,TheLink'sAwakening.gb", //9
+//            };
     
-    private static String romPath;
+    private static File[] ROM_PATHS = new File("roms").listFiles();;
+    
+    private Thread saver;
+    
     private GameBoy gameboj;
     
     public static void main(String[] args) {
-       launch(args);
+        launch(args);
     }
 
     @Override
@@ -90,17 +93,22 @@ public class Main extends Application{
         StackPane powerPane = new StackPane();
         ImageView powerBg = new ImageView("file:powerImage.jpg");
         
-        List<String> romNames = List.of(
-                "Tetris",
-                "2048",
-                "Snake",
-                "Tasmania Story",
-                "Flappy Boy",
-                "Donkey Kong",
-                "BomberMan",
-                "Super Mario Land 1", 
-                "Super Mario Land 2",
-                "Legend of Zelda, Link's Awakening");
+//        List<String> romNames = List.of(
+//                "Tetris",
+//                "2048",
+//                "Snake",
+//                "Tasmania Story",
+//                "Flappy Boy",
+//                "Donkey Kong",
+//                "BomberMan",
+//                "Super Mario Land 1", 
+//                "Super Mario Land 2",
+//                "Legend of Zelda, Link's Awakening");
+        List<String> romNames = new LinkedList<>();
+        for(int i = 0; i < ROM_PATHS.length; i++) {
+            romNames.add(ROM_PATHS[i].getName());
+        }
+
         
         Button power = new Button("POWER");
         power.setDisable(true);
@@ -392,13 +400,13 @@ public class Main extends Application{
 // =================================== FINAL SETUP ==========================================
         power.setOnAction((e) -> {
             //TODO : having to give lcd is not clean, but what can I do...
-            startGame(romChoice.getSelectionModel().getSelectedIndex(), lcd);
+            startGame(romChoice.getValue(), lcd);
             primaryStage.setScene(gbScene);
             primaryStage.centerOnScreen();
         });
 
         powerOff.setOnAction(e -> {
-            endGame();
+            endGame(romChoice.getValue());
             primaryStage.setScene(powerScene);
             primaryStage.centerOnScreen();
         });
@@ -414,14 +422,23 @@ public class Main extends Application{
 
     private void startGame(String rom, ImageView lcd) {
       //TODO i dont want this try catch
-      try (InputStream s = new FileInputStream("saves/" + rom)){
-          gameboj = new GameBoy(Cartridge.ofFile(new File("roms/" + rom))); //TODO : ugly
-          
-          gameboj.cartridge().load(s.readAllBytes());
-          
-      } catch (IOException e1) {
-          e1.printStackTrace();
+      try {
+          gameboj = new GameBoy(Cartridge.ofFile(new File("roms/" + rom))); //TODO : ugly    
       }
+      catch (IOException e) {
+          //TODO : do smth
+          System.out.println("No such rom");
+      }
+      
+      File saveFile = new File("saves/" + rom.replace(".gb", ".sav"));
+      if(saveFile.exists())
+          try (InputStream s = new FileInputStream(saveFile)){
+              gameboj.cartridge().load(s.readAllBytes());
+          }
+          catch (IOException e){
+              //TODO : qqch
+              System.out.println("Problem loading file");
+          }
       
       timer = new AnimationTimer() {
       long before = System.nanoTime();
@@ -438,24 +455,30 @@ public class Main extends Application{
       };
       timer.start();
 
-      Runtime.getRuntime().addShutdownHook(new Thread() {
+      saver = new Thread() {
           public void run() {
               endGame(rom);
           }
-      });
+      };
+      
+      Runtime.getRuntime().addShutdownHook(saver);
     }
     
-    //TODO is it necessary?
     private void endGame(String rom) {
       timer.stop();
       
-      File saveFile = new File("saves/" + rom);
-      try(OutputStream s = new FileOutputStream(saveFile)){
-          s.write(gameboj.cartridge().save());
+      byte[] saveData = gameboj.cartridge().save();
+      if(saveData != null) {
+          File saveFile = new File("saves/" + rom.replace(".gb", ".sav"));
+          try(OutputStream s = new FileOutputStream(saveFile)){
+              byte[] data = gameboj.cartridge().save();
+                  s.write(data);
+          }
+          catch (IOException e) {
+              System.out.println("Problem saving");
+              //TODO : Do smth
+          }
       }
-      catch (IOException e) {
-          System.out.println("Problem loading save");
-          //TODO : Do smth
-      }
+      Runtime.getRuntime().removeShutdownHook(saver);
     }
 }
