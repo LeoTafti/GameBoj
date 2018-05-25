@@ -148,7 +148,6 @@ public class MainBonus extends Application{
         Tab presetTab = new Tab("Presets");
         GridPane presetPane = new GridPane();
         Button randomize = new Button("Randomize!");
-        randomize.setMinSize(randomize.getMaxWidth(), randomize.getMinWidth());
         
         presetPane.addColumn(0,
                 new Palette(ColorSet.GAMEBOY, "GAMEBOY"), 

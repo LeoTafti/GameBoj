@@ -84,7 +84,7 @@ public final class LcdController implements Component, Clocked {
     private long nextNonIdleCycle;
     private int remainingDMACycles;
 
-    private int winY = 0;
+    private int winY;
 
     public LcdController(Cpu cpu) {
         this.cpu = Objects.requireNonNull(cpu);
@@ -97,6 +97,8 @@ public final class LcdController implements Component, Clocked {
         currentImage = BLANK_IMAGE;
 
         nextNonIdleCycle = Long.MAX_VALUE;
+        
+        winY = 0;
     }
 
     /*
@@ -114,7 +116,6 @@ public final class LcdController implements Component, Clocked {
                     bus.read((reg(Reg.DMA) << 8) + index));
 
             remainingDMACycles--;
-            // TODO : compute reg(Reg.DMA) only once and not 160 times ?
         }
 
         // Starts drawing again if screen has been turned on
