@@ -23,6 +23,7 @@ public final class Palette extends VBox{
         button = new Button(name);
         button.setOnAction(e -> ImageConverter.setColorSet(colors));
         button.setPadding(new Insets(5));
+        button.setMaxWidth(Double.MAX_VALUE);
         GridPane colorSquares = new GridPane();
         colorSquares.setPadding(new Insets(5));
         colorSquares.setAlignment(Pos.CENTER);

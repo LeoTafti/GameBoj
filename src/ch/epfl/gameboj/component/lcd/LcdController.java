@@ -511,7 +511,6 @@ public final class LcdController implements Component, Clocked {
         registerFile.set(r, newV);
     }
 
-    // TODO only used once in read
     private int readRegAt(int address) {
         return reg(Reg.values()[address - AddressMap.REG_LCDC]);
     }
