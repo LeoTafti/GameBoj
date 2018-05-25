@@ -7,6 +7,8 @@ import ch.epfl.gameboj.Preconditions;
 
 public final class BitVector {
 
+    private static final int ALL_ONES = 0xFFFFFFFF;
+    
     private enum ExtractType {
         ZERO_EXT, WRAPPED
     };
@@ -26,17 +28,7 @@ public final class BitVector {
      *             Integer.SIZE (32)
      */
     public BitVector(int size, boolean defaultValue) {
-        Preconditions.checkArgument(size > 0 && size % Integer.SIZE == 0);
-
-        // TODO : should we absolutely call the private constructor ?
-        // means we have define a method like "initializeArray" or something of
-        // the sort
-        elements = new int[size / Integer.SIZE];
-
-        // Arrays.fill(elements, defaultValue ? -1 : 0); //since int -1 in two's
-        // complement representation is 32 bits to 1
-        Arrays.fill(elements, defaultValue ? 0xFFFFFFFF : 0);
-        // TODO : choose which is most clean (-1 or F..F), and make static ?
+        this(initializeArray(size, defaultValue));
     }
 
     /**
@@ -52,7 +44,7 @@ public final class BitVector {
      *             Integer.SIZE (32)
      */
     public BitVector(int size) {
-        this(size, false);
+        this(initializeArray(size, false));
     }
 
     /**
@@ -65,10 +57,32 @@ public final class BitVector {
     private BitVector(int[] elements) {
         this.elements = elements;
     }
+    
+    /**
+     * Returns an int array, each int full of 0's (if defaultValue is false) or
+     * full of ones (if defaultValue is true)
+     * 
+     * @param size
+     *            size in bits
+     * @param defaultValue
+     *            initial value of all bits
+     * @throws IllegalArgumentException
+     *             if size is smaller or equals zero or size isn't a multiple of
+     *             Integer.SIZE (32)
+     */
+    private static int[] initializeArray(int size, boolean defaultValue) {
+        Preconditions.checkArgument(size > 0 && size % Integer.SIZE == 0);
+        
+        int[] elements = new int[size / Integer.SIZE];
+        Arrays.fill(elements, defaultValue ? ALL_ONES : 0);
+
+        return elements;
+    }
 
     /**
      * Builder for BitVector Allows to create a BitVector incrementally, byte by
      * byte
+     * 
      */
     public static final class Builder {
         private int[] elements;
