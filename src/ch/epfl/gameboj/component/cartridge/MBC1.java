@@ -14,7 +14,7 @@ public final class MBC1 implements Component, Savable {
     private enum Mode { MODE_0, MODE_1 };
 
     private final Rom rom;
-    private final Ram ram;
+    private Ram ram;
 
     private boolean ramEnabled;
     private Mode mode;
@@ -93,6 +93,6 @@ public final class MBC1 implements Component, Savable {
 
     @Override
     public void load(byte[] data) {
-        ram.ofData(data);
+        ram = new Ram(data);
     }
 }

@@ -5,16 +5,17 @@
 
 package ch.epfl.gameboj.component.memory;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 import ch.epfl.gameboj.Preconditions;
 
 public final class Ram {
 
-    private byte[] data;
+    private final byte[] data;
 
     /**
-     * Constructor
+     * Constructor for Ram
      * 
      * @param size
      *            size of Ram in bytes
@@ -24,6 +25,18 @@ public final class Ram {
     public Ram(int size) {
         Preconditions.checkArgument(size >= 0);
         data = new byte[size];
+    }
+    
+    /**
+     * Constructor for Ram
+     * 
+     * @param data
+     *          initial byte array of data        
+     * @throws NullPointerException
+     *          if given data array is null
+     */
+    public Ram(byte[] data) {
+        this.data = Arrays.copyOf(Objects.requireNonNull(data), data.length);
     }
 
     /**
@@ -71,11 +84,11 @@ public final class Ram {
         data[index] = (byte) value;
     }
     
+    /**
+     * Getter for Ram's content
+     * @return A copy of ram's data, as an array of bytes
+     */
     public byte[] getData() {
-        return data;
-    }
-    
-    public void ofData(byte[] data) {
-        this.data = data;
+        return Arrays.copyOf(data, data.length);
     }
 }
