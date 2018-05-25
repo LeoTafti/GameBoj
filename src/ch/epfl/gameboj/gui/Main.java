@@ -83,8 +83,7 @@ public class Main extends Application{
                 long elapsed = now - start; //in nanosec
                 long gameboyCycles = (long) (elapsed * GameBoy.CYCLES_PER_NANOSEC);
                 gameboj.runUntil(gameboyCycles);
-                imageView.setImage(ImageConverter
-                        .convert(gameboj.lcdController().currentImage()));
+                imageView.setImage(ImageConverter.convert(gameboj.lcdController().currentImage()));
             };
         };
         timer.start();        

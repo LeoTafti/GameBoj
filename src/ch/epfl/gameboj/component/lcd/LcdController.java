@@ -25,21 +25,29 @@ public final class LcdController implements Component, Clocked {
 
     public static final int LCD_WIDTH = 160, LCD_HEIGHT = 144;
 
-    private static final int TILE_SIZE = 8, IMAGE_TILE_SIZE = 32,
-            IMAGE_SIZE = TILE_SIZE * IMAGE_TILE_SIZE, SPRITE_LINES = 8,
-            BIG_SPRITE_LINES = 16, SPRITE_BYTE_SIZE = 4;
+    private static final int TILE_SIZE = 8,
+            IMAGE_TILE_SIZE = 32,
+            IMAGE_SIZE = TILE_SIZE * IMAGE_TILE_SIZE,
+            SPRITE_LINES = 8,
+            BIG_SPRITE_LINES = 16,
+            SPRITE_BYTE_SIZE = 4;
 
-    private static final int WX_CORRECTION = 7, SPRITE_X_CORRECTION = 8,
-            SPRITE_Y_CORRECTION = 16, TILE_INDEX_CORRECTION = 0x80;
+    private static final int WX_CORRECTION = 7,
+            SPRITE_X_CORRECTION = 8,
+            SPRITE_Y_CORRECTION = 16,
+            TILE_INDEX_CORRECTION = 0x80;
 
-    private static final int LINE_CYCLES = 114, TOTAL_DMA_CYCLES = 160;
+    private static final int LINE_CYCLES = 114,
+            TOTAL_DMA_CYCLES = 160;
 
     private static final int V_BLANK_LINES = 10;
 
-    private static final int H_BLANK_CYCLES = 51, MODE_2_CYCLES = 20,
+    private static final int H_BLANK_CYCLES = 51,
+            MODE_2_CYCLES = 20,
             MODE_3_CYCLES = 43;
 
-    private static final int TOTAL_SPRITES = 40, MAX_SPRITES_PER_LINE = 10;
+    private static final int TOTAL_SPRITES = 40,
+            MAX_SPRITES_PER_LINE = 10;
 
     private final LcdImage BLANK_IMAGE = new LcdImage.Builder(LCD_WIDTH, LCD_HEIGHT).build();
     private final LcdImageLine BLANK_LINE = new LcdImageLine.Builder(LCD_WIDTH).build();
@@ -272,7 +280,6 @@ public final class LcdController implements Component, Clocked {
             bg = computeLine(lcdBgLine, LCDC_Bits.BG_AREA)
                             .extractWrapped(reg(Reg.SCX), LCD_WIDTH)
                             .mapColors(reg(Reg.BGP));
-            
         }
 
         // Check if window intersects current line
@@ -455,11 +462,7 @@ public final class LcdController implements Component, Clocked {
 
     private void requestPotentialInterrupt(LcdMode mode) {
         if (!mode.equals(LcdMode.MODE_3)
-                && testBit(Reg.STAT, mode.ordinal() + 3)) // TODO : leave it like that ?
-                                                          // corresponding
-                                                          // STAT_Bits index is
-                                                          // greater by 3
-                                                          // compared to LcdMode
+                && testBit(Reg.STAT, mode.ordinal() + 3)) // corresponding STAT_Bits indices are greater by 3 compared to those of LcdMode
             cpu.requestInterrupt(Cpu.Interrupt.LCD_STAT);
     }
 
