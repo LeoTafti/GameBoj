@@ -192,7 +192,7 @@ public class Main extends Application{
         backgroundPane.setPadding(new Insets(50));
         
             //------------------------------ Background Image -----------------------------------------
-        Image gbImage = new Image("file:gameboy.jpg");
+        Image gbImage = new Image("File:gameboy.jpg");
         PixelReader reader = gbImage.getPixelReader();
         WritableImage newGbImage = new WritableImage(reader, 240, 40, 320, 520);
         ImageView resizedGbImage = new ImageView(newGbImage);
@@ -417,9 +417,9 @@ public class Main extends Application{
       
           @Override
           public void handle(long now) {
-              double elapsed = now - before;
+              double deltaTime = now - before;
               before = now;
-              gameboyCycles += (long) (elapsed * GameBoy.CYCLES_PER_NANOSEC * simSpeed);
+              gameboyCycles += (long) (deltaTime * GameBoy.CYCLES_PER_NANOSEC * simSpeed);
               gameboj.runUntil(gameboyCycles);
               lcd.setImage(ImageConverter.convert(gameboj.lcdController().currentImage()));
           }

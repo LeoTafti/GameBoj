@@ -71,11 +71,13 @@ public final class ColorSet {
      * Randomizes Random ColorSet's colors
      */
     public static void randomize( ) {
-        for (int c = 0; c < Random.colors.length; c++) {
-            Random.colors[c] = 0xff_00_00_00;
+        int[] newRandomColors =new  int[Random.colors.length];
+        for (int c = 0; c < newRandomColors.length; c++) {
+            newRandomColors[c] = 0xff_00_00_00;
             for(int rgb = 0; rgb < 3; rgb++)
-                Random.colors[c] |= (int)(0xff * Math.random()) << (Byte.SIZE * rgb);
+                newRandomColors[c] |= (int)(0xff * Math.random()) << (Byte.SIZE * rgb);
         } 
+        Random = new ColorSet(newRandomColors);
     }
 
     public static final ColorSet GAMEBOY = new ColorSet(new int[] {
