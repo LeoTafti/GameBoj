@@ -402,14 +402,7 @@ public class Main extends Application{
           System.out.println("No such rom");
       }
       
-      File saveFile = new File("saves/" + rom.replace(".gb", ".sav"));
-      if(saveFile.exists())
-          try (InputStream s = new FileInputStream(saveFile)){
-              gameboj.cartridge().load(s.readAllBytes());
-          }
-          catch (IOException e){
-              System.out.println("Problem loading file");
-          }
+      load(rom);
       
       timer = new AnimationTimer() {
       long before = System.nanoTime();
@@ -428,7 +421,7 @@ public class Main extends Application{
 
       saver = new Thread() {
           public void run() {
-              endGame(rom);
+              save(rom);
           }
       };
       
@@ -437,18 +430,32 @@ public class Main extends Application{
     
     private void endGame(String rom) {
       timer.stop();
-      
-      byte[] saveData = gameboj.cartridge().save();
-      if(saveData != null) {
-          File saveFile = new File("saves/" + rom.replace(".gb", ".sav"));
-          try(OutputStream s = new FileOutputStream(saveFile)){
-              byte[] data = gameboj.cartridge().save();
-                  s.write(data);
-          }
-          catch (IOException e) {
-              System.out.println("Problem saving");
-          }
-      }
+      save(rom);
       Runtime.getRuntime().removeShutdownHook(saver);
+    }
+    
+    private void save(String rom) {
+        byte[] saveData = gameboj.cartridge().save();
+        if(saveData != null) {
+            File saveFile = new File("saves/" + rom.replace(".gb", ".sav"));
+            try(OutputStream s = new FileOutputStream(saveFile)){
+                byte[] data = gameboj.cartridge().save();
+                    s.write(data);
+            }
+            catch (IOException e) {
+                System.out.println("Problem saving");
+            }
+        }
+    }
+    
+    private void load(String rom) {
+        File saveFile = new File("saves/" + rom.replace(".gb", ".sav"));
+        if(saveFile.exists())
+            try (InputStream s = new FileInputStream(saveFile)){
+                gameboj.cartridge().load(s.readAllBytes());
+            }
+            catch (IOException e){
+                System.out.println("Problem loading file");
+            }
     }
 }
