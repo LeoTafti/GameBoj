@@ -3,6 +3,6 @@
 
 Authors :
 
-* Prof. Michel Schinz
 * Paul Juillard
 * Léo Tafti
+* (Prof. Michel Schinz)
